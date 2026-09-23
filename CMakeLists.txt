@@ -5,6 +5,8 @@ cmake_minimum_required(VERSION 3.31.6)
 
 project(Canon VERSION 0.1.0 LANGUAGES NONE)
 
+include(cmake/Canon.cmake)
+
 include(CTest)
 if (NOT BUILD_TESTING)
     return()
