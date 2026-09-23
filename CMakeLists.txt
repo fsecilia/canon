@@ -4,3 +4,22 @@
 cmake_minimum_required(VERSION 3.31.6)
 
 project(Canon VERSION 0.1.0 LANGUAGES NONE)
+
+include(CTest)
+if (NOT BUILD_TESTING)
+    return()
+endif()
+
+function(_canon_add_script_test NAME SCRIPT)
+    add_test(
+        NAME "canon.integration.${NAME}"
+        COMMAND
+            "${CMAKE_COMMAND}"
+            -DCANON_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}
+            -DCANON_TEST_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}/test/${NAME}
+            -DCANON_GENERATOR=${CMAKE_GENERATOR}
+            ${ARGN}
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/test/scripts/${SCRIPT}"
+    )
+    set_tests_properties("canon.integration.${NAME}" PROPERTIES LABELS integration TIMEOUT 120)
+endfunction()
