@@ -7,6 +7,11 @@ project(Canon VERSION 0.1.0 LANGUAGES NONE)
 
 include(cmake/Canon.cmake)
 
+# Keep Canon's development setup out of projects that vendor it as a subdirectory.
+if (NOT PROJECT_IS_TOP_LEVEL)
+    return()
+endif()
+
 include(CTest)
 if (NOT BUILD_TESTING)
     return()
