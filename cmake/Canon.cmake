@@ -24,5 +24,7 @@ function(canon_apply_target TARGET)
         CXX_STANDARD 26
         CXX_STANDARD_REQUIRED TRUE
         POSITION_INDEPENDENT_CODE TRUE
+        VISIBILITY_INLINES_HIDDEN TRUE
+        CXX_VISIBILITY_PRESET hidden
     )
 endfunction()
