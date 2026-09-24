@@ -34,6 +34,7 @@ target_compile_features(sample_interface INTERFACE cxx_std_17)
 set_target_properties(sample_static PROPERTIES CXX_EXTENSIONS TRUE)
 set_target_properties(sample_shared PROPERTIES CXX_EXTENSIONS FALSE)
 
+# Apply Canon to each compiled library target under test.
 foreach(_target IN ITEMS sample_static sample_shared sample_module sample_object)
     canon_apply_target("${_target}")
 endforeach()
@@ -48,6 +49,7 @@ add_executable(sample_test sample_test.cpp)
 target_link_libraries(sample_test PRIVATE sample_static)
 canon_apply_target(sample_test)
 
+# Give the project-owned CTest cases a known working directory.
 set(_sample_test_working_dir "${CMAKE_CURRENT_BINARY_DIR}/sample-test-working-directory")
 file(MAKE_DIRECTORY "${_sample_test_working_dir}")
 
@@ -67,6 +69,7 @@ set_tests_properties(
         WORKING_DIRECTORY "${_sample_test_working_dir}"
 )
 
+# Verify the consumer owns and registers its expected CTest cases.
 get_property(_registered_tests DIRECTORY PROPERTY TESTS)
 list(SORT _registered_tests)
 set(_expected_tests sample_test.alternate sample_test.basic)
@@ -83,6 +86,7 @@ function(_require_target_property TARGET PROPERTY EXPECTED)
     endif()
 endfunction()
 
+# Verify every managed compiled target receives the shared Canon policy.
 set(_compiled_targets
     sample_static
     sample_shared
@@ -106,6 +110,7 @@ _require_target_property(sample_shared CXX_EXTENSIONS FALSE)
 _require_target_property(sample_interface INTERFACE_COMPILE_DEFINITIONS CANON_SAMPLE_INTERFACE_VALUE=73)
 _require_target_property(sample_interface INTERFACE_COMPILE_FEATURES cxx_std_17)
 
+# Verify Canon does not leak build options through the unmanaged interface target.
 foreach(_property IN ITEMS INTERFACE_COMPILE_OPTIONS INTERFACE_LINK_OPTIONS)
     get_target_property(_value sample_interface "${_property}")
     if (NOT "${_value}" STREQUAL "_value-NOTFOUND" AND NOT "${_value}" STREQUAL "")
@@ -114,6 +119,7 @@ foreach(_property IN ITEMS INTERFACE_COMPILE_OPTIONS INTERFACE_LINK_OPTIONS)
     endif()
 endforeach()
 
+# Verify Canon does not modify the unmanaged external target.
 get_target_property(_noisy_options noisy COMPILE_OPTIONS)
 if (NOT "${_noisy_options}" STREQUAL "_noisy_options-NOTFOUND"
     AND NOT "${_noisy_options}" STREQUAL "")

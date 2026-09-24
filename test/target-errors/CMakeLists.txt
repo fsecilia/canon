@@ -14,6 +14,7 @@ endif()
 
 include("${CANON_SOURCE_DIR}/cmake/Canon.cmake")
 
+# Trigger the requested invalid canon_apply_target() call during configure.
 if (CANON_TEST_CASE STREQUAL "missing")
     canon_apply_target(missing)
 elseif (CANON_TEST_CASE STREQUAL "interface")

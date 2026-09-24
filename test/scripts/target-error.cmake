@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2026 Frank Secilia
 
+# Validate the inputs supplied by Canon's negative integration-test registration.
 foreach(_required_variable
     CANON_SOURCE_DIR
     CANON_TEST_BINARY_DIR
@@ -13,8 +14,10 @@ foreach(_required_variable
     endif()
 endforeach()
 
+# Start each negative configure from a clean build tree.
 file(REMOVE_RECURSE "${CANON_TEST_BINARY_DIR}")
 
+# Configure the invalid fixture; success is the failure condition for this test.
 execute_process(
     COMMAND
         "${CMAKE_COMMAND}"
@@ -32,6 +35,7 @@ if (_configure_result EQUAL 0)
     message(FATAL_ERROR "Canon target error case '${CANON_TEST_CASE}' unexpectedly configured successfully")
 endif()
 
+# Check the failed configure for every expected diagnostic fragment.
 set(_configure_output "${_configure_stdout}\n${_configure_stderr}")
 set(_expected_errors "${CANON_EXPECTED_ERROR}")
 if (DEFINED CANON_EXPECTED_DETAIL AND NOT "${CANON_EXPECTED_DETAIL}" STREQUAL "")

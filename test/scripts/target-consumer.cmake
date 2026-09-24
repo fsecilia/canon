@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2026 Frank Secilia
 
+# Validate the inputs supplied by Canon's integration-test registration.
 foreach(_required_variable
     CANON_SOURCE_DIR
     CANON_TEST_BINARY_DIR
@@ -13,8 +14,10 @@ foreach(_required_variable
     endif()
 endforeach()
 
+# Start each nested consumer configure from a clean build tree.
 file(REMOVE_RECURSE "${CANON_TEST_BINARY_DIR}")
 
+# Configure the consumer with the active generator, compiler, build type, and toolchain.
 set(_configure_command
     "${CMAKE_COMMAND}"
     -S "${CANON_SOURCE_DIR}/test/consumer"
@@ -28,6 +31,7 @@ if (DEFINED CANON_TOOLCHAIN_FILE AND NOT "${CANON_TOOLCHAIN_FILE}" STREQUAL "")
     list(APPEND _configure_command "-DCMAKE_TOOLCHAIN_FILE=${CANON_TOOLCHAIN_FILE}")
 endif()
 
+# Configure the nested consumer and retain output for a useful failure report.
 execute_process(
     COMMAND ${_configure_command}
     RESULT_VARIABLE _configure_result
@@ -41,6 +45,7 @@ if (NOT _configure_result EQUAL 0)
         "stderr:\n${_configure_stderr}")
 endif()
 
+# Build the consumer and retain output for a useful failure report.
 execute_process(
     COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}"
     RESULT_VARIABLE _build_result
