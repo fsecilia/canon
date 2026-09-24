@@ -37,6 +37,12 @@ _canon_add_script_test(
 )
 
 _canon_add_script_test(
+    targets.release
+    target-consumer.cmake
+    -DCANON_BUILD_TYPE=Release
+)
+
+_canon_add_script_test(
     targets.missing
     target-error.cmake
     -DCANON_TEST_CASE=missing
