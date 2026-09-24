@@ -18,4 +18,9 @@ function(canon_apply_target TARGET)
         message(FATAL_ERROR
             "canon_apply_target(): target '${TARGET}' has type '${_type}', which has no compiled-target Canon policy")
     endif()
+
+    set_target_properties("${TARGET}" PROPERTIES
+        CXX_STANDARD 26
+        CXX_STANDARD_REQUIRED TRUE
+    )
 endfunction()
