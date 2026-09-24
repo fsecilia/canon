@@ -35,3 +35,18 @@ _canon_add_script_test(
     target-consumer.cmake
     -DCANON_BUILD_TYPE=Debug
 )
+
+_canon_add_script_test(
+    targets.missing
+    target-error.cmake
+    -DCANON_TEST_CASE=missing
+    "-DCANON_EXPECTED_ERROR=target 'missing' does not exist"
+)
+
+_canon_add_script_test(
+    targets.interface
+    target-error.cmake
+    -DCANON_TEST_CASE=interface
+    "-DCANON_EXPECTED_ERROR=target 'sample_interface' has type"
+    "-DCANON_EXPECTED_DETAIL='INTERFACE_LIBRARY'"
+)
