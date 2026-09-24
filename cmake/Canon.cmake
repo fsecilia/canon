@@ -20,6 +20,7 @@ function(canon_apply_target TARGET)
     endif()
 
     set_target_properties("${TARGET}" PROPERTIES
+        CXX_SCAN_FOR_MODULES FALSE
         CXX_STANDARD 26
         CXX_STANDARD_REQUIRED TRUE
     )
