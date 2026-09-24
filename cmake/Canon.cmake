@@ -3,6 +3,27 @@
 
 include_guard(GLOBAL)
 
+# Applies the compiler-specific build policy shared by Canon-managed compiled targets.
+function(_canon_apply_compiler_policy TARGET)
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        target_compile_options("${TARGET}" PRIVATE
+            $<$<COMPILE_LANGUAGE:CXX>:-fdiagnostics-color=always>
+            $<$<COMPILE_LANGUAGE:CXX>:-fstrict-aliasing>
+            $<$<COMPILE_LANGUAGE:CXX>:-fsized-deallocation>
+            $<$<COMPILE_LANGUAGE:CXX>:-ftemplate-backtrace-limit=1>
+        )
+    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        target_compile_options("${TARGET}" PRIVATE
+            $<$<COMPILE_LANGUAGE:CXX>:-fcolor-diagnostics>
+            $<$<COMPILE_LANGUAGE:CXX>:-fstrict-aliasing>
+            $<$<COMPILE_LANGUAGE:CXX>:-fsized-deallocation>
+        )
+    else()
+        message(FATAL_ERROR
+            "Canon does not provide compiler policy for '${CMAKE_CXX_COMPILER_ID}'")
+    endif()
+endfunction()
+
 # Applies Canon's private build policy to a target that compiles C++ sources.
 function(canon_apply_target TARGET)
     if (NOT TARGET "${TARGET}")
@@ -28,4 +49,6 @@ function(canon_apply_target TARGET)
         VISIBILITY_INLINES_HIDDEN TRUE
         CXX_VISIBILITY_PRESET hidden
     )
+
+    _canon_apply_compiler_policy("${TARGET}")
 endfunction()
