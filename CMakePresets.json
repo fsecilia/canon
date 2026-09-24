@@ -28,6 +28,9 @@
       "configurePreset": "debug",
       "output": {
         "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
       }
     }
   ],
