@@ -12,10 +12,19 @@ if (NOT PROJECT_IS_TOP_LEVEL)
     return()
 endif()
 
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/CanonConfigVersion.cmake"
+    VERSION "${PROJECT_VERSION}"
+    COMPATIBILITY SameMajorVersion
+    ARCH_INDEPENDENT
+)
+
 install(
     FILES
         cmake/Canon.cmake
         cmake/CanonConfig.cmake
+        "${CMAKE_CURRENT_BINARY_DIR}/CanonConfigVersion.cmake"
     DESTINATION share/cmake/Canon
 )
 
