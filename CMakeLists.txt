@@ -64,6 +64,11 @@ _canon_add_script_test(
 )
 
 _canon_add_script_test(
+    vendored
+    vendored-consumption.cmake
+)
+
+_canon_add_script_test(
     targets.missing
     target-error.cmake
     -DCANON_TEST_CASE=missing
