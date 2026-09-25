@@ -12,7 +12,12 @@ if (NOT PROJECT_IS_TOP_LEVEL)
     return()
 endif()
 
-install(FILES cmake/Canon.cmake DESTINATION share/cmake/Canon)
+install(
+    FILES
+        cmake/Canon.cmake
+        cmake/CanonConfig.cmake
+    DESTINATION share/cmake/Canon
+)
 
 include(CTest)
 if (NOT BUILD_TESTING)
