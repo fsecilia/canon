@@ -69,6 +69,12 @@ _canon_add_script_test(
 )
 
 _canon_add_script_test(
+    installed
+    installed-consumption.cmake
+    "-DCANON_EXPECTED_VERSION=${PROJECT_VERSION}"
+)
+
+_canon_add_script_test(
     targets.missing
     target-error.cmake
     -DCANON_TEST_CASE=missing
