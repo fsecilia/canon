@@ -38,9 +38,39 @@ For each managed target, Canon currently:
 * enables interprocedural optimization for Release builds; and
 * applies the supported compiler-specific build options.
 
+## Shared presets
+
+Canon ships `cmake/CanonPresets.json` for projects that want to share its ordinary development configurations. A
+project can include the fragment from its checked-in `CMakePresets.json`:
+
+```json
+{
+  "version": 10,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 31,
+    "patch": 6
+  },
+  "include": [
+    "external/canon/cmake/CanonPresets.json"
+  ]
+}
+```
+
+The shared fragment provides separate `debug` and `release` configure trees beneath `build/`. Matching
+build and test presets use the same configured tree, and each workflow preset performs configure, build, and CTest in
+sequence.
+
+Machine-specific compiler, toolchain, SDK, and local path choices belong in ignored `CMakeUserPresets.json` files.
+Local presets can inherit the checked-in shared presets normally.
+
+The shared build-tree layout is a development convenience, not a requirement imposed by Canon. Projects may configure
+Canon-managed targets manually or use their own preset layout.
+
 ## Development
 
-Canon follows the repository standards in `standards/`. Configure, build, and run the current integration suite with:
+Canon follows the repository standards in `standards/`. Its root `CMakePresets.json` is for Canon's own integration
+suite rather than for consuming projects. Configure, build, and run that suite with:
 
 ```text
 cmake --workflow --preset debug
