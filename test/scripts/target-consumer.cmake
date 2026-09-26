@@ -30,6 +30,9 @@ set(_configure_command
 if (DEFINED CANON_TOOLCHAIN_FILE AND NOT "${CANON_TOOLCHAIN_FILE}" STREQUAL "")
     list(APPEND _configure_command "-DCMAKE_TOOLCHAIN_FILE=${CANON_TOOLCHAIN_FILE}")
 endif()
+if (DEFINED CANON_ENABLE_WARNINGS)
+    list(APPEND _configure_command "-DCANON_ENABLE_WARNINGS=${CANON_ENABLE_WARNINGS}")
+endif()
 
 # Configure the nested consumer and retain output for a useful failure report.
 execute_process(
@@ -57,4 +60,25 @@ if (NOT _build_result EQUAL 0)
         "Canon consumer build failed (${CANON_BUILD_TYPE})\n"
         "stdout:\n${_build_stdout}\n"
         "stderr:\n${_build_stderr}")
+endif()
+
+# Build the warning probe separately so strict warnings have an observable build result.
+execute_process(
+    COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}" --target warning_probe
+    RESULT_VARIABLE _warning_probe_result
+    OUTPUT_VARIABLE _warning_probe_stdout
+    ERROR_VARIABLE _warning_probe_stderr
+)
+if (CANON_ENABLE_WARNINGS)
+    if (_warning_probe_result EQUAL 0)
+        message(FATAL_ERROR
+            "Canon warning probe unexpectedly built with warnings enabled\n"
+            "stdout:\n${_warning_probe_stdout}\n"
+            "stderr:\n${_warning_probe_stderr}")
+    endif()
+elseif (NOT _warning_probe_result EQUAL 0)
+    message(FATAL_ERROR
+        "Canon warning probe failed with warnings disabled\n"
+        "stdout:\n${_warning_probe_stdout}\n"
+        "stderr:\n${_warning_probe_stderr}")
 endif()
