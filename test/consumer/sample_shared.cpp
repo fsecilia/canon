@@ -3,6 +3,10 @@
 
 #include "sample.hpp"
 
+namespace {
+
 [[maybe_unused]] auto sampleSharedAnswer() -> int {
     return sampleAnswerValue;
 }
+
+} // namespace

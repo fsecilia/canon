@@ -20,6 +20,7 @@ add_library(sample_static STATIC sample_static.cpp)
 add_library(sample_shared SHARED sample_shared.cpp)
 add_library(sample_module MODULE sample_module.cpp)
 add_library(sample_object OBJECT sample_object.cpp)
+add_library(warning_probe STATIC EXCLUDE_FROM_ALL warning_probe.cpp)
 add_library(sample_interface INTERFACE)
 target_sources(
     sample_interface
@@ -35,7 +36,7 @@ set_target_properties(sample_static PROPERTIES CXX_EXTENSIONS TRUE)
 set_target_properties(sample_shared PROPERTIES CXX_EXTENSIONS FALSE)
 
 # Apply Canon to each compiled library target under test.
-foreach(_target IN ITEMS sample_static sample_shared sample_module sample_object)
+foreach(_target IN ITEMS sample_static sample_shared sample_module sample_object warning_probe)
     canon_apply_target("${_target}")
 endforeach()
 
@@ -86,15 +87,57 @@ function(_require_target_property TARGET PROPERTY EXPECTED)
     endif()
 endfunction()
 
+function(_require_compile_option TARGET OPTION)
+    get_target_property(_options "${TARGET}" COMPILE_OPTIONS)
+    if ("${_options}" STREQUAL "_options-NOTFOUND")
+        message(FATAL_ERROR "${TARGET} has no compile options")
+    endif()
+
+    set(_required "$<$<COMPILE_LANGUAGE:CXX>:${OPTION}>")
+    if (NOT "${_required}" IN_LIST _options)
+        message(FATAL_ERROR "${TARGET} is missing compile option '${OPTION}'")
+    endif()
+endfunction()
+
 # Verify every managed compiled target receives the shared Canon policy.
 set(_compiled_targets
     sample_static
     sample_shared
     sample_module
     sample_object
+    warning_probe
     consumer
     sample_test
 )
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    set(_warning_options
+        -Wall
+        -Wextra
+        -Wpedantic
+        -Werror
+        -Wstrict-aliasing=2
+        -Wswitch
+        -Wdouble-promotion
+        -Wfloat-conversion
+        -Wchanges-meaning
+        -Wshadow
+    )
+    set(_warning_suppressions)
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    set(_warning_options
+        -Weverything
+        -Werror
+        -Wswitch
+        -Wdouble-promotion
+        -Wfloat-conversion
+        -Wshadow-all
+    )
+    set(_warning_suppressions
+        -Wno-c++98-compat
+    )
+endif()
+
 foreach(_target IN LISTS _compiled_targets)
     _require_target_property("${_target}" CXX_SCAN_FOR_MODULES FALSE)
     _require_target_property("${_target}" CXX_STANDARD 26)
@@ -103,6 +146,20 @@ foreach(_target IN LISTS _compiled_targets)
     _require_target_property("${_target}" POSITION_INDEPENDENT_CODE TRUE)
     _require_target_property("${_target}" VISIBILITY_INLINES_HIDDEN TRUE)
     _require_target_property("${_target}" CXX_VISIBILITY_PRESET hidden)
+
+    if (CANON_ENABLE_WARNINGS)
+        foreach(_option IN LISTS _warning_options _warning_suppressions)
+            _require_compile_option("${_target}" "${_option}")
+        endforeach()
+    else()
+        get_target_property(_options "${_target}" COMPILE_OPTIONS)
+        foreach(_option IN LISTS _options)
+            if (_option MATCHES ":-W")
+                message(FATAL_ERROR
+                    "warnings are disabled but ${_target} has warning option '${_option}'")
+            endif()
+        endforeach()
+    endif()
 endforeach()
 
 _require_target_property(sample_static CXX_EXTENSIONS TRUE)

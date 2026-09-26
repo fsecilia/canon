@@ -10,7 +10,10 @@
       "name": "_canon-base",
       "hidden": true,
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/${presetName}"
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CANON_ENABLE_WARNINGS": true
+      }
     },
     {
       "name": "debug",

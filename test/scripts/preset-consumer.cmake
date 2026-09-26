@@ -82,3 +82,9 @@ if (NOT "${_build_type_line}" STREQUAL "CMAKE_BUILD_TYPE:STRING=${_expected_buil
     message(FATAL_ERROR
         "${_expected_build_type} workflow configured the wrong build type: '${_build_type_line}'")
 endif()
+
+file(STRINGS "${_cache}" _warnings_line REGEX "^CANON_ENABLE_WARNINGS:BOOL=")
+if (NOT "${_warnings_line}" STREQUAL "CANON_ENABLE_WARNINGS:BOOL=TRUE")
+    message(FATAL_ERROR
+        "${_expected_build_type} workflow did not enable Canon warnings: '${_warnings_line}'")
+endif()

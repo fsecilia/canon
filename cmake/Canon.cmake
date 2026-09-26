@@ -3,24 +3,64 @@
 
 include_guard(GLOBAL)
 
+option(CANON_ENABLE_WARNINGS "Enable Canon's strict compiler warnings." OFF)
+
+function(_canon_apply_cxx_option TARGET OPTION)
+    target_compile_options("${TARGET}" PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${OPTION}>")
+endfunction()
+
 # Applies the compiler-specific build policy shared by Canon-managed compiled targets.
 function(_canon_apply_compiler_policy TARGET)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        target_compile_options("${TARGET}" PRIVATE
-            $<$<COMPILE_LANGUAGE:CXX>:-fdiagnostics-color=always>
-            $<$<COMPILE_LANGUAGE:CXX>:-fstrict-aliasing>
-            $<$<COMPILE_LANGUAGE:CXX>:-fsized-deallocation>
-            $<$<COMPILE_LANGUAGE:CXX>:-ftemplate-backtrace-limit=1>
+        set(_build_options
+            -fdiagnostics-color=always
+            -fstrict-aliasing
+            -fsized-deallocation
+            -ftemplate-backtrace-limit=1
         )
+        set(_warning_options
+            -Wall
+            -Wextra
+            -Wpedantic
+            -Werror
+            -Wstrict-aliasing=2
+            -Wswitch
+            -Wdouble-promotion
+            -Wfloat-conversion
+            -Wchanges-meaning
+            -Wshadow
+        )
+        set(_warning_suppressions)
     elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        target_compile_options("${TARGET}" PRIVATE
-            $<$<COMPILE_LANGUAGE:CXX>:-fcolor-diagnostics>
-            $<$<COMPILE_LANGUAGE:CXX>:-fstrict-aliasing>
-            $<$<COMPILE_LANGUAGE:CXX>:-fsized-deallocation>
+        set(_build_options
+            -fcolor-diagnostics
+            -fstrict-aliasing
+            -fsized-deallocation
+        )
+        set(_warning_options
+            -Weverything
+            -Werror
+            -Wswitch
+            -Wdouble-promotion
+            -Wfloat-conversion
+            -Wshadow-all
+        )
+        set(_warning_suppressions
+            -Wno-c++98-compat
         )
     else()
         message(FATAL_ERROR
             "Canon does not provide compiler policy for '${CMAKE_CXX_COMPILER_ID}'")
+    endif()
+
+    foreach(_option IN LISTS _build_options)
+        _canon_apply_cxx_option("${TARGET}" "${_option}")
+    endforeach()
+
+    if (CANON_ENABLE_WARNINGS)
+        foreach(_option IN LISTS _warning_options _warning_suppressions)
+            _canon_apply_cxx_option("${TARGET}" "${_option}")
+        endforeach()
     endif()
 endfunction()
 

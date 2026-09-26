@@ -64,6 +64,13 @@ _canon_add_script_test(
 )
 
 _canon_add_script_test(
+    targets.warnings
+    target-consumer.cmake
+    -DCANON_BUILD_TYPE=Debug
+    -DCANON_ENABLE_WARNINGS=ON
+)
+
+_canon_add_script_test(
     vendored
     vendored-consumption.cmake
 )

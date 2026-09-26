@@ -38,6 +38,16 @@ For each managed target, Canon currently:
 * enables interprocedural optimization for Release builds; and
 * applies the supported compiler-specific build options.
 
+## Warnings
+
+Warnings are controlled by `CANON_ENABLE_WARNINGS`. It is off by default. Canon's shared development presets turn it on.
+
+This keeps the distinction explicit. Family development builds use strict warnings. A project configured normally does
+not inherit warnings-as-errors merely because it uses Canon.
+
+With warnings enabled, GCC uses the warning set maintained by Canon and treats warnings as errors. Clang uses
+`-Weverything`, treats warnings as errors, and suppresses only the intentional C++98 compatibility diagnostic.
+
 ## Shared presets
 
 Canon ships `cmake/CanonPresets.json` for projects that want to share its ordinary development configurations. A
@@ -57,9 +67,9 @@ project can include the fragment from its checked-in `CMakePresets.json`:
 }
 ```
 
-The shared fragment provides separate `debug` and `release` configure trees beneath `build/`. Matching
-build and test presets use the same configured tree, and each workflow preset performs configure, build, and CTest in
-sequence.
+The shared fragment provides separate `debug` and `release` configure trees beneath `build/`. Both development
+configurations enable Canon's strict warnings. Matching build and test presets use the same configured tree, and each
+workflow preset performs configure, build, and CTest in sequence.
 
 Machine-specific compiler, toolchain, SDK, and local path choices belong in ignored `CMakeUserPresets.json` files.
 Local presets can inherit the checked-in shared presets normally.
