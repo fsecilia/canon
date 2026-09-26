@@ -35,6 +35,8 @@ endif()
 
 enable_language(CXX)
 
+find_program(_canon_clang_tidy NAMES clang-tidy)
+
 function(_canon_add_script_test NAME SCRIPT)
     add_test(
         NAME "canon.integration.${NAME}"
@@ -69,6 +71,16 @@ _canon_add_script_test(
     -DCANON_BUILD_TYPE=Debug
     -DCANON_ENABLE_WARNINGS=ON
 )
+
+if (_canon_clang_tidy)
+    _canon_add_script_test(
+        tidy
+        tooling-consumer.cmake
+        "-DCANON_CLANG_TIDY_EXECUTABLE=${_canon_clang_tidy}"
+    )
+else()
+    message(STATUS "Canon clang-tidy validation unavailable: clang-tidy was not found")
+endif()
 
 _canon_add_script_test(
     vendored
