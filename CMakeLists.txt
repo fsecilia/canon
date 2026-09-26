@@ -7,6 +7,27 @@ project(Canon VERSION 0.1.0 LANGUAGES NONE)
 
 include(cmake/Canon.cmake)
 
+# Keep Canon's development setup out of projects that vendor it as a subdirectory.
+if (NOT PROJECT_IS_TOP_LEVEL)
+    return()
+endif()
+
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/CanonConfigVersion.cmake"
+    VERSION "${PROJECT_VERSION}"
+    COMPATIBILITY SameMajorVersion
+    ARCH_INDEPENDENT
+)
+
+install(
+    FILES
+        cmake/Canon.cmake
+        cmake/CanonConfig.cmake
+        "${CMAKE_CURRENT_BINARY_DIR}/CanonConfigVersion.cmake"
+    DESTINATION share/cmake/Canon
+)
+
 include(CTest)
 if (NOT BUILD_TESTING)
     return()
@@ -40,6 +61,17 @@ _canon_add_script_test(
     targets.release
     target-consumer.cmake
     -DCANON_BUILD_TYPE=Release
+)
+
+_canon_add_script_test(
+    vendored
+    vendored-consumption.cmake
+)
+
+_canon_add_script_test(
+    installed
+    installed-consumption.cmake
+    "-DCANON_EXPECTED_VERSION=${PROJECT_VERSION}"
 )
 
 _canon_add_script_test(
