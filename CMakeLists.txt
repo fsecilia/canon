@@ -75,6 +75,24 @@ _canon_add_script_test(
 )
 
 _canon_add_script_test(
+    presets.listings
+    preset-consumer.cmake
+    -DCANON_TEST_CASE=listings
+)
+
+_canon_add_script_test(
+    presets.debug
+    preset-consumer.cmake
+    -DCANON_TEST_CASE=debug
+)
+
+_canon_add_script_test(
+    presets.release
+    preset-consumer.cmake
+    -DCANON_TEST_CASE=release
+)
+
+_canon_add_script_test(
     targets.missing
     target-error.cmake
     -DCANON_TEST_CASE=missing
