@@ -5,6 +5,7 @@ include_guard(GLOBAL)
 
 option(CANON_ENABLE_WARNINGS "Enable Canon's strict compiler warnings." OFF)
 option(CANON_ENABLE_TIDY "Run clang-tidy as part of compiling Canon-managed targets." OFF)
+option(CANON_ENABLE_DOCUMENTATION "Enable the project documentation target." OFF)
 
 function(_canon_apply_cxx_option TARGET OPTION)
     target_compile_options("${TARGET}" PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${OPTION}>")
@@ -145,5 +146,49 @@ function(canon_apply_library TARGET)
             TYPE HEADERS
             BASE_DIRS "${_include_dir}"
             FILES "${_header}"
+    )
+endfunction()
+
+# Adds a conventional Doxygen target using CMake's native FindDoxygen integration.
+function(canon_add_documentation)
+    find_package(Doxygen 1.9 REQUIRED OPTIONAL_COMPONENTS dot)
+
+    set(_readme "${PROJECT_SOURCE_DIR}/README.md")
+    if (EXISTS "${_readme}")
+        set(DOXYGEN_USE_MDFILE_AS_MAINPAGE "${_readme}")
+    endif()
+
+    set(DOXYGEN_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/doxygen")
+    set(DOXYGEN_EXCLUDE
+        "${PROJECT_BINARY_DIR}"
+        "${PROJECT_SOURCE_DIR}/build"
+        "${PROJECT_SOURCE_DIR}/external"
+        "${PROJECT_SOURCE_DIR}/standards"
+        "${PROJECT_SOURCE_DIR}/test"
+    )
+    set(DOXYGEN_EXCLUDE_PATTERNS "*_test.cpp")
+    set(DOXYGEN_STRIP_FROM_PATH "${PROJECT_SOURCE_DIR}")
+    set(DOXYGEN_QUIET YES)
+    set(DOXYGEN_WARN_AS_ERROR FAIL_ON_WARNINGS)
+    set(DOXYGEN_WARN_LOGFILE "${PROJECT_BINARY_DIR}/doxygen-warnings.log")
+    set(DOXYGEN_JAVADOC_AUTOBRIEF YES)
+    set(DOXYGEN_QT_AUTOBRIEF YES)
+    set(DOXYGEN_ENABLE_PREPROCESSING YES)
+    set(DOXYGEN_EXTRACT_ALL NO)
+    set(DOXYGEN_EXCLUDE_SYMBOLS "*::detail*")
+
+    doxygen_add_docs(
+        doc
+        "${PROJECT_SOURCE_DIR}"
+        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+        COMMENT "Generating API documentation"
+    )
+
+    add_custom_target(
+        doc-clean
+        COMMAND "${CMAKE_COMMAND}" -E rm -rf "${DOXYGEN_OUTPUT_DIRECTORY}"
+        COMMAND "${CMAKE_COMMAND}" -E rm -f "${DOXYGEN_WARN_LOGFILE}"
+        COMMENT "Cleaning generated API documentation"
+        VERBATIM
     )
 endfunction()
