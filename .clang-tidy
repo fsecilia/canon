@@ -27,6 +27,5 @@ CheckOptions:
   readability-identifier-naming.PrivateMemberCase: camelBack
   readability-identifier-naming.PrivateMemberSuffix: _
   readability-identifier-naming.NamespaceCase: lower_case
-  readability-identifier-naming.MacroDefinitionCase: UPPER_CASE
   readability-identifier-naming.TypeTemplateParameterCase: CamelCase
   readability-identifier-naming.ValueTemplateParameterCase: camelBack
