@@ -5,7 +5,6 @@ foreach(_required_variable
     CANON_SOURCE_DIR
     CANON_TEST_BINARY_DIR
     CANON_CXX_COMPILER
-    CANON_TEST_CASE
 )
     if (NOT DEFINED ${_required_variable} OR "${${_required_variable}}" STREQUAL "")
         message(FATAL_ERROR "${_required_variable} is required")
@@ -49,42 +48,33 @@ function(_run DESCRIPTION)
     set(_run_stdout "${_stdout}" PARENT_SCOPE)
 endfunction()
 
-if ("${CANON_TEST_CASE}" STREQUAL "listings")
-    _run("Preset listing" "${CMAKE_COMMAND}" --list-presets=all)
-    foreach(_preset IN ITEMS debug release)
-        if (NOT _run_stdout MATCHES "\"${_preset}\"")
-            message(FATAL_ERROR "Preset listing did not expose '${_preset}'")
-        endif()
-    endforeach()
-    if (_run_stdout MATCHES "\"_canon-base\"")
-        message(FATAL_ERROR "Preset listing unexpectedly exposed hidden preset '_canon-base'")
+function(_expect_cache_value PRESET VARIABLE TYPE EXPECTED_VALUE DESCRIPTION)
+    set(_cache "${_source_dir}/build/${PRESET}/CMakeCache.txt")
+    if (NOT EXISTS "${_cache}")
+        message(FATAL_ERROR "${DESCRIPTION} did not create '${_cache}'")
     endif()
-    return()
-endif()
 
-if ("${CANON_TEST_CASE}" STREQUAL "debug")
-    set(_expected_build_type Debug)
-elseif ("${CANON_TEST_CASE}" STREQUAL "release")
-    set(_expected_build_type Release)
-else()
-    message(FATAL_ERROR "Unknown preset test case '${CANON_TEST_CASE}'")
-endif()
+    file(STRINGS "${_cache}" _cache_line REGEX "^${VARIABLE}:${TYPE}=")
+    if (NOT "${_cache_line}" STREQUAL "${VARIABLE}:${TYPE}=${EXPECTED_VALUE}")
+        message(FATAL_ERROR
+            "${DESCRIPTION} configured the wrong ${VARIABLE}: '${_cache_line}'")
+    endif()
+endfunction()
 
-_run("${_expected_build_type} workflow" "${CMAKE_COMMAND}" --workflow --preset "${CANON_TEST_CASE}")
-
-set(_cache "${_source_dir}/build/${CANON_TEST_CASE}/CMakeCache.txt")
-if (NOT EXISTS "${_cache}")
-    message(FATAL_ERROR "${_expected_build_type} workflow did not create '${_cache}'")
-endif()
-
-file(STRINGS "${_cache}" _build_type_line REGEX "^CMAKE_BUILD_TYPE:STRING=")
-if (NOT "${_build_type_line}" STREQUAL "CMAKE_BUILD_TYPE:STRING=${_expected_build_type}")
-    message(FATAL_ERROR
-        "${_expected_build_type} workflow configured the wrong build type: '${_build_type_line}'")
-endif()
-
-file(STRINGS "${_cache}" _warnings_line REGEX "^CANON_ENABLE_WARNINGS:BOOL=")
-if (NOT "${_warnings_line}" STREQUAL "CANON_ENABLE_WARNINGS:BOOL=TRUE")
-    message(FATAL_ERROR
-        "${_expected_build_type} workflow did not enable Canon warnings: '${_warnings_line}'")
-endif()
+function(_run_workflow PRESET BUILD_TYPE)
+    _run("${PRESET} workflow" "${CMAKE_COMMAND}" --workflow --preset "${PRESET}")
+    _expect_cache_value(
+        "${PRESET}"
+        CMAKE_BUILD_TYPE
+        STRING
+        "${BUILD_TYPE}"
+        "${PRESET} workflow"
+    )
+    _expect_cache_value(
+        "${PRESET}"
+        CANON_ENABLE_WARNINGS
+        BOOL
+        TRUE
+        "${PRESET} workflow"
+    )
+endfunction()

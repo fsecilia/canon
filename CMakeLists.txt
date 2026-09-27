@@ -95,20 +95,17 @@ _canon_add_script_test(
 
 _canon_add_script_test(
     presets.listings
-    preset-consumer.cmake
-    -DCANON_TEST_CASE=listings
+    preset-listings.cmake
 )
 
 _canon_add_script_test(
     presets.debug
-    preset-consumer.cmake
-    -DCANON_TEST_CASE=debug
+    preset-debug.cmake
 )
 
 _canon_add_script_test(
     presets.release
-    preset-consumer.cmake
-    -DCANON_TEST_CASE=release
+    preset-release.cmake
 )
 
 _canon_add_script_test(
