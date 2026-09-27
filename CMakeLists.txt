@@ -130,3 +130,23 @@ _canon_add_script_test(
     "-DCANON_EXPECTED_ERROR=target 'sample_interface' has type"
     "-DCANON_EXPECTED_DETAIL='INTERFACE_LIBRARY'"
 )
+
+_canon_add_script_test(
+    libraries.missing
+    library-missing-error.cmake
+)
+
+_canon_add_script_test(
+    libraries.executable
+    library-executable-error.cmake
+)
+
+_canon_add_script_test(
+    libraries.object
+    library-object-error.cmake
+)
+
+_canon_add_script_test(
+    libraries.interface
+    library-interface-error.cmake
+)
