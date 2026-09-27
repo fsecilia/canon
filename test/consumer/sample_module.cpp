@@ -1,12 +1,9 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Frank Secilia
 
+#include "sample_module.hpp"
 #include "sample.hpp"
 
-namespace {
-
-[[maybe_unused]] auto sampleModuleAnswer() -> int {
+auto sampleModuleAnswer() -> int {
     return sampleAnswerValue;
 }
-
-} // namespace
