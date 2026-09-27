@@ -38,6 +38,27 @@ For each managed target, Canon currently:
 * enables interprocedural optimization for Release builds; and
 * applies the supported compiler-specific build options.
 
+## Libraries and export headers
+
+Use `canon_apply_library()` when a STATIC, SHARED, or MODULE library needs Canon's generated public export header:
+
+```cmake
+add_library(example SHARED example.cpp)
+canon_apply_library(example)
+```
+
+`canon_apply_library()` first calls `canon_apply_target()`, so the library receives the common compiled-target policy. It then uses CMake's `GenerateExportHeader` module to create `<target>/export.hpp`. Canon publishes that file through a public `HEADERS` file set named `canon_export_header`.
+
+The primary export annotation uses the target name normalized as a lowercase C identifier plus `_api`. For a target named `example`, a public declaration can use the generated header like this:
+
+```cpp
+#include "example/export.hpp"
+
+example_api auto exampleAnswer() -> int;
+```
+
+Canon does not install or export the library. Projects use normal CMake install, export, and package commands. They may install `canon_export_header` with the library's other file sets. INTERFACE libraries have no compiled-library policy; manage their headers and usage requirements with ordinary CMake.
+
 ## Warnings
 
 Warnings are controlled by `CANON_ENABLE_WARNINGS`. It is off by default. Canon's shared development presets turn it on.
