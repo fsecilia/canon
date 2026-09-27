@@ -117,10 +117,8 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         -Wpedantic
         -Werror
         -Wstrict-aliasing=2
-        -Wswitch
         -Wdouble-promotion
         -Wfloat-conversion
-        -Wchanges-meaning
         -Wshadow
     )
     set(_warning_suppressions)

@@ -25,10 +25,8 @@ function(_canon_apply_compiler_policy TARGET)
             -Wpedantic
             -Werror
             -Wstrict-aliasing=2
-            -Wswitch
             -Wdouble-promotion
             -Wfloat-conversion
-            -Wchanges-meaning
             -Wshadow
         )
         set(_warning_suppressions)
