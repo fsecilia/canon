@@ -30,6 +30,15 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
       }
+    },
+    {
+      "name": "tidy",
+      "displayName": "clang-tidy",
+      "inherits": "_canon-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CANON_ENABLE_TIDY": true
+      }
     }
   ],
   "buildPresets": [
@@ -40,6 +49,10 @@
     {
       "name": "release",
       "configurePreset": "release"
+    },
+    {
+      "name": "tidy",
+      "configurePreset": "tidy"
     }
   ],
   "testPresets": [
@@ -56,6 +69,16 @@
     {
       "name": "release",
       "configurePreset": "release",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    },
+    {
+      "name": "tidy",
+      "configurePreset": "tidy",
       "output": {
         "outputOnFailure": true
       },
@@ -96,6 +119,23 @@
         {
           "type": "test",
           "name": "release"
+        }
+      ]
+    },
+    {
+      "name": "tidy",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "tidy"
+        },
+        {
+          "type": "build",
+          "name": "tidy"
+        },
+        {
+          "type": "test",
+          "name": "tidy"
         }
       ]
     }

@@ -4,6 +4,7 @@
 include_guard(GLOBAL)
 
 option(CANON_ENABLE_WARNINGS "Enable Canon's strict compiler warnings." OFF)
+option(CANON_ENABLE_TIDY "Run clang-tidy as part of compiling Canon-managed targets." OFF)
 
 function(_canon_apply_cxx_option TARGET OPTION)
     target_compile_options("${TARGET}" PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${OPTION}>")
@@ -24,10 +25,8 @@ function(_canon_apply_compiler_policy TARGET)
             -Wpedantic
             -Werror
             -Wstrict-aliasing=2
-            -Wswitch
             -Wdouble-promotion
             -Wfloat-conversion
-            -Wchanges-meaning
             -Wshadow
         )
         set(_warning_suppressions)
@@ -64,6 +63,21 @@ function(_canon_apply_compiler_policy TARGET)
     endif()
 endfunction()
 
+# Lets CMake drive clang-tidy with the real compile command for each source file.
+function(_canon_apply_tidy TARGET)
+    if (NOT CANON_ENABLE_TIDY)
+        return()
+    endif()
+
+    find_program(
+        CANON_CLANG_TIDY_EXECUTABLE
+        NAMES clang-tidy
+        REQUIRED
+        DOC "clang-tidy executable used by Canon"
+    )
+    set_property(TARGET "${TARGET}" PROPERTY CXX_CLANG_TIDY "${CANON_CLANG_TIDY_EXECUTABLE}")
+endfunction()
+
 # Applies Canon's private build policy to a target that compiles C++ sources.
 function(canon_apply_target TARGET)
     if (NOT TARGET "${TARGET}")
@@ -91,4 +105,5 @@ function(canon_apply_target TARGET)
     )
 
     _canon_apply_compiler_policy("${TARGET}")
+    _canon_apply_tidy("${TARGET}")
 endfunction()

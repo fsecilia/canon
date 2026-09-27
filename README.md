@@ -48,6 +48,14 @@ not inherit warnings-as-errors merely because it uses Canon.
 With warnings enabled, GCC uses the warning set maintained by Canon and treats warnings as errors. Clang uses
 `-Weverything`, treats warnings as errors, and suppresses only the intentional C++98 compatibility diagnostic.
 
+## clang-tidy
+
+Running clang-tidy is enabled by `CANON_ENABLE_TIDY`. It is off by default. Canon's shared development presets turn it on.
+
+When enabled, Canon locates clang-tidy and attaches it to managed targets through CMake's native `CXX_CLANG_TIDY` target property. CMake then supplies the real compiler invocation for each translation unit.
+
+The checked-in `.clang-tidy` file comes from `standards/`. Editors, CI, and direct tool invocations can use the same configuration without going through Canon.
+
 ## Shared presets
 
 Canon ships `cmake/CanonPresets.json` for projects that want to share its ordinary development configurations. A

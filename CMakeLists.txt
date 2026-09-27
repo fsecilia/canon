@@ -35,6 +35,8 @@ endif()
 
 enable_language(CXX)
 
+find_program(_canon_clang_tidy NAMES clang-tidy)
+
 function(_canon_add_script_test NAME SCRIPT)
     add_test(
         NAME "canon.integration.${NAME}"
@@ -70,6 +72,16 @@ _canon_add_script_test(
     -DCANON_ENABLE_WARNINGS=ON
 )
 
+if (_canon_clang_tidy)
+    _canon_add_script_test(
+        tidy
+        tooling-consumer.cmake
+        "-DCANON_CLANG_TIDY_EXECUTABLE=${_canon_clang_tidy}"
+    )
+else()
+    message(STATUS "Canon clang-tidy validation unavailable: clang-tidy was not found")
+endif()
+
 _canon_add_script_test(
     vendored
     vendored-consumption.cmake
@@ -83,21 +95,26 @@ _canon_add_script_test(
 
 _canon_add_script_test(
     presets.listings
-    preset-consumer.cmake
-    -DCANON_TEST_CASE=listings
+    preset-listings.cmake
 )
 
 _canon_add_script_test(
     presets.debug
-    preset-consumer.cmake
-    -DCANON_TEST_CASE=debug
+    preset-debug.cmake
 )
 
 _canon_add_script_test(
     presets.release
-    preset-consumer.cmake
-    -DCANON_TEST_CASE=release
+    preset-release.cmake
 )
+
+if (_canon_clang_tidy)
+    _canon_add_script_test(
+        presets.tidy
+        preset-tidy.cmake
+        "-DCANON_CLANG_TIDY_EXECUTABLE=${_canon_clang_tidy}"
+    )
+endif()
 
 _canon_add_script_test(
     targets.missing
