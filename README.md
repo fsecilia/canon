@@ -63,7 +63,7 @@ Canon does not install or export the library. Projects use normal CMake install,
 
 Warnings are controlled by `CANON_ENABLE_WARNINGS`. It is off by default. Canon's shared development presets turn it on.
 
-This keeps the distinction explicit. Family development builds use strict warnings. A project configured normally doesnot inherit warnings-as-errors merely because it uses Canon.
+This keeps the distinction explicit. Family development builds use strict warnings. A project configured normally does not inherit warnings-as-errors merely because it uses Canon.
 
 With warnings enabled, GCC uses the warning set maintained by Canon and treats warnings as errors. Clang uses `-Weverything`, treats warnings as errors, and suppresses only the intentional C++98 compatibility diagnostic.
 
