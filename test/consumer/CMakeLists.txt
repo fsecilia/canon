@@ -35,15 +35,19 @@ target_compile_features(sample_interface INTERFACE cxx_std_17)
 set_target_properties(sample_static PROPERTIES CXX_EXTENSIONS TRUE)
 set_target_properties(sample_shared PROPERTIES CXX_EXTENSIONS FALSE)
 
-# Apply Canon to each compiled library target under test.
-foreach(_target IN ITEMS sample_static sample_shared sample_module sample_object warning_probe)
+# Apply library policy where export headers are part of the contract.
+foreach(_library IN ITEMS sample_static sample_shared sample_module)
+    canon_apply_library("${_library}")
+endforeach()
+
+foreach(_target IN ITEMS sample_object warning_probe)
     canon_apply_target("${_target}")
 endforeach()
 
 target_link_libraries(noisy PRIVATE sample_interface)
 
 add_executable(consumer main.cpp)
-target_link_libraries(consumer PRIVATE sample_static sample_interface noisy)
+target_link_libraries(consumer PRIVATE sample_static sample_shared sample_interface noisy)
 canon_apply_target(consumer)
 
 add_executable(sample_test sample_test.cpp)
@@ -157,6 +161,15 @@ foreach(_target IN LISTS _compiled_targets)
                     "warnings are disabled but ${_target} has warning option '${_option}'")
             endif()
         endforeach()
+    endif()
+endforeach()
+
+# Verify every managed library publishes its generated export header as a public file set.
+foreach(_library IN ITEMS sample_static sample_shared sample_module)
+    get_target_property(_header_sets "${_library}" INTERFACE_HEADER_SETS)
+    if (NOT "canon_export_header" IN_LIST _header_sets)
+        message(FATAL_ERROR
+            "Canon export header for ${_library} is not a public HEADERS file set")
     endif()
 endforeach()
 

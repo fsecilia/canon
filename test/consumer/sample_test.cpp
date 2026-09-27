@@ -2,7 +2,7 @@
 // Copyright (c) 2026 Frank Secilia
 
 #include "sample.hpp"
-
+#include "sample_static.hpp"
 #include <cstdlib>
 #include <filesystem>
 #include <string_view>

@@ -3,4 +3,6 @@
 
 #pragma once
 
-inline constexpr auto sampleAnswerValue = 73;
+#include "sample_static/export.hpp"
+
+sample_static_api auto sampleAnswer() -> int;

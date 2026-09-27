@@ -107,3 +107,43 @@ function(canon_apply_target TARGET)
     _canon_apply_compiler_policy("${TARGET}")
     _canon_apply_tidy("${TARGET}")
 endfunction()
+
+# Adds Canon's compiled-target policy and a generated public export header to a library.
+function(canon_apply_library TARGET)
+    if (NOT TARGET "${TARGET}")
+        message(FATAL_ERROR "canon_apply_library(): target '${TARGET}' does not exist")
+    endif()
+
+    get_target_property(_type "${TARGET}" TYPE)
+    if (NOT _type STREQUAL "STATIC_LIBRARY"
+        AND NOT _type STREQUAL "SHARED_LIBRARY"
+        AND NOT _type STREQUAL "MODULE_LIBRARY")
+        message(FATAL_ERROR
+            "canon_apply_library(): target '${TARGET}' must be a STATIC, SHARED, or MODULE library")
+    endif()
+
+    canon_apply_target("${TARGET}")
+
+    string(MAKE_C_IDENTIFIER "${TARGET}" _api_name)
+    string(TOLOWER "${_api_name}" _api_name)
+
+    include(GenerateExportHeader)
+    get_target_property(_target_binary_dir "${TARGET}" BINARY_DIR)
+    set(_include_dir "${_target_binary_dir}/canon/include")
+    set(_header "${_include_dir}/${TARGET}/export.hpp")
+    file(MAKE_DIRECTORY "${_include_dir}/${TARGET}")
+
+    generate_export_header(
+        "${TARGET}"
+        EXPORT_FILE_NAME "${_header}"
+        EXPORT_MACRO_NAME "${_api_name}_api"
+    )
+    target_sources(
+        "${TARGET}"
+        PUBLIC
+            FILE_SET canon_export_header
+            TYPE HEADERS
+            BASE_DIRS "${_include_dir}"
+            FILES "${_header}"
+    )
+endfunction()
