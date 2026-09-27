@@ -108,6 +108,14 @@ _canon_add_script_test(
     preset-release.cmake
 )
 
+if (_canon_clang_tidy)
+    _canon_add_script_test(
+        presets.tidy
+        preset-tidy.cmake
+        "-DCANON_CLANG_TIDY_EXECUTABLE=${_canon_clang_tidy}"
+    )
+endif()
+
 _canon_add_script_test(
     targets.missing
     target-error.cmake

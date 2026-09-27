@@ -4,7 +4,7 @@
 include("${CMAKE_CURRENT_LIST_DIR}/preset-common.cmake")
 
 _run("Preset listing" "${CMAKE_COMMAND}" --list-presets=all)
-foreach(_preset IN ITEMS debug release)
+foreach(_preset IN ITEMS debug release tidy)
     if (NOT _run_stdout MATCHES "\"${_preset}\"")
         message(FATAL_ERROR "Preset listing did not expose '${_preset}'")
     endif()
