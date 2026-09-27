@@ -3,7 +3,7 @@
 
 cmake_minimum_required(VERSION 3.31.6)
 
-project(CanonPresetFixture VERSION 0.1.0 LANGUAGES CXX)
+project(CanonPresetFixture VERSION LANGUAGES CXX)
 
 include(CTest)
 add_subdirectory(external/canon EXCLUDE_FROM_ALL)
