@@ -75,6 +75,22 @@ When enabled, Canon locates clang-tidy and attaches it to managed targets throug
 
 The checked-in `.clang-tidy` file comes from `standards/`. Editors, CI, and direct tool invocations can use the same configuration without going through Canon.
 
+## Documentation
+
+Call `canon_add_documentation()` when a project provides Doxygen documentation:
+
+```cmake
+canon_add_documentation()
+```
+
+The call adds `doc` and `doc-clean` targets. Canon looks for Doxygen 1.9 or newer during configuration, but a missing Doxygen installation does not make configuration or ordinary builds fail. If Doxygen was not found, building `doc` fails with a diagnostic that asks the user to install Doxygen and reconfigure. `doc-clean` remains available either way.
+
+Canon uses CMake's native `FindDoxygen` module and `doxygen_add_docs()`. When Doxygen is available, generated documentation is written beneath `${PROJECT_BINARY_DIR}/doxygen`, and Doxygen warnings fail the `doc` build. The warning log is kept at `${PROJECT_BINARY_DIR}/doxygen-warnings.log`.
+
+Canon uses the project `README.md` as the main page when one exists. Documentation input excludes the active project binary tree, the conventional source-side `build/` tree, `external/`, `standards/`, `test/`, and files matching `*_test.cpp`. Symbols beneath `detail` namespaces are also excluded. Graphviz support is used when CMake's Doxygen finder discovers `dot`; it is not required.
+
+Canon does not generate documentation during ordinary builds or installation, and it does not install generated HTML. Projects that distribute documentation can build `doc` explicitly and publish or install the resulting files with normal CMake mechanisms.
+
 ## Shared presets
 
 Canon ships `cmake/CanonPresets.json` for projects that want to share its ordinary development configurations. A project can include the fragment from its checked-in `CMakePresets.json`:

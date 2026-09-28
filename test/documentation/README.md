@@ -1,0 +1,3 @@
+# Documentation Fixture
+
+CANON_DOCUMENTATION_MAIN_PAGE_MARKER
