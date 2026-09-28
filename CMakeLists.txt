@@ -89,6 +89,11 @@ if (Doxygen_FOUND)
         documentation-consumer.cmake
         "-DCANON_DOXYGEN_EXECUTABLE=${DOXYGEN_EXECUTABLE}"
     )
+    _canon_add_script_test(
+        documentation-warning
+        documentation-warning.cmake
+        "-DCANON_DOXYGEN_EXECUTABLE=${DOXYGEN_EXECUTABLE}"
+    )
 else()
     message(STATUS "Canon documentation validation unavailable: Doxygen 1.9 or newer was not found")
 endif()
