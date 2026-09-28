@@ -99,6 +99,11 @@ else()
 endif()
 
 _canon_add_script_test(
+    documentation-unavailable
+    documentation-unavailable.cmake
+)
+
+_canon_add_script_test(
     vendored
     vendored-consumption.cmake
 )
