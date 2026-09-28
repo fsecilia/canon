@@ -36,6 +36,7 @@ endif()
 enable_language(CXX)
 
 find_program(_canon_clang_tidy NAMES clang-tidy)
+find_package(Doxygen 1.9 QUIET OPTIONAL_COMPONENTS dot)
 
 function(_canon_add_script_test NAME SCRIPT)
     add_test(
@@ -80,6 +81,16 @@ if (_canon_clang_tidy)
     )
 else()
     message(STATUS "Canon clang-tidy validation unavailable: clang-tidy was not found")
+endif()
+
+if (Doxygen_FOUND)
+    _canon_add_script_test(
+        documentation
+        documentation-consumer.cmake
+        "-DCANON_DOXYGEN_EXECUTABLE=${DOXYGEN_EXECUTABLE}"
+    )
+else()
+    message(STATUS "Canon documentation validation unavailable: Doxygen 1.9 or newer was not found")
 endif()
 
 _canon_add_script_test(
