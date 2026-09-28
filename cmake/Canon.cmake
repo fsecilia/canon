@@ -327,14 +327,54 @@ function(_canon_mark_package_binary)
     _canon_write_package_version_file()
 endfunction()
 
+# Quotes one argument for a generated CMake package configuration call.
+function(_canon_quote_package_argument OUT_ARGUMENT ARGUMENT)
+    string(REPLACE "\\" "\\\\" _argument "${ARGUMENT}")
+    string(REPLACE "\"" "\\\"" _argument "${_argument}")
+    string(REPLACE "$" "\$" _argument "${_argument}")
+    set("${OUT_ARGUMENT}" "\"${_argument}\"" PARENT_SCOPE)
+endfunction()
+
+# Formats one find_dependency() call for the generated package configuration.
+function(_canon_format_package_dependency OUT_CALL PACKAGE)
+    _canon_quote_package_argument(_package "${PACKAGE}")
+    set(_call "find_dependency(${_package}")
+    foreach(_argument IN LISTS ARGN)
+        _canon_quote_package_argument(_argument "${_argument}")
+        string(APPEND _call " ${_argument}")
+    endforeach()
+    string(APPEND _call ")")
+    set("${OUT_CALL}" "${_call}" PARENT_SCOPE)
+endfunction()
+
 # Writes this project's relocatable CMake package configuration.
 function(_canon_write_package_config_file)
     set(_package_dir "${PROJECT_BINARY_DIR}/canon/package")
     file(MAKE_DIRECTORY "${_package_dir}")
 
+    set(CANON_PACKAGE_DEPENDENCIES "")
+    get_property(
+        _dependency_keys
+        DIRECTORY "${PROJECT_SOURCE_DIR}"
+        PROPERTY _CANON_PACKAGE_DEPENDENCY_KEYS
+    )
+    if (_dependency_keys)
+        string(APPEND CANON_PACKAGE_DEPENDENCIES "include(CMakeFindDependencyMacro)\n\n")
+        foreach(_dependency_key IN LISTS _dependency_keys)
+            get_property(
+                _dependency_call
+                DIRECTORY "${PROJECT_SOURCE_DIR}"
+                PROPERTY "_CANON_PACKAGE_DEPENDENCY_${_dependency_key}"
+            )
+            string(APPEND CANON_PACKAGE_DEPENDENCIES "${_dependency_call}\n")
+        endforeach()
+        string(APPEND CANON_PACKAGE_DEPENDENCIES "\n")
+    endif()
+
     set(_config_input "${_package_dir}/${PROJECT_NAME}Config.cmake.in")
     file(WRITE "${_config_input}" [=[@PACKAGE_INIT@
 
+@CANON_PACKAGE_DEPENDENCIES@
 include("${CMAKE_CURRENT_LIST_DIR}/@CANON_PACKAGE_TARGETS_FILE@")
 
 check_required_components(@CANON_PACKAGE_NAME@)
@@ -389,6 +429,61 @@ function(_canon_register_package)
         )
     endif()
     install(FILES ${_package_files} DESTINATION "${_install_directory}")
+endfunction()
+
+# Records how this project's installed package recovers one external dependency.
+function(canon_apply_dependency PACKAGE)
+    if ("${PACKAGE}" STREQUAL "")
+        message(FATAL_ERROR "canon_apply_dependency(): package name must not be empty")
+    endif()
+
+    foreach(_argument IN LISTS ARGN)
+        if (_argument STREQUAL "REQUIRED" OR _argument STREQUAL "QUIET")
+            message(FATAL_ERROR
+                "canon_apply_dependency(): '${_argument}' is inherited from the outer find_package() call")
+        endif()
+    endforeach()
+
+    _canon_format_package_dependency(_dependency_call "${PACKAGE}" ${ARGN})
+    string(SHA256 _dependency_key "${_dependency_call}")
+    set(_dependency_property "_CANON_PACKAGE_DEPENDENCY_${_dependency_key}")
+
+    get_property(
+        _dependency_recorded
+        DIRECTORY "${PROJECT_SOURCE_DIR}"
+        PROPERTY "${_dependency_property}"
+        SET
+    )
+    if (_dependency_recorded)
+        get_property(
+            _existing_call
+            DIRECTORY "${PROJECT_SOURCE_DIR}"
+            PROPERTY "${_dependency_property}"
+        )
+        if (NOT _existing_call STREQUAL _dependency_call)
+            message(FATAL_ERROR
+                "canon_apply_dependency(): internal dependency-key collision for package '${PACKAGE}'")
+        endif()
+        return()
+    endif()
+
+    set_property(
+        DIRECTORY "${PROJECT_SOURCE_DIR}"
+        APPEND PROPERTY _CANON_PACKAGE_DEPENDENCY_KEYS "${_dependency_key}"
+    )
+    set_property(
+        DIRECTORY "${PROJECT_SOURCE_DIR}"
+        PROPERTY "${_dependency_property}" "${_dependency_call}"
+    )
+
+    get_property(
+        _package_registered
+        DIRECTORY "${PROJECT_SOURCE_DIR}"
+        PROPERTY _CANON_PACKAGE_REGISTERED
+    )
+    if (_package_registered)
+        _canon_write_package_config_file()
+    endif()
 endfunction()
 
 # Applies Canon's compiled-target policy and conventional installation to an executable.

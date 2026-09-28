@@ -95,6 +95,11 @@ _canon_add_script_test(
 )
 
 _canon_add_script_test(
+    package.dependencies
+    package-dependency.cmake
+)
+
+_canon_add_script_test(
     targets.warnings
     target-consumer.cmake
     -DCANON_BUILD_TYPE=Debug
@@ -261,4 +266,19 @@ _canon_add_script_test(
 _canon_add_script_test(
     libraries.framework
     library-framework-error.cmake
+)
+
+_canon_add_script_test(
+    dependencies.empty
+    dependency-empty-error.cmake
+)
+
+_canon_add_script_test(
+    dependencies.required
+    dependency-required-error.cmake
+)
+
+_canon_add_script_test(
+    dependencies.quiet
+    dependency-quiet-error.cmake
 )

@@ -56,6 +56,7 @@ function(_canon_build_package_consumer INSTALL_PREFIX NAME VERSION TARGET ABSENT
     if (DEFINED CANON_TOOLCHAIN_FILE AND NOT "${CANON_TOOLCHAIN_FILE}" STREQUAL "")
         list(APPEND _configure_command "-DCMAKE_TOOLCHAIN_FILE=${CANON_TOOLCHAIN_FILE}")
     endif()
+    list(APPEND _configure_command ${ARGN})
 
     execute_process(
         COMMAND ${_configure_command}
