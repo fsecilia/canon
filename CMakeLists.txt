@@ -13,10 +13,11 @@ if (NOT PROJECT_IS_TOP_LEVEL)
 endif()
 
 include(CMakePackageConfigHelpers)
+_canon_package_version_compatibility(_canon_version_compatibility)
 write_basic_package_version_file(
     "${CMAKE_CURRENT_BINARY_DIR}/CanonConfigVersion.cmake"
     VERSION "${PROJECT_VERSION}"
-    COMPATIBILITY SameMajorVersion
+    COMPATIBILITY "${_canon_version_compatibility}"
     ARCH_INDEPENDENT
 )
 
@@ -71,6 +72,31 @@ _canon_add_script_test(
     targets.release
     target-consumer.cmake
     -DCANON_BUILD_TYPE=Release
+)
+
+_canon_add_script_test(
+    executable.install
+    executable-install.cmake
+)
+
+_canon_add_script_test(
+    library.install
+    library-install.cmake
+)
+
+_canon_add_script_test(
+    package.config
+    package-config.cmake
+)
+
+_canon_add_script_test(
+    package.version
+    package-version.cmake
+)
+
+_canon_add_script_test(
+    package.dependencies
+    package-dependency.cmake
 )
 
 _canon_add_script_test(
@@ -129,6 +155,11 @@ if (Doxygen_FOUND)
     _canon_add_script_test(
         documentation
         documentation-consumer.cmake
+        "-DCANON_DOXYGEN_EXECUTABLE=${DOXYGEN_EXECUTABLE}"
+    )
+    _canon_add_script_test(
+        documentation.install
+        documentation-install.cmake
         "-DCANON_DOXYGEN_EXECUTABLE=${DOXYGEN_EXECUTABLE}"
     )
     _canon_add_script_test(
@@ -208,6 +239,21 @@ _canon_add_script_test(
 )
 
 _canon_add_script_test(
+    executables.missing
+    executable-missing-error.cmake
+)
+
+_canon_add_script_test(
+    executables.library
+    executable-library-error.cmake
+)
+
+_canon_add_script_test(
+    executables.bundle
+    executable-bundle-error.cmake
+)
+
+_canon_add_script_test(
     libraries.missing
     library-missing-error.cmake
 )
@@ -223,6 +269,21 @@ _canon_add_script_test(
 )
 
 _canon_add_script_test(
-    libraries.interface
-    library-interface-error.cmake
+    libraries.framework
+    library-framework-error.cmake
+)
+
+_canon_add_script_test(
+    dependencies.empty
+    dependency-empty-error.cmake
+)
+
+_canon_add_script_test(
+    dependencies.required
+    dependency-required-error.cmake
+)
+
+_canon_add_script_test(
+    dependencies.quiet
+    dependency-quiet-error.cmake
 )

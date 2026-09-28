@@ -16,18 +16,16 @@ if (NOT COMMAND canon_apply_target)
 endif()
 ```
 
-Adjust the vendored path to match the project layout. Canon's installed Config package uses normal CMake version matching within the same major version.
+Adjust the vendored path to match the project layout. Canon's installed Config package uses the same compatibility policy as other Canon-managed packages: versions before 1.0 are compatible within the same minor version, while versions starting at 1.0 are compatible within the same major version.
 
-Apply Canon to an existing compiled target:
+## Compiled targets
+
+`canon_apply_target()` supports executables, object libraries, and STATIC, SHARED, and MODULE libraries. Use it for compiled targets that need Canon's build policy without Canon-managed installation:
 
 ```cmake
 add_executable(example main.cpp)
 canon_apply_target(example)
 ```
-
-## Compiled targets
-
-`canon_apply_target()` supports executables, object libraries, and STATIC, SHARED, and MODULE libraries.
 
 For each managed target, Canon currently:
 
@@ -38,16 +36,35 @@ For each managed target, Canon currently:
 * enables interprocedural optimization for Release builds when supported; and
 * applies the supported compiler-specific build options.
 
+Use `canon_apply_executable()` for a normal executable that should also be installed:
+
+```cmake
+add_executable(example main.cpp)
+canon_apply_executable(example)
+```
+
+`canon_apply_executable()` applies the compiled-target policy and installs the executable through CMake's conventional runtime install directory. `MACOSX_BUNDLE` executables are not supported.
+
 ## Libraries and export headers
 
-Use `canon_apply_library()` when a STATIC, SHARED, or MODULE library needs Canon's generated public export header:
+Use `canon_apply_library()` for a STATIC, SHARED, MODULE, or INTERFACE library that should be installed and exported as part of the project's CMake package:
 
 ```cmake
 add_library(example SHARED example.cpp)
+target_sources(
+    example
+    PUBLIC
+        FILE_SET public_headers
+        TYPE HEADERS
+        BASE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/src"
+        FILES src/example/example.hpp
+)
 canon_apply_library(example)
 ```
 
-`canon_apply_library()` first calls `canon_apply_target()`, so the library receives the common compiled-target policy. It then uses CMake's `GenerateExportHeader` module to create `<target>/export.hpp`. Canon publishes that file through a public `HEADERS` file set named `canon_export_header`.
+Declare the library's public `HEADERS` file sets before calling `canon_apply_library()`. Canon discovers their names, installs them beneath CMake's conventional include directory, and preserves each file's path relative to its file-set base directory.
+
+Compiled libraries receive the common compiled-target policy and publish C++26 as a usage requirement. Canon also uses CMake's `GenerateExportHeader` module to create `<target>/export.hpp` and publishes that file through a public `HEADERS` file set named `canon_export_header`.
 
 The primary export annotation uses the target name normalized as a lowercase C identifier plus `_api`. For a target named `example`, a public declaration can use the generated header like this:
 
@@ -57,7 +74,26 @@ The primary export annotation uses the target name normalized as a lowercase C i
 example_api auto exampleAnswer() -> int;
 ```
 
-Canon does not install or export the library. Projects use normal CMake install, export, and package commands. They may install `canon_export_header` with the library's other file sets. INTERFACE libraries have no compiled-library policy; manage their headers and usage requirements with ordinary CMake.
+INTERFACE libraries publish the same C++26 usage requirement but have no compiled-target policy or generated export header. Canon installs and exports them together with their public header file sets. `FRAMEWORK` libraries are not supported.
+
+## Package installation
+
+The first managed library registers an installable CMake package for the current project. Canon installs the project export and generated package files beneath `${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}`. Imported targets use the `${PROJECT_NAME}::` namespace; projects can use CMake's native `EXPORT_NAME` target property when an exported target needs a different name.
+
+A versioned project receives `<Project>Config.cmake`, `<Project>ConfigVersion.cmake`, and `<Project>Targets.cmake`. Before 1.0, compatible package versions must share the same minor version. Starting with 1.0, compatible versions must share the same major version. Header-only packages are architecture-independent; a package containing an installed compiled library or executable is architecture-specific. Versionless projects omit `ConfigVersion.cmake`.
+
+Executables installed with `canon_apply_executable()` are not exported as package targets and do not create a package configuration by themselves.
+
+Use `canon_apply_dependency()` when an installed package must recover another package before importing its targets:
+
+```cmake
+find_package(Zlib 1.2 CONFIG REQUIRED)
+canon_apply_dependency(Zlib 1.2 CONFIG)
+
+target_link_libraries(example PUBLIC Zlib::Zlib)
+```
+
+`canon_apply_dependency()` does not locate, vendor, or link the dependency. It records the arguments Canon needs to emit the corresponding `find_dependency()` call in the installed package configuration. This is also required when a dependency is provided from the source tree during the build but must be found as a package by downstream consumers. Do not pass `REQUIRED` or `QUIET`; `find_dependency()` inherits those requirements from the outer `find_package()` call.
 
 ## Warnings
 
@@ -111,7 +147,14 @@ Canon uses CMake's native `FindDoxygen` module and `doxygen_add_docs()`. When Do
 
 Canon uses the project `README.md` as the main page when one exists. Documentation input excludes the active project binary tree, the conventional source-side `build/` tree, `external/`, `standards/`, `test/`, and files matching `*_test.cpp`. Symbols beneath `detail` namespaces are also excluded. Graphviz support is used when CMake's Doxygen finder discovers `dot`; it is not required.
 
-Canon does not generate documentation during ordinary builds or installation, and it does not install generated HTML. Projects that distribute documentation can build `doc` explicitly and publish or install the resulting files with normal CMake mechanisms.
+Canon does not generate documentation during ordinary builds or installation. Generated HTML is registered as the `Documentation` install component and remains excluded from a normal installation. Build `doc` first, then install the component explicitly:
+
+```text
+cmake --build build --target doc
+cmake --install build --component Documentation
+```
+
+Requesting the `Documentation` component before the generated HTML exists fails instead of omitting it. Canon installs the HTML through CMake's `DOC` install type, so `CMAKE_INSTALL_DOCDIR` controls its destination.
 
 ## Shared presets
 

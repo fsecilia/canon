@@ -3,9 +3,8 @@
 
 cmake_minimum_required(VERSION 3.31.6)
 
-project(CanonLibraryInterfaceError LANGUAGES NONE)
+project(CanonDependencyEmptyError LANGUAGES NONE)
 
 include(../common.cmake)
 
-add_library(sample INTERFACE)
-canon_apply_library(sample)
+canon_apply_dependency("")
