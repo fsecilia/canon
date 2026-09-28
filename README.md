@@ -35,7 +35,7 @@ For each managed target, Canon currently:
 * disables C++ module dependency scanning;
 * enables position-independent code;
 * hides symbols by default;
-* enables interprocedural optimization for Release builds; and
+* enables interprocedural optimization for Release builds when supported; and
 * applies the supported compiler-specific build options.
 
 ## Libraries and export headers

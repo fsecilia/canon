@@ -37,6 +37,32 @@ function(_canon_apply_compiler_policy TARGET)
     endforeach()
 endfunction()
 
+# Enables Release IPO when the active C++ toolchain supports it.
+function(_canon_apply_ipo_if_supported TARGET)
+    get_property(_ipo_supported GLOBAL PROPERTY _CANON_IPO_SUPPORTED)
+    if ("${_ipo_supported}" STREQUAL "")
+        include(CheckIPOSupported)
+        check_ipo_supported(
+            RESULT _ipo_supported
+            OUTPUT _ipo_output
+            LANGUAGES CXX
+        )
+        set_property(GLOBAL PROPERTY _CANON_IPO_SUPPORTED "${_ipo_supported}")
+
+        if (NOT _ipo_supported)
+            message(STATUS "Canon: IPO is unavailable; Release builds will continue without it")
+            message(VERBOSE "Canon IPO probe failed:\n${_ipo_output}")
+        endif()
+    endif()
+
+    if (_ipo_supported)
+        set_property(
+            TARGET "${TARGET}"
+            PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE
+        )
+    endif()
+endfunction()
+
 # Applies Canon's strict compiler-specific warning policy.
 function(_canon_apply_warnings TARGET)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -215,13 +241,13 @@ function(canon_apply_target TARGET)
         CXX_SCAN_FOR_MODULES FALSE
         CXX_STANDARD 26
         CXX_STANDARD_REQUIRED TRUE
-        INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE
         POSITION_INDEPENDENT_CODE TRUE
         VISIBILITY_INLINES_HIDDEN TRUE
         CXX_VISIBILITY_PRESET hidden
     )
 
     _canon_apply_compiler_policy("${TARGET}")
+    _canon_apply_ipo_if_supported("${TARGET}")
     if (CANON_ENABLE_WARNINGS)
         _canon_apply_warnings("${TARGET}")
     endif()

@@ -81,6 +81,11 @@ _canon_add_script_test(
 )
 
 _canon_add_script_test(
+    ipo.unavailable
+    ipo-unavailable.cmake
+)
+
+_canon_add_script_test(
     asan
     asan-consumer.cmake
 )

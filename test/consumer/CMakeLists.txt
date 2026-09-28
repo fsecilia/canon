@@ -111,6 +111,11 @@ function(_require_compile_option TARGET OPTION)
 endfunction()
 
 # Verify every managed compiled target receives the shared Canon policy.
+get_property(_ipo_supported GLOBAL PROPERTY _CANON_IPO_SUPPORTED)
+if (NOT _ipo_supported STREQUAL "YES" AND NOT _ipo_supported STREQUAL "NO")
+    message(FATAL_ERROR "Canon IPO probe did not record a result: '${_ipo_supported}'")
+endif()
+
 set(_compiled_targets
     sample_static
     sample_shared
@@ -151,7 +156,15 @@ foreach(_target IN LISTS _compiled_targets)
     _require_target_property("${_target}" CXX_SCAN_FOR_MODULES FALSE)
     _require_target_property("${_target}" CXX_STANDARD 26)
     _require_target_property("${_target}" CXX_STANDARD_REQUIRED TRUE)
-    _require_target_property("${_target}" INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
+    if (_ipo_supported)
+        _require_target_property("${_target}" INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
+    else()
+        get_target_property(_ipo_property "${_target}" INTERPROCEDURAL_OPTIMIZATION_RELEASE)
+        if (NOT "${_ipo_property}" STREQUAL "_ipo_property-NOTFOUND")
+            message(FATAL_ERROR
+                "${_target} unexpectedly enables Release IPO when the toolchain does not support it")
+        endif()
+    endif()
     _require_target_property("${_target}" POSITION_INDEPENDENT_CODE TRUE)
     _require_target_property("${_target}" VISIBILITY_INLINES_HIDDEN TRUE)
     _require_target_property("${_target}" CXX_VISIBILITY_PRESET hidden)
