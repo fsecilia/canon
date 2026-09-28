@@ -598,10 +598,18 @@ endfunction()
 
 # Adds conventional documentation targets using CMake's native FindDoxygen integration.
 function(canon_add_documentation)
+    include(GNUInstallDirs)
     find_package(Doxygen 1.9 QUIET OPTIONAL_COMPONENTS dot)
 
     set(_output_directory "${PROJECT_BINARY_DIR}/doxygen")
     set(_warning_log "${PROJECT_BINARY_DIR}/doxygen-warnings.log")
+
+    install(
+        DIRECTORY "${_output_directory}/html/"
+        TYPE DOC
+        COMPONENT Documentation
+        EXCLUDE_FROM_ALL
+    )
 
     add_custom_target(
         doc-clean

@@ -49,6 +49,21 @@ if (NOT _build_result EQUAL 0)
         "stderr:\n${_build_stderr}")
 endif()
 
+# Ordinary installation must not require documentation tooling or generated output.
+set(_install_prefix "${CANON_TEST_BINARY_DIR}/install")
+execute_process(
+    COMMAND "${CMAKE_COMMAND}" --install "${_binary_dir}" --prefix "${_install_prefix}"
+    RESULT_VARIABLE _install_result
+    OUTPUT_VARIABLE _install_stdout
+    ERROR_VARIABLE _install_stderr
+)
+if (NOT _install_result EQUAL 0)
+    message(FATAL_ERROR
+        "Install without Doxygen failed\n"
+        "stdout:\n${_install_stdout}\n"
+        "stderr:\n${_install_stderr}")
+endif()
+
 # Cleanup is always available, even when documentation generation is not.
 execute_process(
     COMMAND "${CMAKE_COMMAND}" --build "${_binary_dir}" --target doc-clean

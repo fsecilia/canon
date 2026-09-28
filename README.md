@@ -111,7 +111,14 @@ Canon uses CMake's native `FindDoxygen` module and `doxygen_add_docs()`. When Do
 
 Canon uses the project `README.md` as the main page when one exists. Documentation input excludes the active project binary tree, the conventional source-side `build/` tree, `external/`, `standards/`, `test/`, and files matching `*_test.cpp`. Symbols beneath `detail` namespaces are also excluded. Graphviz support is used when CMake's Doxygen finder discovers `dot`; it is not required.
 
-Canon does not generate documentation during ordinary builds or installation, and it does not install generated HTML. Projects that distribute documentation can build `doc` explicitly and publish or install the resulting files with normal CMake mechanisms.
+Canon does not generate documentation during ordinary builds or installation. Generated HTML is registered as the `Documentation` install component and remains excluded from a normal installation. Build `doc` first, then install the component explicitly:
+
+```text
+cmake --build build --target doc
+cmake --install build --component Documentation
+```
+
+Requesting the `Documentation` component before the generated HTML exists fails instead of omitting it. Canon installs the HTML through CMake's `DOC` install type, so `CMAKE_INSTALL_DOCDIR` controls its destination.
 
 ## Shared presets
 
