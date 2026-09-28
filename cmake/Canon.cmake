@@ -21,6 +21,25 @@ function(_canon_apply_compiler_policy TARGET)
             -fsized-deallocation
             -ftemplate-backtrace-limit=1
         )
+    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        set(_build_options
+            -fcolor-diagnostics
+            -fstrict-aliasing
+            -fsized-deallocation
+        )
+    else()
+        message(FATAL_ERROR
+            "Canon does not provide compiler policy for '${CMAKE_CXX_COMPILER_ID}'")
+    endif()
+
+    foreach(_option IN LISTS _build_options)
+        _canon_apply_cxx_option("${TARGET}" "${_option}")
+    endforeach()
+endfunction()
+
+# Applies Canon's strict compiler-specific warning policy.
+function(_canon_apply_warnings TARGET)
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         set(_warning_options
             -Wall
             -Wextra
@@ -33,11 +52,6 @@ function(_canon_apply_compiler_policy TARGET)
         )
         set(_warning_suppressions)
     elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        set(_build_options
-            -fcolor-diagnostics
-            -fstrict-aliasing
-            -fsized-deallocation
-        )
         set(_warning_options
             -Weverything
             -Werror
@@ -51,26 +65,16 @@ function(_canon_apply_compiler_policy TARGET)
         )
     else()
         message(FATAL_ERROR
-            "Canon does not provide compiler policy for '${CMAKE_CXX_COMPILER_ID}'")
+            "Canon does not provide warning policy for '${CMAKE_CXX_COMPILER_ID}'")
     endif()
 
-    foreach(_option IN LISTS _build_options)
+    foreach(_option IN LISTS _warning_options _warning_suppressions)
         _canon_apply_cxx_option("${TARGET}" "${_option}")
     endforeach()
-
-    if (CANON_ENABLE_WARNINGS)
-        foreach(_option IN LISTS _warning_options _warning_suppressions)
-            _canon_apply_cxx_option("${TARGET}" "${_option}")
-        endforeach()
-    endif()
 endfunction()
 
 # Adds AddressSanitizer instrumentation to managed C++ compilation and linking.
 function(_canon_apply_asan TARGET)
-    if (NOT CANON_ENABLE_ASAN)
-        return()
-    endif()
-
     _canon_apply_cxx_option("${TARGET}" "-fsanitize=address")
     _canon_apply_cxx_option("${TARGET}" "-fno-omit-frame-pointer")
     target_link_options("${TARGET}" PRIVATE -fsanitize=address)
@@ -163,12 +167,8 @@ function(_canon_add_coverage_targets)
     )
 endfunction()
 
-# Adds gcov-compatible instrumentation and top-level reporting helpers when requested.
+# Adds gcov-compatible instrumentation and top-level reporting helpers.
 function(_canon_apply_coverage TARGET)
-    if (NOT CANON_ENABLE_COVERAGE)
-        return()
-    endif()
-
     _canon_apply_cxx_option("${TARGET}" "--coverage")
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         _canon_apply_cxx_option("${TARGET}" "-fprofile-abs-path")
@@ -186,10 +186,6 @@ endfunction()
 
 # Lets CMake drive clang-tidy with the real compile command for each source file.
 function(_canon_apply_tidy TARGET)
-    if (NOT CANON_ENABLE_TIDY)
-        return()
-    endif()
-
     find_program(
         CANON_CLANG_TIDY_EXECUTABLE
         NAMES clang-tidy
@@ -226,9 +222,18 @@ function(canon_apply_target TARGET)
     )
 
     _canon_apply_compiler_policy("${TARGET}")
-    _canon_apply_asan("${TARGET}")
-    _canon_apply_coverage("${TARGET}")
-    _canon_apply_tidy("${TARGET}")
+    if (CANON_ENABLE_WARNINGS)
+        _canon_apply_warnings("${TARGET}")
+    endif()
+    if (CANON_ENABLE_ASAN)
+        _canon_apply_asan("${TARGET}")
+    endif()
+    if (CANON_ENABLE_COVERAGE)
+        _canon_apply_coverage("${TARGET}")
+    endif()
+    if (CANON_ENABLE_TIDY)
+        _canon_apply_tidy("${TARGET}")
+    endif()
 endfunction()
 
 # Adds Canon's compiled-target policy and a generated public export header to a library.
