@@ -13,10 +13,11 @@ if (NOT PROJECT_IS_TOP_LEVEL)
 endif()
 
 include(CMakePackageConfigHelpers)
+_canon_package_version_compatibility(_canon_version_compatibility)
 write_basic_package_version_file(
     "${CMAKE_CURRENT_BINARY_DIR}/CanonConfigVersion.cmake"
     VERSION "${PROJECT_VERSION}"
-    COMPATIBILITY SameMajorVersion
+    COMPATIBILITY "${_canon_version_compatibility}"
     ARCH_INDEPENDENT
 )
 
@@ -81,6 +82,16 @@ _canon_add_script_test(
 _canon_add_script_test(
     library.install
     library-install.cmake
+)
+
+_canon_add_script_test(
+    package.config
+    package-config.cmake
+)
+
+_canon_add_script_test(
+    package.version
+    package-version.cmake
 )
 
 _canon_add_script_test(

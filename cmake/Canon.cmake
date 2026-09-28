@@ -262,6 +262,135 @@ function(canon_apply_target TARGET)
     endif()
 endfunction()
 
+# Returns the conventional install directory for this project's CMake package files.
+function(_canon_package_install_directory OUT_DIRECTORY)
+    include(GNUInstallDirs)
+    set(
+        "${OUT_DIRECTORY}"
+        "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
+        PARENT_SCOPE
+    )
+endfunction()
+
+# Selects Canon's package compatibility policy from the project's major version.
+function(_canon_package_version_compatibility OUT_COMPATIBILITY)
+    if (PROJECT_VERSION_MAJOR EQUAL 0)
+        set(_compatibility SameMinorVersion)
+    else()
+        set(_compatibility SameMajorVersion)
+    endif()
+    set("${OUT_COMPATIBILITY}" "${_compatibility}" PARENT_SCOPE)
+endfunction()
+
+# Regenerates the package version file from the project's current install policy.
+function(_canon_write_package_version_file)
+    if ("${PROJECT_VERSION}" STREQUAL "")
+        return()
+    endif()
+
+    get_property(
+        _package_registered
+        DIRECTORY "${PROJECT_SOURCE_DIR}"
+        PROPERTY _CANON_PACKAGE_REGISTERED
+    )
+    if (NOT _package_registered)
+        return()
+    endif()
+
+    _canon_package_version_compatibility(_compatibility)
+
+    get_property(
+        _has_binary
+        DIRECTORY "${PROJECT_SOURCE_DIR}"
+        PROPERTY _CANON_PACKAGE_HAS_BINARY
+    )
+    set(_architecture_arguments)
+    if (NOT _has_binary)
+        list(APPEND _architecture_arguments ARCH_INDEPENDENT)
+    endif()
+
+    include(CMakePackageConfigHelpers)
+    write_basic_package_version_file(
+        "${PROJECT_BINARY_DIR}/canon/package/${PROJECT_NAME}ConfigVersion.cmake"
+        VERSION "${PROJECT_VERSION}"
+        COMPATIBILITY "${_compatibility}"
+        ${_architecture_arguments}
+    )
+endfunction()
+
+# Records that this project's installed package contains an architecture-specific artifact.
+function(_canon_mark_package_binary)
+    set_property(
+        DIRECTORY "${PROJECT_SOURCE_DIR}"
+        PROPERTY _CANON_PACKAGE_HAS_BINARY TRUE
+    )
+    _canon_write_package_version_file()
+endfunction()
+
+# Writes this project's relocatable CMake package configuration.
+function(_canon_write_package_config_file)
+    set(_package_dir "${PROJECT_BINARY_DIR}/canon/package")
+    file(MAKE_DIRECTORY "${_package_dir}")
+
+    set(_config_input "${_package_dir}/${PROJECT_NAME}Config.cmake.in")
+    file(WRITE "${_config_input}" [=[@PACKAGE_INIT@
+
+include("${CMAKE_CURRENT_LIST_DIR}/@CANON_PACKAGE_TARGETS_FILE@")
+
+check_required_components(@CANON_PACKAGE_NAME@)
+]=])
+
+    set(CANON_PACKAGE_NAME "${PROJECT_NAME}")
+    set(CANON_PACKAGE_TARGETS_FILE "${PROJECT_NAME}Targets.cmake")
+    _canon_package_install_directory(_install_directory)
+
+    include(CMakePackageConfigHelpers)
+    configure_package_config_file(
+        "${_config_input}"
+        "${_package_dir}/${PROJECT_NAME}Config.cmake"
+        INSTALL_DESTINATION "${_install_directory}"
+        NO_SET_AND_CHECK_MACRO
+    )
+endfunction()
+
+# Registers the project-wide export and package configuration for managed libraries.
+function(_canon_register_package)
+    get_property(
+        _package_registered
+        DIRECTORY "${PROJECT_SOURCE_DIR}"
+        PROPERTY _CANON_PACKAGE_REGISTERED
+    )
+    if (_package_registered)
+        return()
+    endif()
+
+    set_property(
+        DIRECTORY "${PROJECT_SOURCE_DIR}"
+        PROPERTY _CANON_PACKAGE_REGISTERED TRUE
+    )
+
+    _canon_package_install_directory(_install_directory)
+    _canon_write_package_config_file()
+    _canon_write_package_version_file()
+
+    install(
+        EXPORT "${PROJECT_NAME}Targets"
+        FILE "${PROJECT_NAME}Targets.cmake"
+        NAMESPACE "${PROJECT_NAME}::"
+        DESTINATION "${_install_directory}"
+    )
+
+    set(_package_files
+        "${PROJECT_BINARY_DIR}/canon/package/${PROJECT_NAME}Config.cmake"
+    )
+    if (NOT "${PROJECT_VERSION}" STREQUAL "")
+        list(APPEND _package_files
+            "${PROJECT_BINARY_DIR}/canon/package/${PROJECT_NAME}ConfigVersion.cmake"
+        )
+    endif()
+    install(FILES ${_package_files} DESTINATION "${_install_directory}")
+endfunction()
+
 # Applies Canon's compiled-target policy and conventional installation to an executable.
 function(canon_apply_executable TARGET)
     if (NOT TARGET "${TARGET}")
@@ -287,6 +416,7 @@ function(canon_apply_executable TARGET)
         TARGETS "${TARGET}"
         RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
     )
+    _canon_mark_package_binary()
 endfunction()
 
 # Installs a managed library and each of its public HEADERS file sets.
@@ -336,9 +466,11 @@ function(canon_apply_library TARGET)
     if (_type STREQUAL "INTERFACE_LIBRARY")
         target_compile_features("${TARGET}" INTERFACE cxx_std_26)
         _canon_install_library("${TARGET}")
+        _canon_register_package()
         return()
     endif()
 
+    _canon_mark_package_binary()
     canon_apply_target("${TARGET}")
     target_compile_features("${TARGET}" PUBLIC cxx_std_26)
 
@@ -366,6 +498,7 @@ function(canon_apply_library TARGET)
     )
 
     _canon_install_library("${TARGET}")
+    _canon_register_package()
 endfunction()
 
 # Adds conventional documentation targets using CMake's native FindDoxygen integration.
