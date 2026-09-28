@@ -24,7 +24,6 @@ execute_process(
         -B "${_binary_dir}"
         -G "${CANON_GENERATOR}"
         "-DCANON_SOURCE_DIR=${CANON_SOURCE_DIR}"
-        -DCANON_ENABLE_DOCUMENTATION=ON
         "-DDOXYGEN_EXECUTABLE=${CANON_DOXYGEN_EXECUTABLE}"
     RESULT_VARIABLE _configure_result
     OUTPUT_VARIABLE _configure_stdout

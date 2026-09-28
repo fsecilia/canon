@@ -11,6 +11,4 @@ endif()
 
 include("${CANON_SOURCE_DIR}/cmake/Canon.cmake")
 
-if (CANON_ENABLE_DOCUMENTATION)
-    canon_add_documentation()
-endif()
+canon_add_documentation()

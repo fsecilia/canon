@@ -5,7 +5,6 @@ include_guard(GLOBAL)
 
 option(CANON_ENABLE_WARNINGS "Enable Canon's strict compiler warnings." OFF)
 option(CANON_ENABLE_TIDY "Run clang-tidy as part of compiling Canon-managed targets." OFF)
-option(CANON_ENABLE_DOCUMENTATION "Enable the project documentation target." OFF)
 
 function(_canon_apply_cxx_option TARGET OPTION)
     target_compile_options("${TARGET}" PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${OPTION}>")
@@ -149,16 +148,43 @@ function(canon_apply_library TARGET)
     )
 endfunction()
 
-# Adds a conventional Doxygen target using CMake's native FindDoxygen integration.
+# Adds conventional documentation targets using CMake's native FindDoxygen integration.
 function(canon_add_documentation)
-    find_package(Doxygen 1.9 REQUIRED OPTIONAL_COMPONENTS dot)
+    find_package(Doxygen 1.9 QUIET OPTIONAL_COMPONENTS dot)
+
+    set(_output_directory "${PROJECT_BINARY_DIR}/doxygen")
+    set(_warning_log "${PROJECT_BINARY_DIR}/doxygen-warnings.log")
+
+    add_custom_target(
+        doc-clean
+        COMMAND "${CMAKE_COMMAND}" -E rm -rf "${_output_directory}"
+        COMMAND "${CMAKE_COMMAND}" -E rm -f "${_warning_log}"
+        COMMENT "Cleaning generated API documentation"
+        VERBATIM
+    )
+
+    if (NOT Doxygen_FOUND)
+        add_custom_target(
+            doc
+            COMMAND
+                "${CMAKE_COMMAND}" -E echo
+                "Doxygen 1.9 or newer was not found when this build tree was configured."
+            COMMAND
+                "${CMAKE_COMMAND}" -E echo
+                "Install Doxygen 1.9 or newer and reconfigure before building the doc target."
+            COMMAND "${CMAKE_COMMAND}" -E false
+            COMMENT "Unable to generate API documentation"
+            VERBATIM
+        )
+        return()
+    endif()
 
     set(_readme "${PROJECT_SOURCE_DIR}/README.md")
     if (EXISTS "${_readme}")
         set(DOXYGEN_USE_MDFILE_AS_MAINPAGE "${_readme}")
     endif()
 
-    set(DOXYGEN_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/doxygen")
+    set(DOXYGEN_OUTPUT_DIRECTORY "${_output_directory}")
     set(DOXYGEN_EXCLUDE
         "${PROJECT_BINARY_DIR}"
         "${PROJECT_SOURCE_DIR}/build"
@@ -170,7 +196,7 @@ function(canon_add_documentation)
     set(DOXYGEN_STRIP_FROM_PATH "${PROJECT_SOURCE_DIR}")
     set(DOXYGEN_QUIET YES)
     set(DOXYGEN_WARN_AS_ERROR FAIL_ON_WARNINGS)
-    set(DOXYGEN_WARN_LOGFILE "${PROJECT_BINARY_DIR}/doxygen-warnings.log")
+    set(DOXYGEN_WARN_LOGFILE "${_warning_log}")
     set(DOXYGEN_JAVADOC_AUTOBRIEF YES)
     set(DOXYGEN_QT_AUTOBRIEF YES)
     set(DOXYGEN_ENABLE_PREPROCESSING YES)
@@ -182,13 +208,5 @@ function(canon_add_documentation)
         "${PROJECT_SOURCE_DIR}"
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
         COMMENT "Generating API documentation"
-    )
-
-    add_custom_target(
-        doc-clean
-        COMMAND "${CMAKE_COMMAND}" -E rm -rf "${DOXYGEN_OUTPUT_DIRECTORY}"
-        COMMAND "${CMAKE_COMMAND}" -E rm -f "${DOXYGEN_WARN_LOGFILE}"
-        COMMENT "Cleaning generated API documentation"
-        VERBATIM
     )
 endfunction()

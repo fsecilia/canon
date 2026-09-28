@@ -21,6 +21,4 @@ file(WRITE "${PROJECT_BINARY_DIR}/ignored_generated.hpp"
     "auto ignoredGeneratedSymbol() -> int;\n"
 )
 
-if (CANON_ENABLE_DOCUMENTATION)
-    canon_add_documentation()
-endif()
+canon_add_documentation()
