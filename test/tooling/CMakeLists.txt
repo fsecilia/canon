@@ -3,7 +3,7 @@
 
 cmake_minimum_required(VERSION 3.31.6)
 
-project(CanonTidyFixture VERSION LANGUAGES CXX)
+project(CanonTidyFixture LANGUAGES CXX)
 
 if (NOT DEFINED CANON_SOURCE_DIR OR "${CANON_SOURCE_DIR}" STREQUAL "")
     message(FATAL_ERROR "CANON_SOURCE_DIR is required")

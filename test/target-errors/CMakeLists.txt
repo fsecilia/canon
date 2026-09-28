@@ -3,7 +3,7 @@
 
 cmake_minimum_required(VERSION 3.31.6)
 
-project(CanonTargetErrors VERSION LANGUAGES NONE)
+project(CanonTargetErrors LANGUAGES NONE)
 
 if (NOT DEFINED CANON_SOURCE_DIR OR "${CANON_SOURCE_DIR}" STREQUAL "")
     message(FATAL_ERROR "CANON_SOURCE_DIR is required")
