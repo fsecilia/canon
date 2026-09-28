@@ -74,6 +74,11 @@ _canon_add_script_test(
 )
 
 _canon_add_script_test(
+    executable.install
+    executable-install.cmake
+)
+
+_canon_add_script_test(
     targets.warnings
     target-consumer.cmake
     -DCANON_BUILD_TYPE=Debug
@@ -205,6 +210,21 @@ _canon_add_script_test(
     -DCANON_TEST_CASE=interface
     "-DCANON_EXPECTED_ERROR=target 'sample_interface' has type"
     "-DCANON_EXPECTED_DETAIL='INTERFACE_LIBRARY'"
+)
+
+_canon_add_script_test(
+    executables.missing
+    executable-missing-error.cmake
+)
+
+_canon_add_script_test(
+    executables.library
+    executable-library-error.cmake
+)
+
+_canon_add_script_test(
+    executables.bundle
+    executable-bundle-error.cmake
 )
 
 _canon_add_script_test(

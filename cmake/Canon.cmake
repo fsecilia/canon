@@ -262,6 +262,33 @@ function(canon_apply_target TARGET)
     endif()
 endfunction()
 
+# Applies Canon's compiled-target policy and conventional installation to an executable.
+function(canon_apply_executable TARGET)
+    if (NOT TARGET "${TARGET}")
+        message(FATAL_ERROR "canon_apply_executable(): target '${TARGET}' does not exist")
+    endif()
+
+    get_target_property(_type "${TARGET}" TYPE)
+    if (NOT _type STREQUAL "EXECUTABLE")
+        message(FATAL_ERROR
+            "canon_apply_executable(): target '${TARGET}' must be an executable")
+    endif()
+
+    get_target_property(_macosx_bundle "${TARGET}" MACOSX_BUNDLE)
+    if (_macosx_bundle)
+        message(FATAL_ERROR
+            "canon_apply_executable(): MACOSX_BUNDLE target '${TARGET}' is not supported")
+    endif()
+
+    canon_apply_target("${TARGET}")
+
+    include(GNUInstallDirs)
+    install(
+        TARGETS "${TARGET}"
+        RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
+    )
+endfunction()
+
 # Adds Canon's compiled-target policy and a generated public export header to a library.
 function(canon_apply_library TARGET)
     if (NOT TARGET "${TARGET}")
