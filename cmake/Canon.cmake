@@ -289,7 +289,30 @@ function(canon_apply_executable TARGET)
     )
 endfunction()
 
-# Adds Canon's compiled-target policy and a generated public export header to a library.
+# Installs a managed library and each of its public HEADERS file sets.
+function(_canon_install_library TARGET)
+    include(GNUInstallDirs)
+
+    get_property(_header_sets TARGET "${TARGET}" PROPERTY INTERFACE_HEADER_SETS)
+    set(_file_set_arguments)
+    foreach(_header_set IN LISTS _header_sets)
+        list(APPEND _file_set_arguments
+            FILE_SET "${_header_set}"
+            DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+        )
+    endforeach()
+
+    install(
+        TARGETS "${TARGET}"
+        EXPORT "${PROJECT_NAME}Targets"
+        ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+        LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+        RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
+        ${_file_set_arguments}
+    )
+endfunction()
+
+# Applies Canon's library policy and conventional installation to a library.
 function(canon_apply_library TARGET)
     if (NOT TARGET "${TARGET}")
         message(FATAL_ERROR "canon_apply_library(): target '${TARGET}' does not exist")
@@ -298,12 +321,26 @@ function(canon_apply_library TARGET)
     get_target_property(_type "${TARGET}" TYPE)
     if (NOT _type STREQUAL "STATIC_LIBRARY"
         AND NOT _type STREQUAL "SHARED_LIBRARY"
-        AND NOT _type STREQUAL "MODULE_LIBRARY")
+        AND NOT _type STREQUAL "MODULE_LIBRARY"
+        AND NOT _type STREQUAL "INTERFACE_LIBRARY")
         message(FATAL_ERROR
-            "canon_apply_library(): target '${TARGET}' must be a STATIC, SHARED, or MODULE library")
+            "canon_apply_library(): target '${TARGET}' must be a STATIC, SHARED, MODULE, or INTERFACE library")
+    endif()
+
+    get_target_property(_framework "${TARGET}" FRAMEWORK)
+    if (_framework)
+        message(FATAL_ERROR
+            "canon_apply_library(): FRAMEWORK target '${TARGET}' is not supported")
+    endif()
+
+    if (_type STREQUAL "INTERFACE_LIBRARY")
+        target_compile_features("${TARGET}" INTERFACE cxx_std_26)
+        _canon_install_library("${TARGET}")
+        return()
     endif()
 
     canon_apply_target("${TARGET}")
+    target_compile_features("${TARGET}" PUBLIC cxx_std_26)
 
     string(MAKE_C_IDENTIFIER "${TARGET}" _api_name)
     string(TOLOWER "${_api_name}" _api_name)
@@ -327,6 +364,8 @@ function(canon_apply_library TARGET)
             BASE_DIRS "${_include_dir}"
             FILES "${_header}"
     )
+
+    _canon_install_library("${TARGET}")
 endfunction()
 
 # Adds conventional documentation targets using CMake's native FindDoxygen integration.

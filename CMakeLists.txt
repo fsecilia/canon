@@ -79,6 +79,11 @@ _canon_add_script_test(
 )
 
 _canon_add_script_test(
+    library.install
+    library-install.cmake
+)
+
+_canon_add_script_test(
     targets.warnings
     target-consumer.cmake
     -DCANON_BUILD_TYPE=Debug
@@ -243,6 +248,6 @@ _canon_add_script_test(
 )
 
 _canon_add_script_test(
-    libraries.interface
-    library-interface-error.cmake
+    libraries.framework
+    library-framework-error.cmake
 )
