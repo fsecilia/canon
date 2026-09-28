@@ -32,6 +32,15 @@
       }
     },
     {
+      "name": "asan",
+      "displayName": "AddressSanitizer",
+      "inherits": "_canon-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CANON_ENABLE_ASAN": true
+      }
+    },
+    {
       "name": "tidy",
       "displayName": "clang-tidy",
       "inherits": "_canon-base",
@@ -49,6 +58,10 @@
     {
       "name": "release",
       "configurePreset": "release"
+    },
+    {
+      "name": "asan",
+      "configurePreset": "asan"
     },
     {
       "name": "tidy",
@@ -69,6 +82,16 @@
     {
       "name": "release",
       "configurePreset": "release",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    },
+    {
+      "name": "asan",
+      "configurePreset": "asan",
       "output": {
         "outputOnFailure": true
       },
@@ -119,6 +142,23 @@
         {
           "type": "test",
           "name": "release"
+        }
+      ]
+    },
+    {
+      "name": "asan",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "asan"
+        },
+        {
+          "type": "build",
+          "name": "asan"
+        },
+        {
+          "type": "test",
+          "name": "asan"
         }
       ]
     },

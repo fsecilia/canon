@@ -13,6 +13,10 @@ if (NOT COMMAND canon_apply_target)
     include("${CANON_SOURCE_DIR}/cmake/Canon.cmake")
 endif()
 
+if (CANON_ENABLE_ASAN)
+    message(FATAL_ERROR "consumer fixture expects CANON_ENABLE_ASAN to default to OFF")
+endif()
+
 include(CTest)
 add_subdirectory(external/noisy)
 

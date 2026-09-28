@@ -4,6 +4,7 @@
 include_guard(GLOBAL)
 
 option(CANON_ENABLE_WARNINGS "Enable Canon's strict compiler warnings." OFF)
+option(CANON_ENABLE_ASAN "Enable AddressSanitizer on Canon-managed targets." OFF)
 option(CANON_ENABLE_TIDY "Run clang-tidy as part of compiling Canon-managed targets." OFF)
 
 function(_canon_apply_cxx_option TARGET OPTION)
@@ -63,6 +64,17 @@ function(_canon_apply_compiler_policy TARGET)
     endif()
 endfunction()
 
+# Adds AddressSanitizer instrumentation to managed C++ compilation and linking.
+function(_canon_apply_asan TARGET)
+    if (NOT CANON_ENABLE_ASAN)
+        return()
+    endif()
+
+    _canon_apply_cxx_option("${TARGET}" "-fsanitize=address")
+    _canon_apply_cxx_option("${TARGET}" "-fno-omit-frame-pointer")
+    target_link_options("${TARGET}" PRIVATE -fsanitize=address)
+endfunction()
+
 # Lets CMake drive clang-tidy with the real compile command for each source file.
 function(_canon_apply_tidy TARGET)
     if (NOT CANON_ENABLE_TIDY)
@@ -105,6 +117,7 @@ function(canon_apply_target TARGET)
     )
 
     _canon_apply_compiler_policy("${TARGET}")
+    _canon_apply_asan("${TARGET}")
     _canon_apply_tidy("${TARGET}")
 endfunction()
 

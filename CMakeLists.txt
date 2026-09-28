@@ -73,6 +73,11 @@ _canon_add_script_test(
     -DCANON_ENABLE_WARNINGS=ON
 )
 
+_canon_add_script_test(
+    asan
+    asan-consumer.cmake
+)
+
 if (CANON_CLANG_TIDY_EXECUTABLE)
     _canon_add_script_test(
         tidy
@@ -127,6 +132,11 @@ _canon_add_script_test(
 _canon_add_script_test(
     presets.release
     preset-release.cmake
+)
+
+_canon_add_script_test(
+    presets.asan
+    preset-asan.cmake
 )
 
 if (CANON_CLANG_TIDY_EXECUTABLE)

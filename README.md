@@ -67,6 +67,14 @@ This keeps the distinction explicit. Family development builds use strict warnin
 
 With warnings enabled, GCC uses the warning set maintained by Canon and treats warnings as errors. Clang uses `-Weverything`, treats warnings as errors, and suppresses only the intentional C++98 compatibility diagnostic.
 
+## AddressSanitizer
+
+AddressSanitizer instrumentation is controlled by `CANON_ENABLE_ASAN`. It is off by default. Canon's shared `asan` development preset enables it in a dedicated Debug build tree.
+
+When enabled, Canon adds AddressSanitizer compile and link instrumentation to managed targets and preserves frame pointers for useful diagnostics. Unmanaged targets remain unchanged.
+
+Canon does not set `ASAN_OPTIONS` or otherwise control the sanitizer runtime. Projects and users keep ownership of runtime settings for their environment and tests.
+
 ## clang-tidy
 
 Running clang-tidy is enabled by `CANON_ENABLE_TIDY`. It is off by default. Canon's shared development presets turn it on.
@@ -109,7 +117,7 @@ Canon ships `cmake/CanonPresets.json` for projects that want to share its ordina
 }
 ```
 
-The shared fragment provides separate `debug`, `release`, and `tidy` configure trees beneath `build/`. All three development configurations enable Canon's strict warnings, while `tidy` also enables clang-tidy. Matching build and test presets use the same configured tree, and each workflow preset performs configure, build, and CTest in sequence.
+The shared fragment provides separate `debug`, `release`, `asan`, and `tidy` configure trees beneath `build/`. All four development configurations enable Canon's strict warnings. The `asan` preset uses Debug with AddressSanitizer enabled, while `tidy` uses Debug with clang-tidy enabled. Matching build and test presets use the same configured tree, and each workflow preset performs configure, build, and CTest in sequence.
 
 Machine-specific compiler, toolchain, SDK, and local path choices belong in ignored `CMakeUserPresets.json` files. Local presets can inherit the checked-in shared presets normally.
 
