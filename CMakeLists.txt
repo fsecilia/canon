@@ -35,7 +35,7 @@ endif()
 
 enable_language(CXX)
 
-find_program(_canon_clang_tidy NAMES clang-tidy)
+find_program(CANON_CLANG_TIDY_EXECUTABLE NAMES clang-tidy)
 find_package(Doxygen 1.9 QUIET OPTIONAL_COMPONENTS dot)
 
 function(_canon_add_script_test NAME SCRIPT)
@@ -73,11 +73,11 @@ _canon_add_script_test(
     -DCANON_ENABLE_WARNINGS=ON
 )
 
-if (_canon_clang_tidy)
+if (CANON_CLANG_TIDY_EXECUTABLE)
     _canon_add_script_test(
         tidy
         tooling-consumer.cmake
-        "-DCANON_CLANG_TIDY_EXECUTABLE=${_canon_clang_tidy}"
+        "-DCANON_CLANG_TIDY_EXECUTABLE=${CANON_CLANG_TIDY_EXECUTABLE}"
     )
 else()
     message(STATUS "Canon clang-tidy validation unavailable: clang-tidy was not found")
@@ -129,11 +129,11 @@ _canon_add_script_test(
     preset-release.cmake
 )
 
-if (_canon_clang_tidy)
+if (CANON_CLANG_TIDY_EXECUTABLE)
     _canon_add_script_test(
         presets.tidy
         preset-tidy.cmake
-        "-DCANON_CLANG_TIDY_EXECUTABLE=${_canon_clang_tidy}"
+        "-DCANON_CLANG_TIDY_EXECUTABLE=${CANON_CLANG_TIDY_EXECUTABLE}"
     )
 endif()
 
