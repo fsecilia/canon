@@ -24,6 +24,7 @@ install(
     FILES
         cmake/Canon.cmake
         cmake/CanonConfig.cmake
+        cmake/CanonCoverageClean.cmake
         "${CMAKE_CURRENT_BINARY_DIR}/CanonConfigVersion.cmake"
     DESTINATION share/cmake/Canon
 )
@@ -35,8 +36,14 @@ endif()
 
 enable_language(CXX)
 
-find_program(CANON_CLANG_TIDY_EXECUTABLE NAMES clang-tidy)
 find_package(Doxygen 1.9 QUIET OPTIONAL_COMPONENTS dot)
+find_program(CANON_CLANG_TIDY_EXECUTABLE NAMES clang-tidy)
+
+find_program(CANON_GCOVR_EXECUTABLE NAMES gcovr)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    get_filename_component(_canon_compiler_dir "${CMAKE_CXX_COMPILER}" DIRECTORY)
+    find_program(CANON_LLVM_COV_EXECUTABLE NAMES llvm-cov HINTS "${_canon_compiler_dir}")
+endif()
 
 function(_canon_add_script_test NAME SCRIPT)
     add_test(
@@ -77,6 +84,31 @@ _canon_add_script_test(
     asan
     asan-consumer.cmake
 )
+
+set(_canon_coverage_test_arguments)
+if (CANON_GCOVR_EXECUTABLE)
+    list(APPEND _canon_coverage_test_arguments
+        "-DCANON_GCOVR_EXECUTABLE=${CANON_GCOVR_EXECUTABLE}")
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        if (CANON_LLVM_COV_EXECUTABLE)
+            list(APPEND _canon_coverage_test_arguments
+                "-DCANON_LLVM_COV_EXECUTABLE=${CANON_LLVM_COV_EXECUTABLE}")
+        else()
+            set(_canon_coverage_test_arguments)
+            message(STATUS "Canon coverage validation unavailable: llvm-cov was not found")
+        endif()
+    endif()
+else()
+    message(STATUS "Canon coverage validation unavailable: gcovr was not found")
+endif()
+
+if (_canon_coverage_test_arguments)
+    _canon_add_script_test(
+        coverage
+        coverage-consumer.cmake
+        ${_canon_coverage_test_arguments}
+    )
+endif()
 
 if (CANON_CLANG_TIDY_EXECUTABLE)
     _canon_add_script_test(
@@ -138,6 +170,14 @@ _canon_add_script_test(
     presets.asan
     preset-asan.cmake
 )
+
+if (_canon_coverage_test_arguments)
+    _canon_add_script_test(
+        presets.coverage
+        preset-coverage.cmake
+        ${_canon_coverage_test_arguments}
+    )
+endif()
 
 if (CANON_CLANG_TIDY_EXECUTABLE)
     _canon_add_script_test(

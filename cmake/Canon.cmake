@@ -3,9 +3,10 @@
 
 include_guard(GLOBAL)
 
-option(CANON_ENABLE_WARNINGS "Enable Canon's strict compiler warnings." OFF)
 option(CANON_ENABLE_ASAN "Enable AddressSanitizer on Canon-managed targets." OFF)
+option(CANON_ENABLE_COVERAGE "Enable coverage instrumentation on Canon-managed targets." OFF)
 option(CANON_ENABLE_TIDY "Run clang-tidy as part of compiling Canon-managed targets." OFF)
+option(CANON_ENABLE_WARNINGS "Enable Canon's strict compiler warnings." OFF)
 
 function(_canon_apply_cxx_option TARGET OPTION)
     target_compile_options("${TARGET}" PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${OPTION}>")
@@ -75,6 +76,114 @@ function(_canon_apply_asan TARGET)
     target_link_options("${TARGET}" PRIVATE -fsanitize=address)
 endfunction()
 
+# Selects the compiler-matched gcov backend used by gcovr.
+function(_canon_find_coverage_backend OUT_COMMAND)
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        if (NOT CANON_GCOV_EXECUTABLE)
+            execute_process(
+                COMMAND "${CMAKE_CXX_COMPILER}" -print-prog-name=gcov
+                OUTPUT_VARIABLE _gcov_candidate
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+                COMMAND_ERROR_IS_FATAL ANY
+            )
+            if (IS_ABSOLUTE "${_gcov_candidate}" AND EXISTS "${_gcov_candidate}")
+                set(
+                    CANON_GCOV_EXECUTABLE
+                    "${_gcov_candidate}"
+                    CACHE FILEPATH "gcov executable used by Canon coverage"
+                )
+            else()
+                find_program(
+                    CANON_GCOV_EXECUTABLE
+                    NAMES "${_gcov_candidate}" gcov
+                    REQUIRED
+                    DOC "gcov executable used by Canon coverage"
+                )
+            endif()
+        endif()
+        set(${OUT_COMMAND} "${CANON_GCOV_EXECUTABLE}" PARENT_SCOPE)
+        return()
+    endif()
+
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        get_filename_component(_compiler_dir "${CMAKE_CXX_COMPILER}" DIRECTORY)
+        find_program(
+            CANON_LLVM_COV_EXECUTABLE
+            NAMES llvm-cov
+            HINTS "${_compiler_dir}"
+            REQUIRED
+            DOC "llvm-cov executable used by Canon coverage"
+        )
+        set(${OUT_COMMAND} "${CANON_LLVM_COV_EXECUTABLE} gcov" PARENT_SCOPE)
+        return()
+    endif()
+
+    message(FATAL_ERROR
+        "Canon coverage does not support compiler '${CMAKE_CXX_COMPILER_ID}'")
+endfunction()
+
+# Creates cleanup and report targets for the top-level project that owns the coverage build.
+function(_canon_add_coverage_targets)
+    find_program(
+        CANON_GCOVR_EXECUTABLE
+        NAMES gcovr
+        REQUIRED
+        DOC "gcovr executable used by Canon coverage"
+    )
+    _canon_find_coverage_backend(_gcov_command)
+
+    add_custom_target(
+        coverage-clean
+        COMMAND
+            "${CMAKE_COMMAND}"
+            "-DCANON_COVERAGE_BINARY_DIR=${CMAKE_BINARY_DIR}"
+            -P "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/CanonCoverageClean.cmake"
+        COMMENT "Cleaning coverage data"
+        VERBATIM
+    )
+
+    set(_output_dir "${CMAKE_BINARY_DIR}/coverage")
+    add_custom_target(
+        coverage-report
+        COMMAND "${CMAKE_COMMAND}" -E make_directory "${_output_dir}"
+        COMMAND
+            "${CANON_GCOVR_EXECUTABLE}"
+            --root "${CMAKE_SOURCE_DIR}"
+            "${CMAKE_BINARY_DIR}"
+            --gcov-executable "${_gcov_command}"
+            --exclude ".*_test\\.cpp$"
+            --exclude ".*/external/.*"
+            --html-details "${_output_dir}/index.html"
+            --delete
+            --print-summary
+        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+        COMMENT "Generating coverage report"
+        USES_TERMINAL
+        VERBATIM
+    )
+endfunction()
+
+# Adds gcov-compatible instrumentation and top-level reporting helpers when requested.
+function(_canon_apply_coverage TARGET)
+    if (NOT CANON_ENABLE_COVERAGE)
+        return()
+    endif()
+
+    _canon_apply_cxx_option("${TARGET}" "--coverage")
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        _canon_apply_cxx_option("${TARGET}" "-fprofile-abs-path")
+    endif()
+    target_link_options("${TARGET}" PRIVATE --coverage)
+
+    if (PROJECT_IS_TOP_LEVEL)
+        get_property(_targets_added GLOBAL PROPERTY _CANON_COVERAGE_TARGETS_ADDED)
+        if (NOT _targets_added)
+            _canon_add_coverage_targets()
+            set_property(GLOBAL PROPERTY _CANON_COVERAGE_TARGETS_ADDED TRUE)
+        endif()
+    endif()
+endfunction()
+
 # Lets CMake drive clang-tidy with the real compile command for each source file.
 function(_canon_apply_tidy TARGET)
     if (NOT CANON_ENABLE_TIDY)
@@ -118,6 +227,7 @@ function(canon_apply_target TARGET)
 
     _canon_apply_compiler_policy("${TARGET}")
     _canon_apply_asan("${TARGET}")
+    _canon_apply_coverage("${TARGET}")
     _canon_apply_tidy("${TARGET}")
 endfunction()
 

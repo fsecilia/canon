@@ -57,6 +57,11 @@ if (NOT _canon_install_result EQUAL 0)
         "stderr:\n${_canon_install_stderr}")
 endif()
 
+set(_coverage_clean_script "${_install_prefix}/share/cmake/Canon/CanonCoverageClean.cmake")
+if (NOT EXISTS "${_coverage_clean_script}")
+    message(FATAL_ERROR "Canon install did not include '${_coverage_clean_script}'")
+endif()
+
 #
 # configure and build consumer
 #

@@ -75,6 +75,20 @@ When enabled, Canon adds AddressSanitizer compile and link instrumentation to ma
 
 Canon does not set `ASAN_OPTIONS` or otherwise control the sanitizer runtime. Projects and users keep ownership of runtime settings for their environment and tests.
 
+## Coverage
+
+Coverage instrumentation is controlled by `CANON_ENABLE_COVERAGE`. It is off by default. When enabled, Canon adds gcov-compatible compile and link instrumentation to managed targets. GCC also receives `-fprofile-abs-path` so profile data records stable source paths. Unmanaged targets remain unchanged.
+
+For a top-level coverage build, Canon adds two targets when the first managed target receives coverage. `coverage-clean` removes stale `.gcda` files from the build tree. `coverage-report` runs gcovr, writes detailed HTML beneath `coverage/`, excludes `external/` and `*_test.cpp`, prints a summary, and removes the generated `.gcda` data after reporting. GCC uses its matching `gcov` program; Clang uses `llvm-cov gcov`.
+
+Canon's shared `coverage` workflow uses a dedicated Debug build tree and sequences configure, cleanup, build, CTest, and report generation. Run the complete workflow with:
+
+```text
+cmake --workflow --preset coverage
+```
+
+The shared workflow is not required. A project may enable coverage in another build tree and invoke the helper targets around its own build and test steps.
+
 ## clang-tidy
 
 Running clang-tidy is enabled by `CANON_ENABLE_TIDY`. It is off by default. Canon's shared development presets turn it on.
@@ -117,7 +131,9 @@ Canon ships `cmake/CanonPresets.json` for projects that want to share its ordina
 }
 ```
 
-The shared fragment provides separate `debug`, `release`, `asan`, and `tidy` configure trees beneath `build/`. All four development configurations enable Canon's strict warnings. The `asan` preset uses Debug with AddressSanitizer enabled, while `tidy` uses Debug with clang-tidy enabled. Matching build and test presets use the same configured tree, and each workflow preset performs configure, build, and CTest in sequence.
+The shared fragment provides separate `debug`, `release`, `asan`, `tidy`, and `coverage` configure trees beneath `build/`. These development configurations enable Canon's strict warnings. The specialized configurations use Debug: `asan` enables AddressSanitizer, `tidy` enables clang-tidy, and `coverage` enables gcov-compatible instrumentation.
+
+Debug, Release, ASan, and tidy workflows perform configure, build, and CTest in sequence. The coverage workflow adds cleanup before the build and report generation after CTest while keeping those stages as separate native preset steps.
 
 Machine-specific compiler, toolchain, SDK, and local path choices belong in ignored `CMakeUserPresets.json` files. Local presets can inherit the checked-in shared presets normally.
 

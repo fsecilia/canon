@@ -48,6 +48,15 @@
         "CMAKE_BUILD_TYPE": "Debug",
         "CANON_ENABLE_TIDY": true
       }
+    },
+    {
+      "name": "coverage",
+      "displayName": "Coverage",
+      "inherits": "_canon-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CANON_ENABLE_COVERAGE": true
+      }
     }
   ],
   "buildPresets": [
@@ -66,6 +75,24 @@
     {
       "name": "tidy",
       "configurePreset": "tidy"
+    },
+    {
+      "name": "coverage-clean",
+      "configurePreset": "coverage",
+      "targets": [
+        "coverage-clean"
+      ]
+    },
+    {
+      "name": "coverage",
+      "configurePreset": "coverage"
+    },
+    {
+      "name": "coverage-report",
+      "configurePreset": "coverage",
+      "targets": [
+        "coverage-report"
+      ]
     }
   ],
   "testPresets": [
@@ -102,6 +129,16 @@
     {
       "name": "tidy",
       "configurePreset": "tidy",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    },
+    {
+      "name": "coverage",
+      "configurePreset": "coverage",
       "output": {
         "outputOnFailure": true
       },
@@ -176,6 +213,31 @@
         {
           "type": "test",
           "name": "tidy"
+        }
+      ]
+    },
+    {
+      "name": "coverage",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "coverage"
+        },
+        {
+          "type": "build",
+          "name": "coverage-clean"
+        },
+        {
+          "type": "build",
+          "name": "coverage"
+        },
+        {
+          "type": "test",
+          "name": "coverage"
+        },
+        {
+          "type": "build",
+          "name": "coverage-report"
         }
       ]
     }
