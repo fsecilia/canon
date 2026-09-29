@@ -99,11 +99,19 @@ function(_canon_apply_warnings TARGET)
     endforeach()
 endfunction()
 
-# Adds AddressSanitizer instrumentation to managed C++ compilation and linking.
+# Adds AddressSanitizer instrumentation and propagates required runtime linking.
 function(_canon_apply_asan TARGET)
     _canon_apply_cxx_option("${TARGET}" "-fsanitize=address")
     _canon_apply_cxx_option("${TARGET}" "-fno-omit-frame-pointer")
-    target_link_options("${TARGET}" PRIVATE -fsanitize=address)
+
+    get_target_property(_type "${TARGET}" TYPE)
+    if (_type STREQUAL "STATIC_LIBRARY" OR _type STREQUAL "OBJECT_LIBRARY")
+        target_link_options("${TARGET}" INTERFACE -fsanitize=address)
+    elseif (_type STREQUAL "SHARED_LIBRARY")
+        target_link_options("${TARGET}" PUBLIC -fsanitize=address)
+    else()
+        target_link_options("${TARGET}" PRIVATE -fsanitize=address)
+    endif()
 endfunction()
 
 # Selects the compiler-matched gcov backend used by gcovr.
@@ -199,7 +207,13 @@ function(_canon_apply_coverage TARGET)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         _canon_apply_cxx_option("${TARGET}" "-fprofile-abs-path")
     endif()
-    target_link_options("${TARGET}" PRIVATE --coverage)
+
+    get_target_property(_type "${TARGET}" TYPE)
+    if (_type STREQUAL "STATIC_LIBRARY" OR _type STREQUAL "OBJECT_LIBRARY")
+        target_link_options("${TARGET}" INTERFACE --coverage)
+    else()
+        target_link_options("${TARGET}" PRIVATE --coverage)
+    endif()
 
     if (PROJECT_IS_TOP_LEVEL)
         get_property(_targets_added GLOBAL PROPERTY _CANON_COVERAGE_TARGETS_ADDED)

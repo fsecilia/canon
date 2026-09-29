@@ -28,6 +28,12 @@ add_executable(covered_test covered_test.cpp)
 target_link_libraries(covered_test PRIVATE covered)
 canon_apply_target(covered_test)
 add_test(NAME covered_test COMMAND covered_test)
+
+add_executable(covered_unmanaged covered_test.cpp)
+target_link_libraries(covered_unmanaged PRIVATE covered)
+set_property(TARGET covered_unmanaged PROPERTY CXX_SCAN_FOR_MODULES FALSE)
+add_test(NAME covered_unmanaged COMMAND covered_unmanaged)
+
 add_test(
     NAME coverage_project_owned
     COMMAND "${CMAKE_COMMAND}" -E echo "project-owned coverage test"
@@ -53,8 +59,19 @@ foreach(_target IN ITEMS covered covered_test)
     endif()
 endforeach()
 
-# Only targets with a real link step need the coverage runtime link option.
+# Static-library consumers must inherit the coverage runtime without compile instrumentation.
+get_target_property(_covered_link_options covered INTERFACE_LINK_OPTIONS)
+if (NOT "--coverage" IN_LIST _covered_link_options)
+    message(FATAL_ERROR "covered does not publish the coverage link requirement")
+endif()
+
 get_target_property(_link_options covered_test LINK_OPTIONS)
 if (NOT "--coverage" IN_LIST _link_options)
     message(FATAL_ERROR "covered_test is missing the coverage link option")
+endif()
+
+get_target_property(_unmanaged_compile_options covered_unmanaged COMPILE_OPTIONS)
+if (NOT "${_unmanaged_compile_options}" STREQUAL "_unmanaged_compile_options-NOTFOUND"
+    AND "--coverage" IN_LIST _unmanaged_compile_options)
+    message(FATAL_ERROR "covered_unmanaged inherited coverage compile instrumentation")
 endif()

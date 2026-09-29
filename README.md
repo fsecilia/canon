@@ -107,13 +107,15 @@ With warnings enabled, GCC uses the warning set maintained by Canon and treats w
 
 AddressSanitizer instrumentation is controlled by `CANON_ENABLE_ASAN`. It is off by default. Canon's shared `asan` development preset enables it in a dedicated Debug build tree.
 
-When enabled, Canon adds AddressSanitizer compile and link instrumentation to managed targets and preserves frame pointers for useful diagnostics. Unmanaged targets remain unchanged.
+When enabled, Canon adds AddressSanitizer compile instrumentation to managed targets and preserves frame pointers for useful diagnostics. Compile instrumentation remains private to each managed target. Static and object libraries publish the sanitizer runtime link requirement to consumers, while shared libraries both use and publish it. This allows an unmanaged executable to consume an instrumented library without instrumenting the executable's own translation units.
+
+MODULE libraries cannot propagate an AddressSanitizer runtime requirement to the process that loads them dynamically. The host process must arrange for the sanitizer runtime separately.
 
 Canon does not set `ASAN_OPTIONS` or otherwise control the sanitizer runtime. Projects and users keep ownership of runtime settings for their environment and tests.
 
 ## Coverage
 
-Coverage instrumentation is controlled by `CANON_ENABLE_COVERAGE`. It is off by default. When enabled, Canon adds gcov-compatible compile and link instrumentation to managed targets. GCC also receives `-fprofile-abs-path` so profile data records stable source paths. Unmanaged targets remain unchanged.
+Coverage instrumentation is controlled by `CANON_ENABLE_COVERAGE`. It is off by default. When enabled, Canon adds gcov-compatible compile instrumentation to managed targets. GCC also receives `-fprofile-abs-path` so profile data records stable source paths. Compile instrumentation remains private. Static and object libraries publish the coverage runtime link requirement to consumers, while targets with their own link step satisfy that requirement directly.
 
 For a top-level coverage build, Canon adds two targets when the first managed target receives coverage. `coverage-clean` removes stale `.gcda` files from the build tree. `coverage-report` runs gcovr, writes detailed HTML beneath `coverage/`, excludes `external/` and `*_test.cpp`, prints a summary, and removes the generated `.gcda` data after reporting. GCC uses its matching `gcov` program; Clang uses `llvm-cov gcov`.
 
