@@ -8,6 +8,25 @@ option(CANON_ENABLE_COVERAGE "Enable coverage instrumentation on Canon-managed t
 option(CANON_ENABLE_TIDY "Run clang-tidy as part of compiling Canon-managed targets." OFF)
 option(CANON_ENABLE_WARNINGS "Enable Canon's strict compiler warnings." OFF)
 
+set(_CANON_MINIMUM_CLANG_TIDY_VERSION 21.1.6)
+
+# Reports the semantic version printed by a candidate clang-tidy executable.
+function(_canon_get_clang_tidy_version EXECUTABLE OUT_VERSION)
+    execute_process(
+        COMMAND "${EXECUTABLE}" --version
+        RESULT_VARIABLE _result
+        OUTPUT_VARIABLE _stdout
+        ERROR_VARIABLE _stderr
+    )
+    if (NOT _result EQUAL 0)
+        set(${OUT_VERSION} "" PARENT_SCOPE)
+        return()
+    endif()
+
+    string(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+" _version "${_stdout}\n${_stderr}")
+    set(${OUT_VERSION} "${_version}" PARENT_SCOPE)
+endfunction()
+
 function(_canon_apply_cxx_option TARGET OPTION)
     target_compile_options("${TARGET}" PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${OPTION}>")
 endfunction()
@@ -262,6 +281,19 @@ function(_canon_apply_tidy TARGET)
         REQUIRED
         DOC "clang-tidy executable used by Canon"
     )
+
+    _canon_get_clang_tidy_version("${CANON_CLANG_TIDY_EXECUTABLE}" _version)
+    if ("${_version}" STREQUAL "")
+        message(FATAL_ERROR
+            "Canon could not determine the clang-tidy version from "
+            "'${CANON_CLANG_TIDY_EXECUTABLE}'")
+    endif()
+    if (_version VERSION_LESS "${_CANON_MINIMUM_CLANG_TIDY_VERSION}")
+        message(FATAL_ERROR
+            "Canon requires clang-tidy ${_CANON_MINIMUM_CLANG_TIDY_VERSION} or newer; "
+            "found ${_version} at '${CANON_CLANG_TIDY_EXECUTABLE}'")
+    endif()
+
     set_property(TARGET "${TARGET}" PROPERTY CXX_CLANG_TIDY "${CANON_CLANG_TIDY_EXECUTABLE}")
 endfunction()
 

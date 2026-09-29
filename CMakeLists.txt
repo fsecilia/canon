@@ -40,6 +40,22 @@ enable_language(CXX)
 find_package(Doxygen 1.9 QUIET OPTIONAL_COMPONENTS dot)
 find_program(CANON_CLANG_TIDY_EXECUTABLE NAMES clang-tidy)
 
+set(_canon_clang_tidy_supported FALSE)
+if (CANON_CLANG_TIDY_EXECUTABLE)
+    _canon_get_clang_tidy_version("${CANON_CLANG_TIDY_EXECUTABLE}" _canon_clang_tidy_version)
+    if ("${_canon_clang_tidy_version}" STREQUAL "")
+        message(STATUS
+            "Canon clang-tidy validation unavailable: could not determine the version of "
+            "'${CANON_CLANG_TIDY_EXECUTABLE}'")
+    elseif (_canon_clang_tidy_version VERSION_LESS "${_CANON_MINIMUM_CLANG_TIDY_VERSION}")
+        message(STATUS
+            "Canon clang-tidy validation unavailable: clang-tidy ${_canon_clang_tidy_version} "
+            "is older than the required minimum ${_CANON_MINIMUM_CLANG_TIDY_VERSION}")
+    else()
+        set(_canon_clang_tidy_supported TRUE)
+    endif()
+endif()
+
 find_program(CANON_GCOVR_EXECUTABLE NAMES gcovr)
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     get_filename_component(_canon_compiler_dir "${CMAKE_CXX_COMPILER}" DIRECTORY)
@@ -136,6 +152,11 @@ _canon_add_script_test(
 )
 
 _canon_add_script_test(
+    tidy.version
+    tidy-version.cmake
+)
+
+_canon_add_script_test(
     asan
     asan-consumer.cmake
 )
@@ -165,13 +186,13 @@ if (_canon_coverage_test_arguments)
     )
 endif()
 
-if (CANON_CLANG_TIDY_EXECUTABLE)
+if (_canon_clang_tidy_supported)
     _canon_add_script_test(
         tidy
         tooling-consumer.cmake
         "-DCANON_CLANG_TIDY_EXECUTABLE=${CANON_CLANG_TIDY_EXECUTABLE}"
     )
-else()
+elseif (NOT CANON_CLANG_TIDY_EXECUTABLE)
     message(STATUS "Canon clang-tidy validation unavailable: clang-tidy was not found")
 endif()
 

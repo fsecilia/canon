@@ -135,7 +135,7 @@ The shared workflow is not required. A project may enable coverage in another bu
 
 Running clang-tidy is enabled by `CANON_ENABLE_TIDY`. It is off by default. Canon's shared development presets turn it on.
 
-When enabled, Canon locates clang-tidy and attaches it to managed targets through CMake's native `CXX_CLANG_TIDY` target property. CMake then supplies the real compiler invocation for each translation unit.
+Canon requires clang-tidy 21.1.6 or newer. When enabled, Canon locates clang-tidy, verifies its version, and attaches it to managed targets through CMake's native `CXX_CLANG_TIDY` target property. CMake then supplies the real compiler invocation for each translation unit.
 
 The checked-in `.clang-tidy` file comes from `standards/`. Editors, CI, and direct tool invocations can use the same configuration without going through Canon.
 
