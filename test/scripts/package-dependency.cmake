@@ -51,6 +51,10 @@ endif()
 set(_dependency_dir "${_install_prefix}/artifact-lib/cmake/DependencyFixture")
 file(MAKE_DIRECTORY "${_dependency_dir}")
 file(WRITE "${_dependency_dir}/DependencyFixtureConfig.cmake" [=[
+if ("canon-expanded-sentinel" IN_LIST DependencyFixture_FIND_COMPONENTS)
+    message(FATAL_ERROR "Literal dependency argument was expanded by the installed package")
+endif()
+
 if (NOT TARGET DependencyFixture::dependency)
     add_library(DependencyFixture::dependency INTERFACE IMPORTED)
 endif()
@@ -62,15 +66,15 @@ write_basic_package_version_file(
     ARCH_INDEPENDENT
 )
 
-# Exact duplicate declarations collapse while distinct component requests remain ordered.
+# Exact duplicate declarations collapse while distinct dependency arguments remain ordered.
 set(_config_file
     "${_install_prefix}/artifact-lib/cmake/DependentPackage/DependentPackageConfig.cmake")
 file(READ "${_config_file}" _config)
 string(REGEX MATCHALL "find_dependency\\(" _dependency_calls "${_config}")
 list(LENGTH _dependency_calls _dependency_call_count)
-if (NOT _dependency_call_count EQUAL 2)
+if (NOT _dependency_call_count EQUAL 3)
     message(FATAL_ERROR
-        "DependentPackageConfig.cmake contains ${_dependency_call_count} find_dependency() calls; expected 2")
+        "DependentPackageConfig.cmake contains ${_dependency_call_count} find_dependency() calls; expected 3")
 endif()
 
 set(_alpha_call
@@ -79,11 +83,17 @@ string(FIND "${_config}" "${_alpha_call}" _alpha_position)
 set(_beta_call
     "find_dependency(\"DependencyFixture\" \"2.5\" \"CONFIG\" \"COMPONENTS\" \"Beta\")")
 string(FIND "${_config}" "${_beta_call}" _beta_position)
+set(_literal_call [=[find_dependency("DependencyFixture" "2.5" "CONFIG" "COMPONENTS" "\\\${SENTINEL}")]=])
+string(FIND "${_config}" "${_literal_call}" _literal_position)
 string(FIND "${_config}" "include(\"\${CMAKE_CURRENT_LIST_DIR}/DependentPackageTargets.cmake\")" _targets_position)
-if (_alpha_position EQUAL -1 OR _beta_position EQUAL -1 OR NOT _alpha_position LESS _beta_position)
+if (_alpha_position EQUAL -1
+    OR _beta_position EQUAL -1
+    OR _literal_position EQUAL -1
+    OR NOT _alpha_position LESS _beta_position
+    OR NOT _beta_position LESS _literal_position)
     message(FATAL_ERROR "DependentPackageConfig.cmake did not preserve the distinct dependency declarations")
 endif()
-if (NOT _beta_position LESS _targets_position)
+if (NOT _literal_position LESS _targets_position)
     message(FATAL_ERROR "DependentPackageConfig.cmake did not recover dependencies before importing targets")
 endif()
 
@@ -95,4 +105,5 @@ _canon_build_package_consumer(
     DependentPackage::dependent_api
     ""
     "-DDependencyFixture_DIR=${_dependency_dir}"
+    -DSENTINEL=canon-expanded-sentinel
 )

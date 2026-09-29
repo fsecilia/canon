@@ -370,7 +370,8 @@ endfunction()
 function(_canon_quote_package_argument OUT_ARGUMENT ARGUMENT)
     string(REPLACE "\\" "\\\\" _argument "${ARGUMENT}")
     string(REPLACE "\"" "\\\"" _argument "${_argument}")
-    string(REPLACE "$" "\$" _argument "${_argument}")
+    # find_dependency() is a macro, so dollar signs cross two argument expansions.
+    string(REPLACE "$" [=[\\\$]=] _argument "${_argument}")
     set("${OUT_ARGUMENT}" "\"${_argument}\"" PARENT_SCOPE)
 endfunction()
 

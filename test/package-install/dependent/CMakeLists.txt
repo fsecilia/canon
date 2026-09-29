@@ -21,3 +21,4 @@ canon_apply_library(dependent_api)
 
 canon_apply_dependency(DependencyFixture 2.5 CONFIG COMPONENTS Alpha)
 canon_apply_dependency(DependencyFixture 2.5 CONFIG COMPONENTS Beta)
+canon_apply_dependency(DependencyFixture 2.5 CONFIG COMPONENTS [=[${SENTINEL}]=])
