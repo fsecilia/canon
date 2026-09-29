@@ -60,8 +60,15 @@ function(_canon_apply_compiler_policy TARGET)
     endforeach()
 endfunction()
 
-# Enables Release IPO when the active C++ toolchain supports it.
+# Enables Release IPO on final-link targets when the active C++ toolchain supports it.
 function(_canon_apply_ipo_if_supported TARGET)
+    get_target_property(_type "${TARGET}" TYPE)
+    if (NOT _type STREQUAL "EXECUTABLE"
+        AND NOT _type STREQUAL "SHARED_LIBRARY"
+        AND NOT _type STREQUAL "MODULE_LIBRARY")
+        return()
+    endif()
+
     get_property(_ipo_supported GLOBAL PROPERTY _CANON_IPO_SUPPORTED)
     if ("${_ipo_supported}" STREQUAL "")
         include(CheckIPOSupported)

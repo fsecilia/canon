@@ -156,15 +156,6 @@ foreach(_target IN LISTS _compiled_targets)
     _require_target_property("${_target}" CXX_SCAN_FOR_MODULES FALSE)
     _require_target_property("${_target}" CXX_STANDARD 26)
     _require_target_property("${_target}" CXX_STANDARD_REQUIRED TRUE)
-    if (_ipo_supported)
-        _require_target_property("${_target}" INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
-    else()
-        get_target_property(_ipo_property "${_target}" INTERPROCEDURAL_OPTIMIZATION_RELEASE)
-        if (NOT "${_ipo_property}" STREQUAL "_ipo_property-NOTFOUND")
-            message(FATAL_ERROR
-                "${_target} unexpectedly enables Release IPO when the toolchain does not support it")
-        endif()
-    endif()
     _require_target_property("${_target}" POSITION_INDEPENDENT_CODE TRUE)
     _require_target_property("${_target}" VISIBILITY_INLINES_HIDDEN TRUE)
     _require_target_property("${_target}" CXX_VISIBILITY_PRESET hidden)
@@ -181,6 +172,31 @@ foreach(_target IN LISTS _compiled_targets)
                     "warnings are disabled but ${_target} has warning option '${_option}'")
             endif()
         endforeach()
+    endif()
+endforeach()
+
+set(_ipo_final_targets
+    sample_shared
+    sample_module
+    consumer
+    sample_test
+)
+foreach(_target IN LISTS _ipo_final_targets)
+    if (_ipo_supported)
+        _require_target_property("${_target}" INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
+    else()
+        get_target_property(_ipo_property "${_target}" INTERPROCEDURAL_OPTIMIZATION_RELEASE)
+        if (NOT "${_ipo_property}" STREQUAL "_ipo_property-NOTFOUND")
+            message(FATAL_ERROR
+                "${_target} unexpectedly enables Release IPO when the toolchain does not support it")
+        endif()
+    endif()
+endforeach()
+
+foreach(_target IN ITEMS sample_static sample_object warning_probe)
+    get_target_property(_ipo_property "${_target}" INTERPROCEDURAL_OPTIMIZATION_RELEASE)
+    if (NOT "${_ipo_property}" STREQUAL "_ipo_property-NOTFOUND")
+        message(FATAL_ERROR "${_target} unexpectedly enables Release IPO")
     endif()
 endforeach()
 

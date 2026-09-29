@@ -35,8 +35,10 @@ For each managed target, Canon currently:
 * disables C++ module dependency scanning;
 * enables position-independent code;
 * hides symbols by default;
-* enables interprocedural optimization for Release builds when supported; and
+* enables interprocedural optimization for Release executables, shared libraries, and module libraries when supported; and
 * applies the supported compiler-specific build options.
+
+Canon intentionally leaves Release static and object libraries without IPO. Those artifacts remain ordinary object code that can be consumed across supported compiler toolchains, at the cost of excluding their compiled object code from later whole-program IPO. Header-defined code compiled directly into an IPO-enabled final target remains eligible for that target's optimization.
 
 Use `canon_apply_executable()` for a normal executable that should also be installed:
 
