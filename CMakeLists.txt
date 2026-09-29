@@ -75,6 +75,30 @@ _canon_add_script_test(
 )
 
 _canon_add_script_test(
+    compiler.appleclang
+    compiler-error.cmake
+    -DCANON_TEST_COMPILER_ID=AppleClang
+    -DCANON_TEST_FRONTEND_VARIANT=GNU
+    "-DCANON_EXPECTED_ERROR='AppleClang' is not supported"
+)
+
+_canon_add_script_test(
+    compiler.clang-cl
+    compiler-error.cmake
+    -DCANON_TEST_COMPILER_ID=Clang
+    -DCANON_TEST_FRONTEND_VARIANT=MSVC
+    "-DCANON_EXPECTED_ERROR='Clang' with frontend 'MSVC' is not supported"
+)
+
+_canon_add_script_test(
+    compiler.msvc
+    compiler-error.cmake
+    -DCANON_TEST_COMPILER_ID=MSVC
+    -DCANON_TEST_FRONTEND_VARIANT=MSVC
+    "-DCANON_EXPECTED_ERROR='MSVC' is not supported"
+)
+
+_canon_add_script_test(
     executable.install
     executable-install.cmake
 )

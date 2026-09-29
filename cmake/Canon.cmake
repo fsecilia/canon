@@ -12,6 +12,29 @@ function(_canon_apply_cxx_option TARGET OPTION)
     target_compile_options("${TARGET}" PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${OPTION}>")
 endfunction()
 
+# Rejects compiler frontends outside Canon's supported GNU-style toolchains.
+function(_canon_require_supported_compiler)
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        return()
+    endif()
+
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
+        AND CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "GNU")
+        return()
+    endif()
+
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        message(FATAL_ERROR
+            "Canon supports GNU GCC and LLVM Clang with the GNU frontend; "
+            "compiler '${CMAKE_CXX_COMPILER_ID}' with frontend "
+            "'${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}' is not supported")
+    endif()
+
+    message(FATAL_ERROR
+        "Canon supports GNU GCC and LLVM Clang with the GNU frontend; "
+        "compiler '${CMAKE_CXX_COMPILER_ID}' is not supported")
+endfunction()
+
 # Applies the compiler-specific build policy shared by Canon-managed compiled targets.
 function(_canon_apply_compiler_policy TARGET)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -250,6 +273,8 @@ function(canon_apply_target TARGET)
         message(FATAL_ERROR
             "canon_apply_target(): target '${TARGET}' has type '${_type}', which has no compiled-target Canon policy")
     endif()
+
+    _canon_require_supported_compiler()
 
     set_target_properties("${TARGET}" PROPERTIES
         CXX_SCAN_FOR_MODULES FALSE

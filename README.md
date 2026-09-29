@@ -18,6 +18,8 @@ endif()
 
 Adjust the vendored path to match the project layout. Canon's installed Config package uses the same compatibility policy as other Canon-managed packages: versions before 1.0 are compatible within the same minor version, while versions starting at 1.0 are compatible within the same major version.
 
+Canon currently supports GNU GCC and LLVM Clang using Clang's GNU-compatible frontend. AppleClang, clang-cl, and MSVC are not supported.
+
 ## Compiled targets
 
 `canon_apply_target()` supports executables, object libraries, and STATIC, SHARED, and MODULE libraries. Use it for compiled targets that need Canon's build policy without Canon-managed installation:
