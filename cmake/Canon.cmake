@@ -405,25 +405,32 @@ function(_canon_mark_package_binary)
     _canon_write_package_version_file()
 endfunction()
 
-# Quotes one argument for a generated CMake package configuration call.
-function(_canon_quote_package_argument OUT_ARGUMENT ARGUMENT)
-    string(REPLACE "\\" "\\\\" _argument "${ARGUMENT}")
-    string(REPLACE "\"" "\\\"" _argument "${_argument}")
-    # find_dependency() is a macro, so dollar signs cross two argument expansions.
-    string(REPLACE "$" [=[\\\$]=] _argument "${_argument}")
-    set("${OUT_ARGUMENT}" "\"${_argument}\"" PARENT_SCOPE)
-endfunction()
+# Represents one value as a literal CMake bracket argument.
+function(_canon_literal_package_argument OUT_ARGUMENT ARGUMENT)
+    set(_equals "=")
+    while (TRUE)
+        set(_closing_bracket "]${_equals}]")
+        string(FIND "${ARGUMENT}" "${_closing_bracket}" _closing_bracket_position)
+        if (_closing_bracket_position EQUAL -1)
+            break()
+        endif()
+        string(APPEND _equals "=")
+    endwhile()
 
-# Formats one find_dependency() call for the generated package configuration.
-function(_canon_format_package_dependency OUT_CALL PACKAGE)
-    _canon_quote_package_argument(_package "${PACKAGE}")
-    set(_call "find_dependency(${_package}")
-    foreach(_argument IN LISTS ARGN)
-        _canon_quote_package_argument(_argument "${_argument}")
-        string(APPEND _call " ${_argument}")
-    endforeach()
-    string(APPEND _call ")")
-    set("${OUT_CALL}" "${_call}" PARENT_SCOPE)
+    set(_opening_bracket "[${_equals}[")
+    set(_leading_newline "")
+    if (NOT "${ARGUMENT}" STREQUAL "")
+        string(SUBSTRING "${ARGUMENT}" 0 1 _first_character)
+        if ("${_first_character}" STREQUAL "\n" OR "${_first_character}" STREQUAL "\r")
+            set(_leading_newline "\n")
+        endif()
+    endif()
+
+    set(
+        "${OUT_ARGUMENT}"
+        "${_opening_bracket}${_leading_newline}${ARGUMENT}${_closing_bracket}"
+        PARENT_SCOPE
+    )
 endfunction()
 
 # Writes this project's relocatable CMake package configuration.
@@ -516,14 +523,25 @@ function(canon_apply_dependency PACKAGE)
         message(FATAL_ERROR "canon_apply_dependency(): package name must not be empty")
     endif()
 
-    foreach(_argument IN LISTS ARGN)
-        if (_argument STREQUAL "REQUIRED" OR _argument STREQUAL "QUIET")
+    set(_dependency_call "find_dependency(")
+    math(EXPR _last_argument "${ARGC} - 1")
+    foreach(_argument_index RANGE 0 ${_last_argument})
+        set(_argument_name "ARGV${_argument_index}")
+        set(_argument "${${_argument_name}}")
+        if (_argument_index GREATER 0
+            AND ("${_argument}" STREQUAL "REQUIRED" OR "${_argument}" STREQUAL "QUIET"))
             message(FATAL_ERROR
                 "canon_apply_dependency(): '${_argument}' is inherited from the outer find_package() call")
         endif()
-    endforeach()
 
-    _canon_format_package_dependency(_dependency_call "${PACKAGE}" ${ARGN})
+        _canon_literal_package_argument(_literal_argument "${_argument}")
+        if (_argument_index GREATER 0)
+            string(APPEND _dependency_call " ")
+        endif()
+        string(APPEND _dependency_call "${_literal_argument}")
+    endforeach()
+    string(APPEND _dependency_call ")")
+
     string(SHA256 _dependency_key "${_dependency_call}")
     set(_dependency_property "_CANON_PACKAGE_DEPENDENCY_${_dependency_key}")
 

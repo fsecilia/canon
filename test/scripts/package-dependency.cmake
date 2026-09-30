@@ -51,10 +51,6 @@ endif()
 set(_dependency_dir "${_install_prefix}/artifact-lib/cmake/DependencyFixture")
 file(MAKE_DIRECTORY "${_dependency_dir}")
 file(WRITE "${_dependency_dir}/DependencyFixtureConfig.cmake" [=[
-if ("canon-expanded-sentinel" IN_LIST DependencyFixture_FIND_COMPONENTS)
-    message(FATAL_ERROR "Literal dependency argument was expanded by the installed package")
-endif()
-
 if (NOT TARGET DependencyFixture::dependency)
     add_library(DependencyFixture::dependency INTERFACE IMPORTED)
 endif()
@@ -66,34 +62,34 @@ write_basic_package_version_file(
     ARCH_INDEPENDENT
 )
 
-# Exact duplicate declarations collapse while distinct dependency arguments remain ordered.
+# Exact duplicate declarations collapse while distinct evaluated argument values remain ordered.
 set(_config_file
     "${_install_prefix}/artifact-lib/cmake/DependentPackage/DependentPackageConfig.cmake")
 file(READ "${_config_file}" _config)
 string(REGEX MATCHALL "find_dependency\\(" _dependency_calls "${_config}")
 list(LENGTH _dependency_calls _dependency_call_count)
-if (NOT _dependency_call_count EQUAL 3)
+if (NOT _dependency_call_count EQUAL 4)
     message(FATAL_ERROR
-        "DependentPackageConfig.cmake contains ${_dependency_call_count} find_dependency() calls; expected 3")
+        "DependentPackageConfig.cmake contains ${_dependency_call_count} find_dependency() calls; expected 4")
 endif()
 
-set(_alpha_call
-    "find_dependency(\"DependencyFixture\" \"2.5\" \"CONFIG\" \"COMPONENTS\" \"Alpha\")")
-string(FIND "${_config}" "${_alpha_call}" _alpha_position)
-set(_beta_call
-    "find_dependency(\"DependencyFixture\" \"2.5\" \"CONFIG\" \"COMPONENTS\" \"Beta\")")
-string(FIND "${_config}" "${_beta_call}" _beta_position)
-set(_literal_call [=[find_dependency("DependencyFixture" "2.5" "CONFIG" "COMPONENTS" "\\\${SENTINEL}")]=])
-string(FIND "${_config}" "${_literal_call}" _literal_position)
+set(_alpha_call [==[find_dependency([=[DependencyFixture]=] [=[2.5]=] [=[CONFIG]=] [=[COMPONENTS]=] [=[Alpha]=])]==])
+set(_beta_call [==[find_dependency([=[DependencyFixture]=] [=[2.5]=] [=[CONFIG]=] [=[COMPONENTS]=] [=[Beta]=])]==])
+set(_literal_call [==[find_dependency([=[DependencyFixture]=] [=[2.5]=] [=[CONFIG]=] [=[COMPONENTS]=] [=[${SENTINEL}]=])]==])
+set(_list_valued_call [==[find_dependency([=[DependencyFixture]=] [=[2.5]=] [=[CONFIG]=] [=[COMPONENTS]=] [=[Gamma;Delta]=])]==])
+set(_previous_position -1)
+foreach(_call_name IN ITEMS _alpha_call _beta_call _literal_call _list_valued_call)
+    set(_expected_call "${${_call_name}}")
+    string(FIND "${_config}" "${_expected_call}" _position)
+    if (_position EQUAL -1 OR NOT _previous_position LESS _position)
+        message(FATAL_ERROR
+            "DependentPackageConfig.cmake did not preserve dependency declaration '${_expected_call}'")
+    endif()
+    set(_previous_position "${_position}")
+endforeach()
+
 string(FIND "${_config}" "include(\"\${CMAKE_CURRENT_LIST_DIR}/DependentPackageTargets.cmake\")" _targets_position)
-if (_alpha_position EQUAL -1
-    OR _beta_position EQUAL -1
-    OR _literal_position EQUAL -1
-    OR NOT _alpha_position LESS _beta_position
-    OR NOT _beta_position LESS _literal_position)
-    message(FATAL_ERROR "DependentPackageConfig.cmake did not preserve the distinct dependency declarations")
-endif()
-if (NOT _literal_position LESS _targets_position)
+if (NOT _previous_position LESS _targets_position)
     message(FATAL_ERROR "DependentPackageConfig.cmake did not recover dependencies before importing targets")
 endif()
 
@@ -107,3 +103,29 @@ _canon_build_package_consumer(
     "-DDependencyFixture_DIR=${_dependency_dir}"
     -DSENTINEL=canon-expanded-sentinel
 )
+
+# Source generation preserves values that exercise bracket delimiters and leading newlines.
+set(_literal_build_dir "${CANON_TEST_BINARY_DIR}/literal-build")
+_canon_configure_package_fixture(
+    "${_literal_build_dir}"
+    -DCANON_TEST_DEPENDENCY_LITERAL_ARGUMENTS=ON
+)
+set(_literal_config_file
+    "${_literal_build_dir}/dependent/canon/package/DependentPackageConfig.cmake")
+file(READ "${_literal_config_file}" _literal_config)
+set(_backslash_call
+    [==[find_dependency([=[DependencyFixture]=] [=[2.5]=] [=[CONFIG]=] [=[COMPONENTS]=] [=[path\segment]=])]==])
+set(_delimiter_call
+    [===[find_dependency([=[DependencyFixture]=] [=[2.5]=] [=[CONFIG]=] [=[COMPONENTS]=] [==[right]]middle]=]edge]==])]===])
+set(_syntax_like_call
+    [==[find_dependency([=[DependencyFixture]=] [=[2.5]=] [=[CONFIG]=] [=[COMPONENTS]=] [=[[[${[[mismatched}]]]=])]==])
+set(_leading_newline_call
+    "find_dependency([=[DependencyFixture]=] [=[2.5]=] [=[CONFIG]=] [=[COMPONENTS]=] [=[\n\nLeading]=])")
+foreach(_call_name IN ITEMS _backslash_call _delimiter_call _syntax_like_call _leading_newline_call)
+    set(_expected_call "${${_call_name}}")
+    string(FIND "${_literal_config}" "${_expected_call}" _position)
+    if (_position EQUAL -1)
+        message(FATAL_ERROR
+            "DependentPackageConfig.cmake did not preserve literal argument '${_expected_call}'")
+    endif()
+endforeach()
