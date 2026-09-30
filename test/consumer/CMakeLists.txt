@@ -112,6 +112,18 @@ function(_require_compile_option TARGET OPTION)
     endif()
 endfunction()
 
+function(_require_compile_option_after TARGET OPTION EARLIER_OPTION)
+    get_target_property(_options "${TARGET}" COMPILE_OPTIONS)
+    set(_required "$<$<COMPILE_LANGUAGE:CXX>:${OPTION}>")
+    set(_earlier "$<$<COMPILE_LANGUAGE:CXX>:${EARLIER_OPTION}>")
+    list(FIND _options "${_required}" _required_index)
+    list(FIND _options "${_earlier}" _earlier_index)
+    if ("${_required_index}" LESS_EQUAL "${_earlier_index}")
+        message(FATAL_ERROR
+            "${TARGET} compile option '${OPTION}' must follow '${EARLIER_OPTION}'")
+    endif()
+endfunction()
+
 # Verify every managed compiled target receives the shared Canon policy.
 get_property(_ipo_supported GLOBAL PROPERTY _CANON_IPO_SUPPORTED)
 if (NOT _ipo_supported STREQUAL "YES" AND NOT _ipo_supported STREQUAL "NO")
@@ -140,17 +152,33 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         -Wshadow
     )
     set(_warning_suppressions)
+    set(_warning_reenables)
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(_warning_options
         -Weverything
         -Werror
-        -Wswitch
-        -Wdouble-promotion
-        -Wfloat-conversion
-        -Wshadow-all
     )
     set(_warning_suppressions
         -Wno-c++98-compat
+        -Wno-c++98-compat-pedantic
+        -Wno-c++20-compat
+        -Wno-c++23-compat
+        -Wno-ctad-maybe-unsupported
+        -Wno-documentation
+        -Wno-documentation-unknown-command
+        -Wno-exit-time-destructors
+        -Wno-global-constructors
+        -Wno-missing-prototypes
+        -Wno-padded
+        -Wno-shadow-field-in-constructor
+        -Wno-switch-default
+        -Wno-switch-enum
+        -Wno-unused-function
+        -Wno-unused-member-function
+        -Wno-unused-template
+    )
+    set(_warning_reenables
+        -Wshadow-field-in-constructor-modified
     )
 endif()
 
@@ -163,9 +191,16 @@ foreach(_target IN LISTS _compiled_targets)
     _require_target_property("${_target}" CXX_VISIBILITY_PRESET hidden)
 
     if (CANON_ENABLE_WARNINGS)
-        foreach(_option IN LISTS _warning_options _warning_suppressions)
+        foreach(_option IN LISTS _warning_options _warning_suppressions _warning_reenables)
             _require_compile_option("${_target}" "${_option}")
         endforeach()
+        if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+            _require_compile_option_after(
+                "${_target}"
+                -Wshadow-field-in-constructor-modified
+                -Wno-shadow-field-in-constructor
+            )
+        endif()
     else()
         get_target_property(_options "${_target}" COMPILE_OPTIONS)
         foreach(_option IN LISTS _options)

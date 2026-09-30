@@ -104,18 +104,35 @@ function(_canon_apply_warnings TARGET)
             -Wshadow
         )
         set(_warning_suppressions)
+        set(_warning_reenables)
     elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
         AND CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "GNU")
         set(_warning_options
             -Weverything
             -Werror
-            -Wswitch
-            -Wdouble-promotion
-            -Wfloat-conversion
-            -Wshadow-all
         )
         set(_warning_suppressions
             -Wno-c++98-compat
+            -Wno-c++98-compat-pedantic
+            -Wno-c++20-compat
+            -Wno-c++23-compat
+            -Wno-ctad-maybe-unsupported
+            -Wno-documentation
+            -Wno-documentation-unknown-command
+            -Wno-exit-time-destructors
+            -Wno-global-constructors
+            -Wno-missing-prototypes
+            -Wno-padded
+            -Wno-shadow-field-in-constructor
+            -Wno-switch-default
+            -Wno-switch-enum
+            -Wno-unused-function
+            -Wno-unused-member-function
+            -Wno-unused-template
+        )
+        # Re-enable child groups that broader cemetery entries would otherwise disable.
+        set(_warning_reenables
+            -Wshadow-field-in-constructor-modified
         )
     else()
         message(FATAL_ERROR
@@ -123,7 +140,7 @@ function(_canon_apply_warnings TARGET)
             "with frontend '${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}'")
     endif()
 
-    foreach(_option IN LISTS _warning_options _warning_suppressions)
+    foreach(_option IN LISTS _warning_options _warning_suppressions _warning_reenables)
         _canon_apply_cxx_option("${TARGET}" "${_option}")
     endforeach()
 endfunction()
