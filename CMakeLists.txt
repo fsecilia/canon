@@ -86,73 +86,73 @@ function(_canon_add_script_test NAME SCRIPT)
             "-DCANON_CXX_COMPILER=${CMAKE_CXX_COMPILER}"
             "-DCANON_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}"
             ${ARGN}
-            -P "${CMAKE_CURRENT_SOURCE_DIR}/test/scripts/${SCRIPT}"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/test/${SCRIPT}"
     )
     set_tests_properties("canon.integration.${NAME}" PROPERTIES LABELS integration TIMEOUT 120)
 endfunction()
 
 _canon_add_script_test(
     targets
-    target-consumer.cmake
+    scripts/target-consumer.cmake
     -DCANON_BUILD_TYPE=Debug
 )
 
 _canon_add_script_test(
     targets.release
-    target-consumer.cmake
+    scripts/target-consumer.cmake
     -DCANON_BUILD_TYPE=Release
 )
 
 _canon_add_script_test(
     executable.install
-    executable-install.cmake
+    scripts/executable-install.cmake
 )
 
 _canon_add_script_test(
     library.install
-    library-install.cmake
+    scripts/library-install.cmake
 )
 
 _canon_add_script_test(
     package.config
-    package-config.cmake
+    scripts/package-config.cmake
 )
 
 _canon_add_script_test(
     package.version
-    package-version.cmake
+    scripts/package-version.cmake
 )
 
 _canon_add_script_test(
     package.dependencies
-    package-dependency.cmake
+    scripts/package-dependency.cmake
 )
 
 _canon_add_script_test(
     targets.warnings
-    target-consumer.cmake
+    scripts/target-consumer.cmake
     -DCANON_BUILD_TYPE=Debug
     -DCANON_ENABLE_WARNINGS=ON
 )
 
 _canon_add_script_test(
     ipo.unavailable
-    ipo-unavailable.cmake
+    scripts/ipo-unavailable.cmake
 )
 
 _canon_add_script_test(
     tidy.version
-    tidy-version.cmake
+    scripts/tidy-version.cmake
 )
 
 _canon_add_script_test(
     asan
-    asan-consumer.cmake
+    scripts/asan-consumer.cmake
 )
 
 _canon_add_script_test(
     coverage.backend
-    coverage-backend.cmake
+    scripts/coverage-backend.cmake
     "-DCANON_CXX_COMPILER_ID=${CMAKE_CXX_COMPILER_ID}"
     "-DCANON_CXX_COMPILER_FRONTEND_VARIANT=${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}"
     "-DCANON_CXX_COMPILER_VERSION=${CMAKE_CXX_COMPILER_VERSION}"
@@ -160,7 +160,7 @@ _canon_add_script_test(
 
 _canon_add_script_test(
     coverage.override-error
-    coverage-backend-error.cmake
+    scripts/coverage-backend-error.cmake
     "-DCANON_CXX_COMPILER_ID=${CMAKE_CXX_COMPILER_ID}"
 )
 
@@ -182,12 +182,12 @@ endif()
 
 _canon_add_script_test(
     coverage
-    coverage-consumer.cmake
+    scripts/coverage-consumer.cmake
     ${_canon_coverage_test_arguments}
 )
 _canon_add_script_test(
     coverage.empty-report
-    coverage-empty-report.cmake
+    scripts/coverage-empty-report.cmake
     ${_canon_coverage_test_arguments}
 )
 if (NOT _canon_coverage_tests_enabled)
@@ -205,7 +205,7 @@ endif()
 
 _canon_add_script_test(
     tidy
-    tooling-consumer.cmake
+    scripts/tooling-consumer.cmake
     "-DCANON_CLANG_TIDY_EXECUTABLE=${CANON_CLANG_TIDY_EXECUTABLE}"
 )
 if (NOT _canon_clang_tidy_supported)
@@ -217,27 +217,27 @@ endif()
 
 _canon_add_script_test(
     documentation
-    documentation-consumer.cmake
+    scripts/documentation-consumer.cmake
     "-DCANON_DOXYGEN_EXECUTABLE=${DOXYGEN_EXECUTABLE}"
 )
 _canon_add_script_test(
     documentation.install
-    documentation-install.cmake
+    scripts/documentation-install.cmake
     "-DCANON_DOXYGEN_EXECUTABLE=${DOXYGEN_EXECUTABLE}"
 )
 _canon_add_script_test(
     documentation.policy
-    documentation-policy.cmake
+    scripts/documentation-policy.cmake
     "-DCANON_DOXYGEN_EXECUTABLE=${DOXYGEN_EXECUTABLE}"
 )
 _canon_add_script_test(
     documentation.nested
-    documentation-nested.cmake
+    scripts/documentation-nested.cmake
     "-DCANON_DOXYGEN_EXECUTABLE=${DOXYGEN_EXECUTABLE}"
 )
 _canon_add_script_test(
     documentation-warning
-    documentation-warning.cmake
+    scripts/documentation-warning.cmake
     "-DCANON_DOXYGEN_EXECUTABLE=${DOXYGEN_EXECUTABLE}"
 )
 if (NOT Doxygen_FOUND)
@@ -254,43 +254,43 @@ endif()
 
 _canon_add_script_test(
     documentation-unavailable
-    documentation-unavailable.cmake
+    scripts/documentation-unavailable.cmake
 )
 
 _canon_add_script_test(
     vendored
-    vendored-consumption.cmake
+    scripts/vendored-consumption.cmake
 )
 
 _canon_add_script_test(
     installed
-    installed-consumption.cmake
+    scripts/installed-consumption.cmake
     "-DCANON_EXPECTED_VERSION=${PROJECT_VERSION}"
 )
 
 _canon_add_script_test(
     presets.listings
-    preset-listings.cmake
+    scripts/preset-listings.cmake
 )
 
 _canon_add_script_test(
     presets.debug
-    preset-debug.cmake
+    scripts/preset-debug.cmake
 )
 
 _canon_add_script_test(
     presets.release
-    preset-release.cmake
+    scripts/preset-release.cmake
 )
 
 _canon_add_script_test(
     presets.asan
-    preset-asan.cmake
+    scripts/preset-asan.cmake
 )
 
 _canon_add_script_test(
     presets.coverage
-    preset-coverage.cmake
+    scripts/preset-coverage.cmake
     ${_canon_coverage_test_arguments}
 )
 if (NOT _canon_coverage_tests_enabled)
@@ -299,7 +299,7 @@ endif()
 
 _canon_add_script_test(
     presets.tidy
-    preset-tidy.cmake
+    scripts/preset-tidy.cmake
     "-DCANON_CLANG_TIDY_EXECUTABLE=${CANON_CLANG_TIDY_EXECUTABLE}"
 )
 if (NOT _canon_clang_tidy_supported)
@@ -308,7 +308,7 @@ endif()
 
 _canon_add_script_test(
     optional-tools.registration
-    optional-tool-registration.cmake
+    scripts/optional-tool-registration.cmake
     "-DCANON_CTEST_COMMAND=${CMAKE_CTEST_COMMAND}"
     "-DCANON_TEST_ROOT=${CMAKE_CURRENT_BINARY_DIR}"
     "-DCANON_EXPECT_COVERAGE_ENABLED=${_canon_coverage_tests_enabled}"
@@ -318,20 +318,20 @@ _canon_add_script_test(
 
 _canon_add_script_test(
     coverage.gcovr-unavailable
-    coverage-gcovr-unavailable.cmake
+    scripts/coverage-gcovr-unavailable.cmake
     "-DCANON_CTEST_COMMAND=${CMAKE_CTEST_COMMAND}"
 )
 
 _canon_add_script_test(
     targets.missing
-    target-error.cmake
+    target-errors/test.cmake
     -DCANON_TEST_CASE=missing
     "-DCANON_EXPECTED_ERROR=target 'missing' does not exist"
 )
 
 _canon_add_script_test(
     targets.interface
-    target-error.cmake
+    target-errors/test.cmake
     -DCANON_TEST_CASE=interface
     "-DCANON_EXPECTED_ERROR=target 'sample_interface' has type"
     "-DCANON_EXPECTED_DETAIL='INTERFACE_LIBRARY'"
@@ -339,55 +339,77 @@ _canon_add_script_test(
 
 _canon_add_script_test(
     executables.missing
-    executable-missing-error.cmake
+    executable-errors/test.cmake
+    -DCANON_FIXTURE=missing
+    "-DCANON_EXPECTED_ERROR=canon_apply_executable(): target 'missing' does not exist"
 )
 
 _canon_add_script_test(
     executables.library
-    executable-library-error.cmake
+    executable-errors/test.cmake
+    -DCANON_FIXTURE=library
+    "-DCANON_EXPECTED_ERROR=canon_apply_executable(): target 'sample' must be an executable"
 )
 
 _canon_add_script_test(
     executables.bundle
-    executable-bundle-error.cmake
+    executable-errors/test.cmake
+    -DCANON_FIXTURE=bundle
+    "-DCANON_EXPECTED_ERROR=canon_apply_executable(): MACOSX_BUNDLE target 'sample' is not supported"
 )
 
 _canon_add_script_test(
     libraries.missing
-    library-missing-error.cmake
+    library-errors/test.cmake
+    -DCANON_FIXTURE=missing
+    "-DCANON_EXPECTED_ERROR=canon_apply_library(): target 'missing' does not exist"
 )
 
 _canon_add_script_test(
     libraries.executable
-    library-executable-error.cmake
+    library-errors/test.cmake
+    -DCANON_FIXTURE=executable
+    "-DCANON_EXPECTED_ERROR=canon_apply_library(): target 'sample' must be a STATIC, SHARED, MODULE, or INTERFACE library"
 )
 
 _canon_add_script_test(
     libraries.object
-    library-object-error.cmake
+    library-errors/test.cmake
+    -DCANON_FIXTURE=object
+    "-DCANON_EXPECTED_ERROR=canon_apply_library(): target 'sample' must be a STATIC, SHARED, MODULE, or INTERFACE library"
 )
 
 _canon_add_script_test(
     libraries.framework
-    library-framework-error.cmake
+    library-errors/test.cmake
+    -DCANON_FIXTURE=framework
+    "-DCANON_EXPECTED_ERROR=canon_apply_library(): FRAMEWORK target 'sample' is not supported"
 )
 
 _canon_add_script_test(
     dependencies.empty
-    dependency-empty-error.cmake
+    dependency-errors/test.cmake
+    -DCANON_FIXTURE=empty
+    "-DCANON_EXPECTED_ERROR=canon_apply_dependency(): package name must not be empty"
 )
 
 _canon_add_script_test(
     dependencies.required
-    dependency-required-error.cmake
+    dependency-errors/test.cmake
+    -DCANON_FIXTURE=required
+    "-DCANON_EXPECTED_ERROR=canon_apply_dependency(): 'REQUIRED' is inherited"
 )
 
 _canon_add_script_test(
     dependencies.quiet
-    dependency-quiet-error.cmake
+    dependency-errors/test.cmake
+    -DCANON_FIXTURE=quiet
+    "-DCANON_EXPECTED_ERROR=canon_apply_dependency(): 'QUIET' is inherited"
 )
 
 _canon_add_script_test(
     dependencies.no-package
-    dependency-no-package-error.cmake
+    dependency-errors/test.cmake
+    -DCANON_FIXTURE=no-package
+    "-DCANON_EXPECTED_ERROR=package dependencies were declared, but project"
 )
