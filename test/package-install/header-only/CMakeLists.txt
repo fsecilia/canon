@@ -1,7 +1,9 @@
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2026 Frank Secilia
 
-project(HeaderOnlyPackage VERSION 0.7.3 LANGUAGES CXX)
+project(HeaderOnlyPackage VERSION 0.7.3 LANGUAGES NONE)
+
+list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 add_library(header_api INTERFACE)
 target_sources(

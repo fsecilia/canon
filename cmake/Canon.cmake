@@ -774,9 +774,23 @@ endfunction()
 
 # Installs a managed library and each of its public HEADERS file sets.
 function(_canon_install_library TARGET)
-    include(GNUInstallDirs)
-
     get_property(_header_sets TARGET "${TARGET}" PROPERTY INTERFACE_HEADER_SETS)
+
+    get_target_property(_type "${TARGET}" TYPE)
+    if ("${_type}" STREQUAL "INTERFACE_LIBRARY")
+        set(_file_set_arguments)
+        foreach(_header_set IN LISTS _header_sets)
+            list(APPEND _file_set_arguments FILE_SET "${_header_set}")
+        endforeach()
+        install(
+            TARGETS "${TARGET}"
+            EXPORT "${PROJECT_NAME}Targets"
+            ${_file_set_arguments}
+        )
+        return()
+    endif()
+
+    include(GNUInstallDirs)
     set(_file_set_arguments)
     foreach(_header_set IN LISTS _header_sets)
         list(APPEND _file_set_arguments
@@ -784,7 +798,6 @@ function(_canon_install_library TARGET)
             DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
         )
     endforeach()
-
     install(
         TARGETS "${TARGET}"
         EXPORT "${PROJECT_NAME}Targets"
