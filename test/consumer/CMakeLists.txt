@@ -147,7 +147,7 @@ endfunction()
 
 # Verify every managed compiled target receives the shared Canon policy.
 get_property(_ipo_supported GLOBAL PROPERTY _CANON_IPO_SUPPORTED)
-if (NOT _ipo_supported STREQUAL "YES" AND NOT _ipo_supported STREQUAL "NO")
+if (NOT "${_ipo_supported}" STREQUAL "YES" AND NOT "${_ipo_supported}" STREQUAL "NO")
     message(FATAL_ERROR "Canon IPO probe did not record a result: '${_ipo_supported}'")
 endif()
 
@@ -162,7 +162,7 @@ set(_compiled_targets
     sample_test
 )
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     set(_warning_options
         -Wall
         -Wextra
@@ -175,7 +175,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     )
     set(_warning_suppressions)
     set(_warning_reenables)
-elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     set(_warning_options
         -Weverything
         -Werror
@@ -226,7 +226,7 @@ foreach(_target IN LISTS _compiled_targets)
     else()
         get_target_property(_options "${_target}" COMPILE_OPTIONS)
         foreach(_option IN LISTS _options)
-            if (_option MATCHES ":-W")
+            if ("${_option}" MATCHES ":-W")
                 message(FATAL_ERROR
                     "warnings are disabled but ${_target} has warning option '${_option}'")
             endif()

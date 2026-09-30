@@ -39,12 +39,12 @@ execute_process(
     OUTPUT_VARIABLE _consumer_stdout
     ERROR_VARIABLE _consumer_stderr
 )
-if (_consumer_result EQUAL 0)
+if ("${_consumer_result}" EQUAL 0)
     message(FATAL_ERROR "unsupported clang-tidy unexpectedly configured successfully")
 endif()
 
 set(_consumer_output "${_consumer_stdout}\n${_consumer_stderr}")
-if (NOT _consumer_output MATCHES "requires clang-tidy 21\\.1\\.6 or newer")
+if (NOT "${_consumer_output}" MATCHES "requires clang-tidy 21\\.1\\.6 or newer")
     message(FATAL_ERROR
         "unsupported clang-tidy failed without the expected diagnostic\n"
         "stdout:\n${_consumer_stdout}\n"
@@ -71,7 +71,7 @@ execute_process(
     OUTPUT_VARIABLE _harness_stdout
     ERROR_VARIABLE _harness_stderr
 )
-if (NOT _harness_result EQUAL 0)
+if (NOT "${_harness_result}" EQUAL 0)
     message(FATAL_ERROR
         "Canon harness configure failed for an unsupported optional clang-tidy\n"
         "stdout:\n${_harness_stdout}\n"
@@ -79,8 +79,8 @@ if (NOT _harness_result EQUAL 0)
 endif()
 
 set(_harness_output "${_harness_stdout}\n${_harness_stderr}")
-if (NOT _harness_output MATCHES "clang-tidy validation unavailable: clang-tidy [0-9.]+"
-    OR NOT _harness_output MATCHES "required minimum 21\.1\.6")
+if (NOT "${_harness_output}" MATCHES "clang-tidy validation unavailable: clang-tidy [0-9.]+"
+    OR NOT "${_harness_output}" MATCHES "required minimum 21\.1\.6")
     message(FATAL_ERROR
         "Canon harness did not report the unsupported clang-tidy version\n${_harness_output}")
 endif()
@@ -96,7 +96,7 @@ execute_process(
     OUTPUT_VARIABLE _registration_stdout
     ERROR_VARIABLE _registration_stderr
 )
-if (NOT _registration_result EQUAL 0)
+if (NOT "${_registration_result}" EQUAL 0)
     message(FATAL_ERROR
         "Canon harness did not disable tests for the unsupported clang-tidy
 "

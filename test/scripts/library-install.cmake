@@ -38,7 +38,7 @@ execute_process(
     OUTPUT_VARIABLE _configure_stdout
     ERROR_VARIABLE _configure_stderr
 )
-if (NOT _configure_result EQUAL 0)
+if (NOT "${_configure_result}" EQUAL 0)
     message(FATAL_ERROR
         "Canon library-install configure failed\n"
         "stdout:\n${_configure_stdout}\n"
@@ -52,7 +52,7 @@ execute_process(
     OUTPUT_VARIABLE _build_stdout
     ERROR_VARIABLE _build_stderr
 )
-if (NOT _build_result EQUAL 0)
+if (NOT "${_build_result}" EQUAL 0)
     message(FATAL_ERROR
         "Canon library-install build failed\n"
         "stdout:\n${_build_stdout}\n"
@@ -69,7 +69,7 @@ execute_process(
     OUTPUT_VARIABLE _install_stdout
     ERROR_VARIABLE _install_stderr
 )
-if (NOT _install_result EQUAL 0)
+if (NOT "${_install_result}" EQUAL 0)
     message(FATAL_ERROR
         "Canon library-install install failed\n"
         "stdout:\n${_install_stdout}\n"

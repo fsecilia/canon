@@ -27,7 +27,7 @@ execute_process(
     OUTPUT_VARIABLE _build_stdout
     ERROR_VARIABLE _build_stderr
 )
-if (NOT _build_result EQUAL 0)
+if (NOT "${_build_result}" EQUAL 0)
     message(FATAL_ERROR
         "Canon dependency package fixture build failed\n"
         "stdout:\n${_build_stdout}\n"
@@ -40,7 +40,7 @@ execute_process(
     OUTPUT_VARIABLE _install_stdout
     ERROR_VARIABLE _install_stderr
 )
-if (NOT _install_result EQUAL 0)
+if (NOT "${_install_result}" EQUAL 0)
     message(FATAL_ERROR
         "Canon dependency package fixture install failed\n"
         "stdout:\n${_install_stdout}\n"
@@ -68,7 +68,7 @@ set(_config_file
 file(READ "${_config_file}" _config)
 string(REGEX MATCHALL "find_dependency\\(" _dependency_calls "${_config}")
 list(LENGTH _dependency_calls _dependency_call_count)
-if (NOT _dependency_call_count EQUAL 4)
+if (NOT "${_dependency_call_count}" EQUAL 4)
     message(FATAL_ERROR
         "DependentPackageConfig.cmake contains ${_dependency_call_count} find_dependency() calls; expected 4")
 endif()
@@ -81,7 +81,7 @@ set(_previous_position -1)
 foreach(_call_name IN ITEMS _alpha_call _beta_call _literal_call _list_valued_call)
     set(_expected_call "${${_call_name}}")
     string(FIND "${_config}" "${_expected_call}" _position)
-    if (_position EQUAL -1 OR NOT _previous_position LESS _position)
+    if ("${_position}" EQUAL -1 OR NOT "${_previous_position}" LESS "${_position}")
         message(FATAL_ERROR
             "DependentPackageConfig.cmake did not preserve dependency declaration '${_expected_call}'")
     endif()
@@ -89,7 +89,7 @@ foreach(_call_name IN ITEMS _alpha_call _beta_call _literal_call _list_valued_ca
 endforeach()
 
 string(FIND "${_config}" "include(\"\${CMAKE_CURRENT_LIST_DIR}/DependentPackageTargets.cmake\")" _targets_position)
-if (NOT _previous_position LESS _targets_position)
+if (NOT "${_previous_position}" LESS "${_targets_position}")
     message(FATAL_ERROR "DependentPackageConfig.cmake did not recover dependencies before importing targets")
 endif()
 
@@ -124,7 +124,7 @@ set(_leading_newline_call
 foreach(_call_name IN ITEMS _backslash_call _delimiter_call _syntax_like_call _leading_newline_call)
     set(_expected_call "${${_call_name}}")
     string(FIND "${_literal_config}" "${_expected_call}" _position)
-    if (_position EQUAL -1)
+    if ("${_position}" EQUAL -1)
         message(FATAL_ERROR
             "DependentPackageConfig.cmake did not preserve literal argument '${_expected_call}'")
     endif()

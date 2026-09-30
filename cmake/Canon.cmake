@@ -29,7 +29,7 @@ function(_canon_get_clang_tidy_version EXECUTABLE OUT_VERSION)
         OUTPUT_VARIABLE _stdout
         ERROR_VARIABLE _stderr
     )
-    if (NOT _result EQUAL 0)
+    if (NOT "${_result}" EQUAL 0)
         set(${OUT_VERSION} "" PARENT_SCOPE)
         return()
     endif()
@@ -45,10 +45,10 @@ endfunction()
 # Applies compiler-specific build options when Canon has policy for the active toolchain.
 function(_canon_apply_compiler_policy TARGET)
     set(_build_options)
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
         list(APPEND _build_options -fstrict-aliasing)
-    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
-        AND CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "GNU")
+    elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang"
+        AND "${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}" STREQUAL "GNU")
         list(APPEND _build_options -fstrict-aliasing)
     endif()
 
@@ -60,9 +60,9 @@ endfunction()
 # Enables Release IPO on final-link targets when the active C++ toolchain supports it.
 function(_canon_apply_ipo_if_supported TARGET)
     get_target_property(_type "${TARGET}" TYPE)
-    if (NOT _type STREQUAL "EXECUTABLE"
-        AND NOT _type STREQUAL "SHARED_LIBRARY"
-        AND NOT _type STREQUAL "MODULE_LIBRARY")
+    if (NOT "${_type}" STREQUAL "EXECUTABLE"
+        AND NOT "${_type}" STREQUAL "SHARED_LIBRARY"
+        AND NOT "${_type}" STREQUAL "MODULE_LIBRARY")
         return()
     endif()
 
@@ -92,7 +92,7 @@ endfunction()
 
 # Applies Canon's strict compiler-specific warning policy.
 function(_canon_apply_warnings TARGET)
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
         set(_warning_options
             -Wall
             -Wextra
@@ -105,8 +105,8 @@ function(_canon_apply_warnings TARGET)
         )
         set(_warning_suppressions)
         set(_warning_reenables)
-    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
-        AND CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "GNU")
+    elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang"
+        AND "${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}" STREQUAL "GNU")
         set(_warning_options
             -Weverything
             -Werror
@@ -151,9 +151,9 @@ function(_canon_apply_asan TARGET)
     _canon_apply_cxx_option("${TARGET}" "-fno-omit-frame-pointer")
 
     get_target_property(_type "${TARGET}" TYPE)
-    if (_type STREQUAL "STATIC_LIBRARY" OR _type STREQUAL "OBJECT_LIBRARY")
+    if ("${_type}" STREQUAL "STATIC_LIBRARY" OR "${_type}" STREQUAL "OBJECT_LIBRARY")
         target_link_options("${TARGET}" INTERFACE -fsanitize=address)
-    elseif (_type STREQUAL "SHARED_LIBRARY")
+    elseif ("${_type}" STREQUAL "SHARED_LIBRARY")
         target_link_options("${TARGET}" PUBLIC -fsanitize=address)
     else()
         target_link_options("${TARGET}" PRIVATE -fsanitize=address)
@@ -266,13 +266,13 @@ endfunction()
 
 # Selects and validates the compiler-matched gcov backend used by gcovr.
 function(_canon_find_coverage_backend OUT_COMMAND)
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
         set(_program_name gcov)
         set(_family GNU)
         set(_override_variable CANON_GCOV_EXECUTABLE)
         set(_command_suffix "")
-    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
-        AND CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "GNU")
+    elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang"
+        AND "${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}" STREQUAL "GNU")
         set(_program_name llvm-cov)
         set(_family LLVM)
         set(_override_variable CANON_LLVM_COV_EXECUTABLE)
@@ -401,12 +401,12 @@ endfunction()
 # Adds gcov-compatible instrumentation and top-level reporting helpers.
 function(_canon_apply_coverage TARGET)
     _canon_apply_cxx_option("${TARGET}" "--coverage")
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
         _canon_apply_cxx_option("${TARGET}" "-fprofile-abs-path")
     endif()
 
     get_target_property(_type "${TARGET}" TYPE)
-    if (_type STREQUAL "STATIC_LIBRARY" OR _type STREQUAL "OBJECT_LIBRARY")
+    if ("${_type}" STREQUAL "STATIC_LIBRARY" OR "${_type}" STREQUAL "OBJECT_LIBRARY")
         target_link_options("${TARGET}" INTERFACE --coverage)
     else()
         target_link_options("${TARGET}" PRIVATE --coverage)
@@ -436,7 +436,7 @@ function(_canon_apply_tidy TARGET)
             "Canon could not determine the clang-tidy version from "
             "'${CANON_CLANG_TIDY_EXECUTABLE}'")
     endif()
-    if (_version VERSION_LESS "${_CANON_MINIMUM_CLANG_TIDY_VERSION}")
+    if ("${_version}" VERSION_LESS "${_CANON_MINIMUM_CLANG_TIDY_VERSION}")
         message(FATAL_ERROR
             "Canon requires clang-tidy ${_CANON_MINIMUM_CLANG_TIDY_VERSION} or newer; "
             "found ${_version} at '${CANON_CLANG_TIDY_EXECUTABLE}'")
@@ -452,11 +452,11 @@ function(canon_apply_target TARGET)
     endif()
 
     get_target_property(_type "${TARGET}" TYPE)
-    if (NOT _type STREQUAL "EXECUTABLE"
-        AND NOT _type STREQUAL "STATIC_LIBRARY"
-        AND NOT _type STREQUAL "SHARED_LIBRARY"
-        AND NOT _type STREQUAL "MODULE_LIBRARY"
-        AND NOT _type STREQUAL "OBJECT_LIBRARY")
+    if (NOT "${_type}" STREQUAL "EXECUTABLE"
+        AND NOT "${_type}" STREQUAL "STATIC_LIBRARY"
+        AND NOT "${_type}" STREQUAL "SHARED_LIBRARY"
+        AND NOT "${_type}" STREQUAL "MODULE_LIBRARY"
+        AND NOT "${_type}" STREQUAL "OBJECT_LIBRARY")
         message(FATAL_ERROR
             "canon_apply_target(): target '${TARGET}' has type '${_type}', which has no compiled-target Canon policy")
     endif()
@@ -498,7 +498,7 @@ endfunction()
 
 # Selects Canon's package compatibility policy from the project's major version.
 function(_canon_package_version_compatibility OUT_COMPATIBILITY)
-    if (PROJECT_VERSION_MAJOR EQUAL 0)
+    if ("${PROJECT_VERSION_MAJOR}" EQUAL 0)
         set(_compatibility SameMinorVersion)
     else()
         set(_compatibility SameMajorVersion)
@@ -557,7 +557,7 @@ function(_canon_literal_package_argument OUT_ARGUMENT ARGUMENT)
     while (TRUE)
         set(_closing_bracket "]${_equals}]")
         string(FIND "${ARGUMENT}" "${_closing_bracket}" _closing_bracket_position)
-        if (_closing_bracket_position EQUAL -1)
+        if ("${_closing_bracket_position}" EQUAL -1)
             break()
         endif()
         string(APPEND _equals "=")
@@ -674,14 +674,14 @@ function(canon_apply_dependency PACKAGE)
     foreach(_argument_index RANGE 0 ${_last_argument})
         set(_argument_name "ARGV${_argument_index}")
         set(_argument "${${_argument_name}}")
-        if (_argument_index GREATER 0
+        if ("${_argument_index}" GREATER 0
             AND ("${_argument}" STREQUAL "REQUIRED" OR "${_argument}" STREQUAL "QUIET"))
             message(FATAL_ERROR
                 "canon_apply_dependency(): '${_argument}' is inherited from the outer find_package() call")
         endif()
 
         _canon_literal_package_argument(_literal_argument "${_argument}")
-        if (_argument_index GREATER 0)
+        if ("${_argument_index}" GREATER 0)
             string(APPEND _dependency_call " ")
         endif()
         string(APPEND _dependency_call "${_literal_argument}")
@@ -703,7 +703,7 @@ function(canon_apply_dependency PACKAGE)
             DIRECTORY "${PROJECT_SOURCE_DIR}"
             PROPERTY "${_dependency_property}"
         )
-        if (NOT _existing_call STREQUAL _dependency_call)
+        if (NOT "${_existing_call}" STREQUAL "${_dependency_call}")
             message(FATAL_ERROR
                 "canon_apply_dependency(): internal dependency-key collision for package '${PACKAGE}'")
         endif()
@@ -736,7 +736,7 @@ function(canon_apply_executable TARGET)
     endif()
 
     get_target_property(_type "${TARGET}" TYPE)
-    if (NOT _type STREQUAL "EXECUTABLE")
+    if (NOT "${_type}" STREQUAL "EXECUTABLE")
         message(FATAL_ERROR
             "canon_apply_executable(): target '${TARGET}' must be an executable")
     endif()
@@ -835,10 +835,10 @@ function(canon_apply_library TARGET)
     endif()
 
     get_target_property(_type "${TARGET}" TYPE)
-    if (NOT _type STREQUAL "STATIC_LIBRARY"
-        AND NOT _type STREQUAL "SHARED_LIBRARY"
-        AND NOT _type STREQUAL "MODULE_LIBRARY"
-        AND NOT _type STREQUAL "INTERFACE_LIBRARY")
+    if (NOT "${_type}" STREQUAL "STATIC_LIBRARY"
+        AND NOT "${_type}" STREQUAL "SHARED_LIBRARY"
+        AND NOT "${_type}" STREQUAL "MODULE_LIBRARY"
+        AND NOT "${_type}" STREQUAL "INTERFACE_LIBRARY")
         message(FATAL_ERROR
             "canon_apply_library(): target '${TARGET}' must be a STATIC, SHARED, MODULE, or INTERFACE library")
     endif()
@@ -851,7 +851,7 @@ function(canon_apply_library TARGET)
 
     _canon_add_build_tree_alias("${TARGET}")
 
-    if (_type STREQUAL "INTERFACE_LIBRARY")
+    if ("${_type}" STREQUAL "INTERFACE_LIBRARY")
         target_compile_features("${TARGET}" INTERFACE cxx_std_26)
         _canon_install_library("${TARGET}")
         _canon_register_package()

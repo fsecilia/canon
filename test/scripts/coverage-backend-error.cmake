@@ -43,14 +43,14 @@ execute_process(
     OUTPUT_VARIABLE _stdout
     ERROR_VARIABLE _stderr
 )
-if (_result EQUAL 0)
+if ("${_result}" EQUAL 0)
     message(FATAL_ERROR "invalid ${_override_variable} unexpectedly configured successfully")
 endif()
 
 set(_output "${_stdout}\n${_stderr}")
 string(FIND "${_output}" "Canon coverage override ${_override_variable}=" _override_position)
 string(FIND "${_output}" "invalid:" _invalid_position)
-if (_override_position EQUAL -1 OR _invalid_position EQUAL -1)
+if ("${_override_position}" EQUAL -1 OR "${_invalid_position}" EQUAL -1)
     message(FATAL_ERROR
         "invalid ${_override_variable} failed for the wrong reason\n"
         "stdout:\n${_stdout}\n"

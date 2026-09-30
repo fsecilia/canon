@@ -31,7 +31,7 @@ execute_process(
     ERROR_VARIABLE _configure_stderr
 )
 
-if (_configure_result EQUAL 0)
+if ("${_configure_result}" EQUAL 0)
     message(FATAL_ERROR "Canon target error case '${CANON_TEST_CASE}' unexpectedly configured successfully")
 endif()
 
@@ -44,7 +44,7 @@ endif()
 
 foreach(_expected_error IN LISTS _expected_errors)
     string(FIND "${_configure_output}" "${_expected_error}" _expected_error_position)
-    if (_expected_error_position EQUAL -1)
+    if ("${_expected_error_position}" EQUAL -1)
         message(FATAL_ERROR
             "Canon target error case '${CANON_TEST_CASE}' failed without the expected diagnostic\n"
             "expected fragment:\n${_expected_error}\n"

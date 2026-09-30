@@ -32,7 +32,7 @@ execute_process(
     OUTPUT_VARIABLE _configure_stdout
     ERROR_VARIABLE _configure_stderr
 )
-if (NOT _configure_result EQUAL 0)
+if (NOT "${_configure_result}" EQUAL 0)
     message(FATAL_ERROR
         "Nested documentation configure failed\n"
         "stdout:\n${_configure_stdout}\n"
@@ -49,7 +49,7 @@ execute_process(
     OUTPUT_VARIABLE _root_doc_stdout
     ERROR_VARIABLE _root_doc_stderr
 )
-if (NOT _root_doc_result EQUAL 0)
+if (NOT "${_root_doc_result}" EQUAL 0)
     message(FATAL_ERROR
         "Root qualified documentation target failed\n"
         "stdout:\n${_root_doc_stdout}\n"
@@ -69,7 +69,7 @@ execute_process(
     OUTPUT_VARIABLE _nested_doc_stdout
     ERROR_VARIABLE _nested_doc_stderr
 )
-if (NOT _nested_doc_result EQUAL 0)
+if (NOT "${_nested_doc_result}" EQUAL 0)
     message(FATAL_ERROR
         "Nested qualified documentation target failed\n"
         "stdout:\n${_nested_doc_stdout}\n"
@@ -87,7 +87,7 @@ execute_process(
     OUTPUT_VARIABLE _clean_stdout
     ERROR_VARIABLE _clean_stderr
 )
-if (NOT _clean_result EQUAL 0)
+if (NOT "${_clean_result}" EQUAL 0)
     message(FATAL_ERROR
         "Top-level doc-clean target failed\n"
         "stdout:\n${_clean_stdout}\n"
@@ -107,7 +107,7 @@ execute_process(
     OUTPUT_VARIABLE _doc_stdout
     ERROR_VARIABLE _doc_stderr
 )
-if (NOT _doc_result EQUAL 0)
+if (NOT "${_doc_result}" EQUAL 0)
     message(FATAL_ERROR
         "Top-level doc target failed\n"
         "stdout:\n${_doc_stdout}\n"
@@ -131,7 +131,7 @@ execute_process(
     OUTPUT_VARIABLE _install_stdout
     ERROR_VARIABLE _install_stderr
 )
-if (NOT _install_result EQUAL 0)
+if (NOT "${_install_result}" EQUAL 0)
     message(FATAL_ERROR
         "Root documentation install failed\n"
         "stdout:\n${_install_stdout}\n"
@@ -151,7 +151,7 @@ execute_process(
     OUTPUT_VARIABLE _nested_clean_stdout
     ERROR_VARIABLE _nested_clean_stderr
 )
-if (NOT _nested_clean_result EQUAL 0)
+if (NOT "${_nested_clean_result}" EQUAL 0)
     message(FATAL_ERROR
         "Nested qualified documentation cleanup failed\n"
         "stdout:\n${_nested_clean_stdout}\n"

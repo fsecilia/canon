@@ -33,7 +33,7 @@ execute_process(
     ERROR_VARIABLE _configure_stderr
 )
 
-if (_configure_result EQUAL 0)
+if ("${_configure_result}" EQUAL 0)
     message(FATAL_ERROR
         "Canon library error fixture '${_canon_fixture}' unexpectedly configured successfully")
 endif()
@@ -43,7 +43,7 @@ set(_configure_output "${_configure_stdout}\n${_configure_stderr}")
 string(REGEX REPLACE "[ \t\r\n]+" " " _normalized_output "${_configure_output}")
 string(REGEX REPLACE "[ \t\r\n]+" " " _normalized_expected "${_canon_expected_error}")
 string(FIND "${_normalized_output}" "${_normalized_expected}" _expected_error_position)
-if (_expected_error_position EQUAL -1)
+if ("${_expected_error_position}" EQUAL -1)
     message(FATAL_ERROR
         "Canon library error fixture '${_canon_fixture}' failed without the expected diagnostic\n"
         "expected fragment:\n${_canon_expected_error}\n"

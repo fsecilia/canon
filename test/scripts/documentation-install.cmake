@@ -43,7 +43,7 @@ execute_process(
     OUTPUT_VARIABLE _configure_stdout
     ERROR_VARIABLE _configure_stderr
 )
-if (NOT _configure_result EQUAL 0)
+if (NOT "${_configure_result}" EQUAL 0)
     message(FATAL_ERROR
         "Documentation-install configure failed\n"
         "stdout:\n${_configure_stdout}\n"
@@ -57,7 +57,7 @@ execute_process(
     OUTPUT_VARIABLE _build_stdout
     ERROR_VARIABLE _build_stderr
 )
-if (NOT _build_result EQUAL 0)
+if (NOT "${_build_result}" EQUAL 0)
     message(FATAL_ERROR
         "Documentation-install fixture build failed\n"
         "stdout:\n${_build_stdout}\n"
@@ -71,7 +71,7 @@ execute_process(
     OUTPUT_VARIABLE _ordinary_install_stdout
     ERROR_VARIABLE _ordinary_install_stderr
 )
-if (NOT _ordinary_install_result EQUAL 0)
+if (NOT "${_ordinary_install_result}" EQUAL 0)
     message(FATAL_ERROR
         "Ordinary install failed before documentation was generated\n"
         "stdout:\n${_ordinary_install_stdout}\n"
@@ -92,11 +92,11 @@ execute_process(
     OUTPUT_VARIABLE _missing_install_stdout
     ERROR_VARIABLE _missing_install_stderr
 )
-if (_missing_install_result EQUAL 0)
+if ("${_missing_install_result}" EQUAL 0)
     message(FATAL_ERROR "Documentation install unexpectedly succeeded before building doc")
 endif()
 set(_missing_install_output "${_missing_install_stdout}\n${_missing_install_stderr}")
-if (NOT _missing_install_output MATCHES "doxygen/html")
+if (NOT "${_missing_install_output}" MATCHES "doxygen/html")
     message(FATAL_ERROR
         "Documentation install failed for an unexpected reason\n"
         "stdout:\n${_missing_install_stdout}\n"
@@ -109,7 +109,7 @@ execute_process(
     OUTPUT_VARIABLE _doc_stdout
     ERROR_VARIABLE _doc_stderr
 )
-if (NOT _doc_result EQUAL 0)
+if (NOT "${_doc_result}" EQUAL 0)
     message(FATAL_ERROR
         "Documentation build failed\n"
         "stdout:\n${_doc_stdout}\n"
@@ -124,7 +124,7 @@ execute_process(
     OUTPUT_VARIABLE _generated_ordinary_stdout
     ERROR_VARIABLE _generated_ordinary_stderr
 )
-if (NOT _generated_ordinary_result EQUAL 0)
+if (NOT "${_generated_ordinary_result}" EQUAL 0)
     message(FATAL_ERROR
         "Ordinary install failed after documentation was generated\n"
         "stdout:\n${_generated_ordinary_stdout}\n"
@@ -144,7 +144,7 @@ execute_process(
     OUTPUT_VARIABLE _documentation_install_stdout
     ERROR_VARIABLE _documentation_install_stderr
 )
-if (NOT _documentation_install_result EQUAL 0)
+if (NOT "${_documentation_install_result}" EQUAL 0)
     message(FATAL_ERROR
         "Documentation component install failed\n"
         "stdout:\n${_documentation_install_stdout}\n"

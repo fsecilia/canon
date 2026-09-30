@@ -48,7 +48,7 @@ if (CANON_CLANG_TIDY_EXECUTABLE)
         message(WARNING
             "Canon clang-tidy validation unavailable: could not determine the version of "
             "'${CANON_CLANG_TIDY_EXECUTABLE}'")
-    elseif (_canon_clang_tidy_version VERSION_LESS "${_CANON_MINIMUM_CLANG_TIDY_VERSION}")
+    elseif ("${_canon_clang_tidy_version}" VERSION_LESS "${_CANON_MINIMUM_CLANG_TIDY_VERSION}")
         message(WARNING
             "Canon clang-tidy validation unavailable: clang-tidy ${_canon_clang_tidy_version} "
             "is older than the required minimum ${_CANON_MINIMUM_CLANG_TIDY_VERSION}")
@@ -60,9 +60,9 @@ endif()
 find_program(CANON_GCOVR_EXECUTABLE NAMES gcovr)
 set(_canon_coverage_backend "")
 if (CANON_GCOVR_EXECUTABLE)
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU"
-        OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
-            AND CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "GNU"))
+    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"
+        OR ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang"
+            AND "${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}" STREQUAL "GNU"))
         _canon_find_coverage_backend(_canon_coverage_backend)
     else()
         message(WARNING

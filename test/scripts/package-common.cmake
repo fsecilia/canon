@@ -24,7 +24,7 @@ function(_canon_configure_package_fixture BUILD_DIR)
         OUTPUT_VARIABLE _configure_stdout
         ERROR_VARIABLE _configure_stderr
     )
-    if (NOT _configure_result EQUAL 0)
+    if (NOT "${_configure_result}" EQUAL 0)
         message(FATAL_ERROR
             "Canon package fixture configure failed\n"
             "stdout:\n${_configure_stdout}\n"
@@ -65,7 +65,7 @@ function(_canon_build_package_consumer INSTALL_PREFIX NAME VERSION TARGET ABSENT
         OUTPUT_VARIABLE _configure_stdout
         ERROR_VARIABLE _configure_stderr
     )
-    if (NOT _configure_result EQUAL 0)
+    if (NOT "${_configure_result}" EQUAL 0)
         message(FATAL_ERROR
             "Consumer for ${NAME} failed to configure\n"
             "stdout:\n${_configure_stdout}\n"
@@ -78,7 +78,7 @@ function(_canon_build_package_consumer INSTALL_PREFIX NAME VERSION TARGET ABSENT
         OUTPUT_VARIABLE _build_stdout
         ERROR_VARIABLE _build_stderr
     )
-    if (NOT _build_result EQUAL 0)
+    if (NOT "${_build_result}" EQUAL 0)
         message(FATAL_ERROR
             "Consumer for ${NAME} failed to build\n"
             "stdout:\n${_build_stdout}\n"

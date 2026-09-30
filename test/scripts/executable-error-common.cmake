@@ -28,7 +28,7 @@ execute_process(
     OUTPUT_VARIABLE _configure_stdout
     ERROR_VARIABLE _configure_stderr
 )
-if (_configure_result EQUAL 0)
+if ("${_configure_result}" EQUAL 0)
     message(FATAL_ERROR
         "Canon executable error case '${CANON_FIXTURE}' unexpectedly configured successfully")
 endif()
@@ -36,7 +36,7 @@ endif()
 # Check the configure failure for the public API diagnostic.
 set(_configure_output "${_configure_stdout}\n${_configure_stderr}")
 string(FIND "${_configure_output}" "${CANON_EXPECTED_ERROR}" _expected_error_position)
-if (_expected_error_position EQUAL -1)
+if ("${_expected_error_position}" EQUAL -1)
     message(FATAL_ERROR
         "Canon executable error case '${CANON_FIXTURE}' failed without the expected diagnostic\n"
         "expected fragment:\n${CANON_EXPECTED_ERROR}\n"

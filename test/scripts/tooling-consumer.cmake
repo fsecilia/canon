@@ -41,7 +41,7 @@ execute_process(
     OUTPUT_VARIABLE _configure_stdout
     ERROR_VARIABLE _configure_stderr
 )
-if (NOT _configure_result EQUAL 0)
+if (NOT "${_configure_result}" EQUAL 0)
     message(FATAL_ERROR
         "tidy configure failed\n"
         "stdout:\n${_configure_stdout}\n"
@@ -55,7 +55,7 @@ execute_process(
     OUTPUT_VARIABLE _build_stdout
     ERROR_VARIABLE _build_stderr
 )
-if (NOT _build_result EQUAL 0)
+if (NOT "${_build_result}" EQUAL 0)
     message(FATAL_ERROR
         "tidy build failed; unmanaged external code should not be linted\n"
         "stdout:\n${_build_stdout}\n"
@@ -69,12 +69,12 @@ execute_process(
     OUTPUT_VARIABLE _bad_stdout
     ERROR_VARIABLE _bad_stderr
 )
-if (_bad_result EQUAL 0)
+if ("${_bad_result}" EQUAL 0)
     message(FATAL_ERROR "clang-tidy unexpectedly accepted the deliberately invalid target")
 endif()
 
 set(_bad_output "${_bad_stdout}\n${_bad_stderr}")
-if (NOT _bad_output MATCHES "readability-identifier-naming")
+if (NOT "${_bad_output}" MATCHES "readability-identifier-naming")
     message(FATAL_ERROR
         "clang-tidy failure did not surface the expected check\n${_bad_output}")
 endif()

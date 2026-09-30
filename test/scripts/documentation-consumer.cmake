@@ -40,7 +40,7 @@ execute_process(
     OUTPUT_VARIABLE _configure_stdout
     ERROR_VARIABLE _configure_stderr
 )
-if (NOT _configure_result EQUAL 0)
+if (NOT "${_configure_result}" EQUAL 0)
     message(FATAL_ERROR
         "Documentation configure failed\n"
         "stdout:\n${_configure_stdout}\n"
@@ -54,7 +54,7 @@ execute_process(
     OUTPUT_VARIABLE _doc_stdout
     ERROR_VARIABLE _doc_stderr
 )
-if (NOT _doc_result EQUAL 0)
+if (NOT "${_doc_result}" EQUAL 0)
     message(FATAL_ERROR
         "Documentation build failed\n"
         "stdout:\n${_doc_stdout}\n"
@@ -74,20 +74,20 @@ set(_symbol_html "")
 foreach(_file IN LISTS _html_files)
     file(READ "${_file}" _contents)
     string(APPEND _html "\n${_contents}")
-    if (NOT _file MATCHES "_source\\.html$")
+    if (NOT "${_file}" MATCHES "_source\\.html$")
         string(APPEND _symbol_html "\n${_contents}")
     endif()
 endforeach()
 
-if (NOT _html MATCHES "CANON_DOCUMENTATION_MAIN_PAGE_MARKER")
+if (NOT "${_html}" MATCHES "CANON_DOCUMENTATION_MAIN_PAGE_MARKER")
     message(FATAL_ERROR "Documentation output did not use README.md as its main page")
 endif()
-if (NOT _html MATCHES "documented::answer")
+if (NOT "${_html}" MATCHES "documented::answer")
     message(FATAL_ERROR "Documentation output did not contain the documented API")
 endif()
 
 foreach(_excluded_symbol IN ITEMS hiddenTopLevelDetail hiddenNestedDetail)
-    if (_symbol_html MATCHES "${_excluded_symbol}")
+    if ("${_symbol_html}" MATCHES "${_excluded_symbol}")
         message(FATAL_ERROR "Documentation output contained excluded symbol '${_excluded_symbol}'")
     endif()
 endforeach()
@@ -98,7 +98,7 @@ foreach(_visible_symbol IN ITEMS
     visibleNestedDetails
     visibleNestedDetailHelper
 )
-    if (NOT _symbol_html MATCHES "${_visible_symbol}")
+    if (NOT "${_symbol_html}" MATCHES "${_visible_symbol}")
         message(FATAL_ERROR "Documentation output omitted public symbol '${_visible_symbol}'")
     endif()
 endforeach()
@@ -111,7 +111,7 @@ foreach(_excluded_marker IN ITEMS
     CANON_DOCUMENTATION_TEST_MARKER
     CANON_DOCUMENTATION_TEST_PATTERN_MARKER
 )
-    if (_html MATCHES "${_excluded_marker}")
+    if ("${_html}" MATCHES "${_excluded_marker}")
         message(FATAL_ERROR "Documentation output contained excluded marker '${_excluded_marker}'")
     endif()
 endforeach()
@@ -123,7 +123,7 @@ execute_process(
     OUTPUT_VARIABLE _clean_stdout
     ERROR_VARIABLE _clean_stderr
 )
-if (NOT _clean_result EQUAL 0)
+if (NOT "${_clean_result}" EQUAL 0)
     message(FATAL_ERROR
         "doc-clean failed\n"
         "stdout:\n${_clean_stdout}\n"

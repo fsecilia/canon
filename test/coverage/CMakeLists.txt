@@ -54,7 +54,7 @@ endfunction()
 # Verify compile instrumentation on every managed target in the fixture.
 foreach(_target IN ITEMS covered covered_test)
     _require_compile_option("${_target}" "--coverage")
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
         _require_compile_option("${_target}" "-fprofile-abs-path")
     endif()
 endforeach()

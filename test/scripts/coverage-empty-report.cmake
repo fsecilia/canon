@@ -41,7 +41,7 @@ execute_process(
     OUTPUT_VARIABLE _configure_stdout
     ERROR_VARIABLE _configure_stderr
 )
-if (NOT _configure_result EQUAL 0)
+if (NOT "${_configure_result}" EQUAL 0)
     message(FATAL_ERROR
         "empty coverage configure failed\n"
         "stdout:\n${_configure_stdout}\n"
@@ -54,7 +54,7 @@ execute_process(
     OUTPUT_VARIABLE _build_stdout
     ERROR_VARIABLE _build_stderr
 )
-if (NOT _build_result EQUAL 0)
+if (NOT "${_build_result}" EQUAL 0)
     message(FATAL_ERROR
         "empty coverage build failed\n"
         "stdout:\n${_build_stdout}\n"
@@ -67,7 +67,7 @@ execute_process(
     OUTPUT_VARIABLE _run_stdout
     ERROR_VARIABLE _run_stderr
 )
-if (NOT _run_result EQUAL 0)
+if (NOT "${_run_result}" EQUAL 0)
     message(FATAL_ERROR
         "empty coverage fixture failed\n"
         "stdout:\n${_run_stdout}\n"
@@ -80,11 +80,11 @@ execute_process(
     OUTPUT_VARIABLE _report_stdout
     ERROR_VARIABLE _report_stderr
 )
-if (_report_result EQUAL 0)
+if ("${_report_result}" EQUAL 0)
     message(FATAL_ERROR "coverage-report unexpectedly accepted a report with no source files")
 endif()
 set(_report_output "${_report_stdout}\n${_report_stderr}")
-if (NOT _report_output MATCHES "Canon coverage report contains no project source files")
+if (NOT "${_report_output}" MATCHES "Canon coverage report contains no project source files")
     message(FATAL_ERROR
         "coverage-report failed for the wrong reason\n"
         "stdout:\n${_report_stdout}\n"

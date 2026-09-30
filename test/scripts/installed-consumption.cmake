@@ -33,7 +33,7 @@ execute_process(
     OUTPUT_VARIABLE _canon_configure_stdout
     ERROR_VARIABLE _canon_configure_stderr
 )
-if (NOT _canon_configure_result EQUAL 0)
+if (NOT "${_canon_configure_result}" EQUAL 0)
     message(FATAL_ERROR
         "Canon staging configure failed\n"
         "stdout:\n${_canon_configure_stdout}\n"
@@ -50,7 +50,7 @@ execute_process(
     OUTPUT_VARIABLE _canon_install_stdout
     ERROR_VARIABLE _canon_install_stderr
 )
-if (NOT _canon_install_result EQUAL 0)
+if (NOT "${_canon_install_result}" EQUAL 0)
     message(FATAL_ERROR
         "Canon staging install failed\n"
         "stdout:\n${_canon_install_stdout}\n"
@@ -88,7 +88,7 @@ execute_process(
     OUTPUT_VARIABLE _consumer_configure_stdout
     ERROR_VARIABLE _consumer_configure_stderr
 )
-if (NOT _consumer_configure_result EQUAL 0)
+if (NOT "${_consumer_configure_result}" EQUAL 0)
     message(FATAL_ERROR
         "Installed Canon consumer configure failed\n"
         "stdout:\n${_consumer_configure_stdout}\n"
@@ -102,7 +102,7 @@ execute_process(
     OUTPUT_VARIABLE _consumer_build_stdout
     ERROR_VARIABLE _consumer_build_stderr
 )
-if (NOT _consumer_build_result EQUAL 0)
+if (NOT "${_consumer_build_result}" EQUAL 0)
     message(FATAL_ERROR
         "Installed Canon consumer build failed\n"
         "stdout:\n${_consumer_build_stdout}\n"

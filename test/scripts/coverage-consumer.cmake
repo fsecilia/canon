@@ -51,7 +51,7 @@ execute_process(
     OUTPUT_VARIABLE _configure_stdout
     ERROR_VARIABLE _configure_stderr
 )
-if (NOT _configure_result EQUAL 0)
+if (NOT "${_configure_result}" EQUAL 0)
     message(FATAL_ERROR
         "coverage configure failed\n"
         "stdout:\n${_configure_stdout}\n"
@@ -67,7 +67,7 @@ execute_process(
     OUTPUT_VARIABLE _clean_stdout
     ERROR_VARIABLE _clean_stderr
 )
-if (NOT _clean_result EQUAL 0 OR EXISTS "${CANON_TEST_BINARY_DIR}/stale/stale.gcda")
+if (NOT "${_clean_result}" EQUAL 0 OR EXISTS "${CANON_TEST_BINARY_DIR}/stale/stale.gcda")
     message(FATAL_ERROR
         "coverage-clean failed\n"
         "stdout:\n${_clean_stdout}\n"
@@ -81,7 +81,7 @@ execute_process(
     OUTPUT_VARIABLE _build_stdout
     ERROR_VARIABLE _build_stderr
 )
-if (NOT _build_result EQUAL 0)
+if (NOT "${_build_result}" EQUAL 0)
     message(FATAL_ERROR
         "coverage build failed\n"
         "stdout:\n${_build_stdout}\n"
@@ -95,14 +95,14 @@ execute_process(
     OUTPUT_VARIABLE _test_stdout
     ERROR_VARIABLE _test_stderr
 )
-if (NOT _test_result EQUAL 0)
+if (NOT "${_test_result}" EQUAL 0)
     message(FATAL_ERROR
         "coverage tests failed\n"
         "stdout:\n${_test_stdout}\n"
         "stderr:\n${_test_stderr}")
 endif()
 string(FIND "${_test_stdout}" "coverage_project_owned" _project_owned_position)
-if (_project_owned_position EQUAL -1)
+if ("${_project_owned_position}" EQUAL -1)
     message(FATAL_ERROR "CTest did not run the project-owned coverage test")
 endif()
 
@@ -113,7 +113,7 @@ execute_process(
     OUTPUT_VARIABLE _report_stdout
     ERROR_VARIABLE _report_stderr
 )
-if (NOT _report_result EQUAL 0)
+if (NOT "${_report_result}" EQUAL 0)
     message(FATAL_ERROR
         "coverage-report failed\n"
         "stdout:\n${_report_stdout}\n"
@@ -126,13 +126,13 @@ if (NOT EXISTS "${_index}")
     message(FATAL_ERROR "coverage-report did not generate ${_index}")
 endif()
 file(READ "${_index}" _html)
-if (NOT _html MATCHES "covered\\.cpp")
+if (NOT "${_html}" MATCHES "covered\\.cpp")
     message(FATAL_ERROR "coverage report does not contain covered.cpp")
 endif()
-if (_html MATCHES "covered_test\\.cpp")
+if ("${_html}" MATCHES "covered_test\\.cpp")
     message(FATAL_ERROR "coverage report unexpectedly contains covered_test.cpp")
 endif()
-if (_html MATCHES "excluded\\.cpp")
+if ("${_html}" MATCHES "excluded\\.cpp")
     message(FATAL_ERROR "coverage report unexpectedly contains external/excluded.cpp")
 endif()
 
@@ -149,7 +149,7 @@ execute_process(
     OUTPUT_VARIABLE _install_stdout
     ERROR_VARIABLE _install_stderr
 )
-if (NOT _install_result EQUAL 0)
+if (NOT "${_install_result}" EQUAL 0)
     message(FATAL_ERROR
         "coverage install failed\n"
         "stdout:\n${_install_stdout}\n"
@@ -176,7 +176,7 @@ execute_process(
     OUTPUT_VARIABLE _consumer_configure_stdout
     ERROR_VARIABLE _consumer_configure_stderr
 )
-if (NOT _consumer_configure_result EQUAL 0)
+if (NOT "${_consumer_configure_result}" EQUAL 0)
     message(FATAL_ERROR
         "coverage package consumer configure failed\n"
         "stdout:\n${_consumer_configure_stdout}\n"
@@ -189,7 +189,7 @@ execute_process(
     OUTPUT_VARIABLE _consumer_build_stdout
     ERROR_VARIABLE _consumer_build_stderr
 )
-if (NOT _consumer_build_result EQUAL 0)
+if (NOT "${_consumer_build_result}" EQUAL 0)
     message(FATAL_ERROR
         "coverage package consumer build failed\n"
         "stdout:\n${_consumer_build_stdout}\n"
@@ -202,7 +202,7 @@ execute_process(
     OUTPUT_VARIABLE _consumer_run_stdout
     ERROR_VARIABLE _consumer_run_stderr
 )
-if (NOT _consumer_run_result EQUAL 0)
+if (NOT "${_consumer_run_result}" EQUAL 0)
     message(FATAL_ERROR
         "coverage package consumer failed\n"
         "stdout:\n${_consumer_run_stdout}\n"

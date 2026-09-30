@@ -16,7 +16,7 @@ execute_process(
     OUTPUT_VARIABLE _ctest_json
     ERROR_VARIABLE _ctest_stderr
 )
-if (NOT _ctest_result EQUAL 0)
+if (NOT "${_ctest_result}" EQUAL 0)
     message(FATAL_ERROR
         "CTest inventory query failed\n"
         "${_ctest_stderr}")
@@ -36,7 +36,7 @@ function(_canon_require_test_state NAME EXPECT_ENABLED)
 
         set(_found TRUE)
         string(JSON _property_count LENGTH "${_ctest_json}" tests ${_test_index} properties)
-        if (_property_count GREATER 0)
+        if ("${_property_count}" GREATER 0)
             math(EXPR _last_property "${_property_count} - 1")
             foreach(_property_index RANGE 0 ${_last_property})
                 string(JSON _property_name

@@ -38,7 +38,7 @@ function(_run DESCRIPTION)
         OUTPUT_VARIABLE _stdout
         ERROR_VARIABLE _stderr
     )
-    if (NOT _result EQUAL 0)
+    if (NOT "${_result}" EQUAL 0)
         message(FATAL_ERROR
             "${DESCRIPTION} failed\n"
             "stdout:\n${_stdout}\n"

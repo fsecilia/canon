@@ -41,7 +41,7 @@ execute_process(
     OUTPUT_VARIABLE _configure_stdout
     ERROR_VARIABLE _configure_stderr
 )
-if (NOT _configure_result EQUAL 0)
+if (NOT "${_configure_result}" EQUAL 0)
     message(FATAL_ERROR
         "Canon consumer configure failed (${CANON_BUILD_TYPE})\n"
         "stdout:\n${_configure_stdout}\n"
@@ -55,7 +55,7 @@ execute_process(
     OUTPUT_VARIABLE _build_stdout
     ERROR_VARIABLE _build_stderr
 )
-if (NOT _build_result EQUAL 0)
+if (NOT "${_build_result}" EQUAL 0)
     message(FATAL_ERROR
         "Canon consumer build failed (${CANON_BUILD_TYPE})\n"
         "stdout:\n${_build_stdout}\n"
@@ -69,7 +69,7 @@ execute_process(
     OUTPUT_VARIABLE _visibility_exported_stdout
     ERROR_VARIABLE _visibility_exported_stderr
 )
-if (NOT _visibility_exported_result EQUAL 0)
+if (NOT "${_visibility_exported_result}" EQUAL 0)
     message(FATAL_ERROR
         "Exported visibility probe failed to link\n"
         "stdout:\n${_visibility_exported_stdout}\n"
@@ -84,15 +84,15 @@ execute_process(
     ERROR_VARIABLE _visibility_hidden_stderr
 )
 set(_visibility_hidden_output "${_visibility_hidden_stdout}\n${_visibility_hidden_stderr}")
-if (_visibility_hidden_result EQUAL 0)
+if ("${_visibility_hidden_result}" EQUAL 0)
     message(FATAL_ERROR "Unexported visibility probe unexpectedly linked")
 endif()
-if (NOT _visibility_hidden_output MATCHES "sampleHiddenAnswer")
+if (NOT "${_visibility_hidden_output}" MATCHES "sampleHiddenAnswer")
     message(FATAL_ERROR
         "Unexported visibility probe failed for an unrelated reason: expected the hidden symbol "
         "in the linker diagnostic\n${_visibility_hidden_output}")
 endif()
-if (NOT _visibility_hidden_output MATCHES
+if (NOT "${_visibility_hidden_output}" MATCHES
     "undefined reference|undefined symbol|Undefined symbols|unresolved external symbol")
     message(FATAL_ERROR
         "Unexported visibility probe failed without the expected unresolved-symbol diagnostic\n"
@@ -107,7 +107,7 @@ execute_process(
     ERROR_VARIABLE _warning_probe_stderr
 )
 if (CANON_ENABLE_WARNINGS)
-    if (_warning_probe_result EQUAL 0)
+    if ("${_warning_probe_result}" EQUAL 0)
         message(FATAL_ERROR
             "Canon warning probe unexpectedly built with warnings enabled\n"
             "stdout:\n${_warning_probe_stdout}\n"
@@ -121,13 +121,13 @@ if (CANON_ENABLE_WARNINGS)
         OUTPUT_VARIABLE _warning_probe_demoted_stdout
         ERROR_VARIABLE _warning_probe_demoted_stderr
     )
-    if (NOT _warning_probe_demoted_result EQUAL 0)
+    if (NOT "${_warning_probe_demoted_result}" EQUAL 0)
         message(FATAL_ERROR
             "Canon warning probe still failed after demoting unused-parameter\n"
             "stdout:\n${_warning_probe_demoted_stdout}\n"
             "stderr:\n${_warning_probe_demoted_stderr}")
     endif()
-elseif (NOT _warning_probe_result EQUAL 0)
+elseif (NOT "${_warning_probe_result}" EQUAL 0)
     message(FATAL_ERROR
         "Canon warning probe failed with warnings disabled\n"
         "stdout:\n${_warning_probe_stdout}\n"

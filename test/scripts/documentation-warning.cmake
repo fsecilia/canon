@@ -29,7 +29,7 @@ execute_process(
     OUTPUT_VARIABLE _configure_stdout
     ERROR_VARIABLE _configure_stderr
 )
-if (NOT _configure_result EQUAL 0)
+if (NOT "${_configure_result}" EQUAL 0)
     message(FATAL_ERROR
         "Documentation warning fixture configure failed\n"
         "stdout:\n${_configure_stdout}\n"
@@ -66,7 +66,7 @@ execute_process(
     OUTPUT_VARIABLE _doc_stdout
     ERROR_VARIABLE _doc_stderr
 )
-if (_doc_result EQUAL 0)
+if ("${_doc_result}" EQUAL 0)
     message(FATAL_ERROR "Documentation target succeeded despite a Doxygen warning")
 endif()
 
@@ -76,7 +76,7 @@ if (NOT EXISTS "${_warning_log}")
 endif()
 
 file(READ "${_warning_log}" _warning_output)
-if (NOT _warning_output MATCHES "unable to resolve reference to 'canon_missing_documentation_target'")
+if (NOT "${_warning_output}" MATCHES "unable to resolve reference to 'canon_missing_documentation_target'")
     message(FATAL_ERROR
         "Documentation target failed without the expected Doxygen warning\n"
         "warning log:\n${_warning_output}\n"

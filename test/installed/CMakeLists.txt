@@ -20,7 +20,7 @@ endif()
 if (NOT COMMAND canon_apply_target)
     message(FATAL_ERROR "Installed Canon did not provide canon_apply_target()")
 endif()
-if (NOT Canon_VERSION STREQUAL CANON_EXPECTED_VERSION)
+if (NOT "${Canon_VERSION}" STREQUAL "${CANON_EXPECTED_VERSION}")
     message(FATAL_ERROR
         "Installed Canon reported version '${Canon_VERSION}', expected '${CANON_EXPECTED_VERSION}'")
 endif()

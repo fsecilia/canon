@@ -28,7 +28,7 @@ execute_process(
     OUTPUT_VARIABLE _configure_stdout
     ERROR_VARIABLE _configure_stderr
 )
-if (NOT _configure_result EQUAL 0)
+if (NOT "${_configure_result}" EQUAL 0)
     message(FATAL_ERROR
         "Documentation-unavailable fixture configure failed\n"
         "stdout:\n${_configure_stdout}\n"
@@ -42,7 +42,7 @@ execute_process(
     OUTPUT_VARIABLE _build_stdout
     ERROR_VARIABLE _build_stderr
 )
-if (NOT _build_result EQUAL 0)
+if (NOT "${_build_result}" EQUAL 0)
     message(FATAL_ERROR
         "Build without Doxygen failed\n"
         "stdout:\n${_build_stdout}\n"
@@ -57,7 +57,7 @@ execute_process(
     OUTPUT_VARIABLE _install_stdout
     ERROR_VARIABLE _install_stderr
 )
-if (NOT _install_result EQUAL 0)
+if (NOT "${_install_result}" EQUAL 0)
     message(FATAL_ERROR
         "Install without Doxygen failed\n"
         "stdout:\n${_install_stdout}\n"
@@ -71,7 +71,7 @@ execute_process(
     OUTPUT_VARIABLE _clean_stdout
     ERROR_VARIABLE _clean_stderr
 )
-if (NOT _clean_result EQUAL 0)
+if (NOT "${_clean_result}" EQUAL 0)
     message(FATAL_ERROR
         "doc-clean without Doxygen failed\n"
         "stdout:\n${_clean_stdout}\n"
@@ -85,7 +85,7 @@ execute_process(
     OUTPUT_VARIABLE _doc_stdout
     ERROR_VARIABLE _doc_stderr
 )
-if (_doc_result EQUAL 0)
+if ("${_doc_result}" EQUAL 0)
     message(FATAL_ERROR "doc unexpectedly succeeded without Doxygen")
 endif()
 
@@ -94,7 +94,7 @@ foreach(_expected_fragment IN ITEMS
     "Doxygen 1.9 or newer was not found when this build tree was configured."
     "Install Doxygen 1.9 or newer and reconfigure before building the doc target."
 )
-    if (NOT _doc_output MATCHES "${_expected_fragment}")
+    if (NOT "${_doc_output}" MATCHES "${_expected_fragment}")
         message(FATAL_ERROR
             "doc failed without the expected missing-Doxygen diagnostic\n"
             "expected fragment:\n${_expected_fragment}\n"

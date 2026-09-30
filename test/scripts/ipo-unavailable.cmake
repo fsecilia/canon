@@ -33,14 +33,14 @@ execute_process(
     OUTPUT_VARIABLE _configure_stdout
     ERROR_VARIABLE _configure_stderr
 )
-if (NOT _configure_result EQUAL 0)
+if (NOT "${_configure_result}" EQUAL 0)
     message(FATAL_ERROR
         "IPO-unavailable configure failed\n"
         "stdout:\n${_configure_stdout}\n"
         "stderr:\n${_configure_stderr}")
 endif()
 
-if (NOT _configure_stdout MATCHES "Canon: IPO is unavailable; Release builds will continue without it")
+if (NOT "${_configure_stdout}" MATCHES "Canon: IPO is unavailable; Release builds will continue without it")
     message(FATAL_ERROR
         "IPO-unavailable configure did not report the fallback\n"
         "stdout:\n${_configure_stdout}\n"
@@ -53,7 +53,7 @@ execute_process(
     OUTPUT_VARIABLE _build_stdout
     ERROR_VARIABLE _build_stderr
 )
-if (NOT _build_result EQUAL 0)
+if (NOT "${_build_result}" EQUAL 0)
     message(FATAL_ERROR
         "IPO-unavailable build failed\n"
         "stdout:\n${_build_stdout}\n"

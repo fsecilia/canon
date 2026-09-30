@@ -15,7 +15,7 @@ if (NOT "${_json_error}" STREQUAL "NOTFOUND")
     message(FATAL_ERROR
         "Canon could not read coverage summary '${CANON_COVERAGE_SUMMARY_FILE}': ${_json_error}")
 endif()
-if (_file_count EQUAL 0)
+if ("${_file_count}" EQUAL 0)
     message(FATAL_ERROR "Canon coverage report contains no project source files")
 endif()
 

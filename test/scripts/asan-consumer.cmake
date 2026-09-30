@@ -39,7 +39,7 @@ execute_process(
     OUTPUT_VARIABLE _configure_stdout
     ERROR_VARIABLE _configure_stderr
 )
-if (NOT _configure_result EQUAL 0)
+if (NOT "${_configure_result}" EQUAL 0)
     message(FATAL_ERROR
         "ASan configure failed\n"
         "stdout:\n${_configure_stdout}\n"
@@ -52,7 +52,7 @@ execute_process(
     OUTPUT_VARIABLE _build_stdout
     ERROR_VARIABLE _build_stderr
 )
-if (NOT _build_result EQUAL 0)
+if (NOT "${_build_result}" EQUAL 0)
     message(FATAL_ERROR
         "ASan build failed\n"
         "stdout:\n${_build_stdout}\n"
@@ -66,7 +66,7 @@ execute_process(
     OUTPUT_VARIABLE _run_stdout
     ERROR_VARIABLE _run_stderr
 )
-if (NOT _run_result EQUAL 0)
+if (NOT "${_run_result}" EQUAL 0)
     message(FATAL_ERROR
         "ASan executable failed\n"
         "stdout:\n${_run_stdout}\n"
@@ -79,7 +79,7 @@ execute_process(
     OUTPUT_VARIABLE _test_stdout
     ERROR_VARIABLE _test_stderr
 )
-if (NOT _test_result EQUAL 0)
+if (NOT "${_test_result}" EQUAL 0)
     message(FATAL_ERROR
         "ASan CTest run failed\n"
         "stdout:\n${_test_stdout}\n"
@@ -95,7 +95,7 @@ execute_process(
     OUTPUT_VARIABLE _install_stdout
     ERROR_VARIABLE _install_stderr
 )
-if (NOT _install_result EQUAL 0)
+if (NOT "${_install_result}" EQUAL 0)
     message(FATAL_ERROR
         "ASan install failed\n"
         "stdout:\n${_install_stdout}\n"
@@ -122,7 +122,7 @@ execute_process(
     OUTPUT_VARIABLE _consumer_configure_stdout
     ERROR_VARIABLE _consumer_configure_stderr
 )
-if (NOT _consumer_configure_result EQUAL 0)
+if (NOT "${_consumer_configure_result}" EQUAL 0)
     message(FATAL_ERROR
         "ASan package consumer configure failed\n"
         "stdout:\n${_consumer_configure_stdout}\n"
@@ -135,7 +135,7 @@ execute_process(
     OUTPUT_VARIABLE _consumer_build_stdout
     ERROR_VARIABLE _consumer_build_stderr
 )
-if (NOT _consumer_build_result EQUAL 0)
+if (NOT "${_consumer_build_result}" EQUAL 0)
     message(FATAL_ERROR
         "ASan package consumer build failed\n"
         "stdout:\n${_consumer_build_stdout}\n"
@@ -149,7 +149,7 @@ foreach(_consumer IN ITEMS asan_static_consumer asan_shared_consumer)
         OUTPUT_VARIABLE _consumer_run_stdout
         ERROR_VARIABLE _consumer_run_stderr
     )
-    if (NOT _consumer_run_result EQUAL 0)
+    if (NOT "${_consumer_run_result}" EQUAL 0)
         message(FATAL_ERROR
             "ASan package consumer '${_consumer}' failed\n"
             "stdout:\n${_consumer_run_stdout}\n"
@@ -164,7 +164,7 @@ execute_process(
     OUTPUT_VARIABLE _probe_build_stdout
     ERROR_VARIABLE _probe_build_stderr
 )
-if (NOT _probe_build_result EQUAL 0)
+if (NOT "${_probe_build_result}" EQUAL 0)
     message(FATAL_ERROR
         "ASan probe build failed\n"
         "stdout:\n${_probe_build_stdout}\n"
@@ -177,13 +177,13 @@ execute_process(
     OUTPUT_VARIABLE _probe_stdout
     ERROR_VARIABLE _probe_stderr
 )
-if (_probe_result EQUAL 0)
+if ("${_probe_result}" EQUAL 0)
     message(FATAL_ERROR "AddressSanitizer unexpectedly accepted the invalid probe")
 endif()
 
 set(_probe_output "${_probe_stdout}\n${_probe_stderr}")
-if (NOT _probe_output MATCHES "AddressSanitizer"
-    OR NOT _probe_output MATCHES "heap-use-after-free")
+if (NOT "${_probe_output}" MATCHES "AddressSanitizer"
+    OR NOT "${_probe_output}" MATCHES "heap-use-after-free")
     message(FATAL_ERROR
         "ASan probe did not surface the expected heap-use-after-free diagnostic\n"
         "${_probe_output}")
