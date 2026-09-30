@@ -630,6 +630,16 @@ function(_canon_finalize_package)
         PROPERTY _CANON_PACKAGE_REGISTERED
     )
     if (NOT _package_registered)
+        get_property(
+            _dependency_keys
+            DIRECTORY "${PROJECT_SOURCE_DIR}"
+            PROPERTY _CANON_PACKAGE_DEPENDENCY_KEYS
+        )
+        if (_dependency_keys)
+            message(FATAL_ERROR
+                "canon_apply_dependency(): package dependencies were declared, but project "
+                "'${PROJECT_NAME}' has no installable Canon package")
+        endif()
         return()
     endif()
 
