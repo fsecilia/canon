@@ -506,18 +506,9 @@ function(_canon_package_version_compatibility OUT_COMPATIBILITY)
     set("${OUT_COMPATIBILITY}" "${_compatibility}" PARENT_SCOPE)
 endfunction()
 
-# Regenerates the package version file from the project's current install policy.
+# Writes the package version file from the project's finalized install policy.
 function(_canon_write_package_version_file)
     if ("${PROJECT_VERSION}" STREQUAL "")
-        return()
-    endif()
-
-    get_property(
-        _package_registered
-        DIRECTORY "${PROJECT_SOURCE_DIR}"
-        PROPERTY _CANON_PACKAGE_REGISTERED
-    )
-    if (NOT _package_registered)
         return()
     endif()
 
@@ -548,7 +539,6 @@ function(_canon_mark_package_binary)
         DIRECTORY "${PROJECT_SOURCE_DIR}"
         PROPERTY _CANON_PACKAGE_HAS_BINARY TRUE
     )
-    _canon_write_package_version_file()
 endfunction()
 
 # Represents one value as a literal CMake bracket argument.
@@ -625,21 +615,16 @@ check_required_components(@CANON_PACKAGE_NAME@)
     )
 endfunction()
 
-# Registers the project-wide export and package configuration for managed libraries.
-function(_canon_register_package)
+# Finalizes the project-wide export and package configuration after target declarations.
+function(_canon_finalize_package)
     get_property(
         _package_registered
         DIRECTORY "${PROJECT_SOURCE_DIR}"
         PROPERTY _CANON_PACKAGE_REGISTERED
     )
-    if (_package_registered)
+    if (NOT _package_registered)
         return()
     endif()
-
-    set_property(
-        DIRECTORY "${PROJECT_SOURCE_DIR}"
-        PROPERTY _CANON_PACKAGE_REGISTERED TRUE
-    )
 
     _canon_package_install_directory(_install_directory)
     _canon_write_package_config_file()
@@ -661,6 +646,36 @@ function(_canon_register_package)
         )
     endif()
     install(FILES ${_package_files} DESTINATION "${_install_directory}")
+endfunction()
+
+# Schedules one package finalization at the end of this project's source directory.
+function(_canon_schedule_package_finalization)
+    get_property(
+        _finalizer_scheduled
+        DIRECTORY "${PROJECT_SOURCE_DIR}"
+        PROPERTY _CANON_PACKAGE_FINALIZER_SCHEDULED
+    )
+    if (_finalizer_scheduled)
+        return()
+    endif()
+
+    set_property(
+        DIRECTORY "${PROJECT_SOURCE_DIR}"
+        PROPERTY _CANON_PACKAGE_FINALIZER_SCHEDULED TRUE
+    )
+    cmake_language(
+        DEFER DIRECTORY "${PROJECT_SOURCE_DIR}"
+        CALL _canon_finalize_package
+    )
+endfunction()
+
+# Records that a managed library makes this project an installable CMake package.
+function(_canon_register_package)
+    set_property(
+        DIRECTORY "${PROJECT_SOURCE_DIR}"
+        PROPERTY _CANON_PACKAGE_REGISTERED TRUE
+    )
+    _canon_schedule_package_finalization()
 endfunction()
 
 # Records how this project's installed package recovers one external dependency.
@@ -719,14 +734,7 @@ function(canon_apply_dependency PACKAGE)
         PROPERTY "${_dependency_property}" "${_dependency_call}"
     )
 
-    get_property(
-        _package_registered
-        DIRECTORY "${PROJECT_SOURCE_DIR}"
-        PROPERTY _CANON_PACKAGE_REGISTERED
-    )
-    if (_package_registered)
-        _canon_write_package_config_file()
-    endif()
+    _canon_schedule_package_finalization()
 endfunction()
 
 # Applies Canon's compiled-target policy and conventional installation to an executable.
