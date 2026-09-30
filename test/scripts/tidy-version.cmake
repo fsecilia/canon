@@ -79,7 +79,30 @@ if (NOT _harness_result EQUAL 0)
 endif()
 
 set(_harness_output "${_harness_stdout}\n${_harness_stderr}")
-if (NOT _harness_output MATCHES "clang-tidy validation unavailable: clang-tidy .* is older than the required minimum 21\\.1\\.6")
+if (NOT _harness_output MATCHES "clang-tidy validation unavailable: clang-tidy [0-9.]+"
+    OR NOT _harness_output MATCHES "required minimum 21\.1\.6")
     message(FATAL_ERROR
         "Canon harness did not report the unsupported clang-tidy version\n${_harness_output}")
+endif()
+
+execute_process(
+    COMMAND
+        "${CMAKE_COMMAND}"
+        "-DCANON_CTEST_COMMAND=${CMAKE_CTEST_COMMAND}"
+        "-DCANON_TEST_ROOT=${_harness_binary_dir}"
+        -DCANON_EXPECT_TIDY_ENABLED=FALSE
+        -P "${CANON_SOURCE_DIR}/test/scripts/optional-tool-registration.cmake"
+    RESULT_VARIABLE _registration_result
+    OUTPUT_VARIABLE _registration_stdout
+    ERROR_VARIABLE _registration_stderr
+)
+if (NOT _registration_result EQUAL 0)
+    message(FATAL_ERROR
+        "Canon harness did not disable tests for the unsupported clang-tidy
+"
+        "stdout:
+${_registration_stdout}
+"
+        "stderr:
+${_registration_stderr}")
 endif()
