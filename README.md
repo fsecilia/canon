@@ -101,6 +101,17 @@ target_link_libraries(example PUBLIC Zlib::Zlib)
 
 `canon_apply_dependency()` does not locate, vendor, or link the dependency. It records the arguments Canon needs to emit the corresponding `find_dependency()` call in the installed package configuration. This is also required when a dependency is provided from the source tree during the build but must be found as a package by downstream consumers. Do not pass `REQUIRED` or `QUIET`; `find_dependency()` inherits those requirements from the outer `find_package()` call.
 
+## Developer controls
+
+Canon's shared development presets are the normal entry points for developer policy. Every shared development preset enables strict warnings. The `asan`, `tidy`, and `coverage` presets also enable their matching features. Projects that do not use Canon's presets, or that need a different combination, may set the same options directly or from their own presets:
+
+* `CANON_ENABLE_WARNINGS` enables Canon's strict compiler warning policy;
+* `CANON_ENABLE_ASAN` enables AddressSanitizer instrumentation;
+* `CANON_ENABLE_TIDY` enables clang-tidy during compilation; and
+* `CANON_ENABLE_COVERAGE` enables coverage instrumentation and reporting support.
+
+These controls are build-wide. When enabled, they apply to every Canon-managed target in the build, including Canon-managed targets from vendored subprojects. Canon does not isolate them per project.
+
 ## Warnings
 
 Warnings are controlled by `CANON_ENABLE_WARNINGS`. It is off by default. Canon's shared development presets turn it on.
