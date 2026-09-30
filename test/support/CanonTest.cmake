@@ -14,7 +14,7 @@ endfunction()
 function(canon_test_run)
     set(_options EXPECT_FAILURE NORMALIZE_WHITESPACE)
     set(_one_value_arguments DESCRIPTION)
-    set(_multi_value_arguments COMMAND EXPECTED_OUTPUT)
+    set(_multi_value_arguments COMMAND EXPECTED_OUTPUT EXPECTED_REGEX)
     cmake_parse_arguments(
         PARSE_ARGV 0
         _test
@@ -52,27 +52,37 @@ function(canon_test_run)
             "stderr:\n${_stderr}")
     endif()
 
-    if (DEFINED _test_EXPECTED_OUTPUT)
+    if (DEFINED _test_EXPECTED_OUTPUT OR DEFINED _test_EXPECTED_REGEX)
         set(_output "${_stdout}\n${_stderr}")
         if (_test_NORMALIZE_WHITESPACE)
             string(REGEX REPLACE "[ \t\r\n]+" " " _output "${_output}")
         endif()
-
-        foreach(_expected_output IN LISTS _test_EXPECTED_OUTPUT)
-            set(_expected_fragment "${_expected_output}")
-            if (_test_NORMALIZE_WHITESPACE)
-                string(REGEX REPLACE
-                    "[ \t\r\n]+" " " _expected_fragment "${_expected_fragment}")
-            endif()
-
-            string(FIND "${_output}" "${_expected_fragment}" _expected_output_position)
-            if ("${_expected_output_position}" EQUAL -1)
-                message(FATAL_ERROR
-                    "${_test_DESCRIPTION} did not report the expected output\n"
-                    "expected fragment:\n${_expected_output}\n"
-                    "stdout:\n${_stdout}\n"
-                    "stderr:\n${_stderr}")
-            endif()
-        endforeach()
     endif()
+
+    foreach(_expected_output IN LISTS _test_EXPECTED_OUTPUT)
+        set(_expected_fragment "${_expected_output}")
+        if (_test_NORMALIZE_WHITESPACE)
+            string(REGEX REPLACE
+                "[ \t\r\n]+" " " _expected_fragment "${_expected_fragment}")
+        endif()
+
+        string(FIND "${_output}" "${_expected_fragment}" _expected_output_position)
+        if ("${_expected_output_position}" EQUAL -1)
+            message(FATAL_ERROR
+                "${_test_DESCRIPTION} did not report the expected output\n"
+                "expected fragment:\n${_expected_output}\n"
+                "stdout:\n${_stdout}\n"
+                "stderr:\n${_stderr}")
+        endif()
+    endforeach()
+
+    foreach(_expected_regex IN LISTS _test_EXPECTED_REGEX)
+        if (NOT "${_output}" MATCHES "${_expected_regex}")
+            message(FATAL_ERROR
+                "${_test_DESCRIPTION} did not report the expected output\n"
+                "expected regular expression:\n${_expected_regex}\n"
+                "stdout:\n${_stdout}\n"
+                "stderr:\n${_stderr}")
+        endif()
+    endforeach()
 endfunction()

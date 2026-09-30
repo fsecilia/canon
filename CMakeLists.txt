@@ -93,24 +93,24 @@ endfunction()
 
 _canon_add_script_test(
     targets
-    scripts/target-consumer.cmake
+    consumer/test.cmake
     -DCANON_BUILD_TYPE=Debug
 )
 
 _canon_add_script_test(
     targets.release
-    scripts/target-consumer.cmake
+    consumer/test.cmake
     -DCANON_BUILD_TYPE=Release
 )
 
 _canon_add_script_test(
     executable.install
-    scripts/executable-install.cmake
+    executable-install/test.cmake
 )
 
 _canon_add_script_test(
     library.install
-    scripts/library-install.cmake
+    library-install/test.cmake
 )
 
 _canon_add_script_test(
@@ -130,14 +130,14 @@ _canon_add_script_test(
 
 _canon_add_script_test(
     targets.warnings
-    scripts/target-consumer.cmake
+    consumer/test.cmake
     -DCANON_BUILD_TYPE=Debug
     -DCANON_ENABLE_WARNINGS=ON
 )
 
 _canon_add_script_test(
     ipo.unavailable
-    scripts/ipo-unavailable.cmake
+    ipo-unavailable/test.cmake
 )
 
 _canon_add_script_test(
@@ -259,12 +259,12 @@ _canon_add_script_test(
 
 _canon_add_script_test(
     vendored
-    scripts/vendored-consumption.cmake
+    vendored/test.cmake
 )
 
 _canon_add_script_test(
     installed
-    scripts/installed-consumption.cmake
+    installed/test.cmake
     "-DCANON_EXPECTED_VERSION=${PROJECT_VERSION}"
 )
 
