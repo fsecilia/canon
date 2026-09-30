@@ -486,14 +486,21 @@ function(canon_apply_target TARGET)
     endif()
 endfunction()
 
-# Returns the conventional install directory for this project's CMake package files.
+# Returns the install directory for this project's finalized package architecture.
 function(_canon_package_install_directory OUT_DIRECTORY)
-    include(GNUInstallDirs)
-    set(
-        "${OUT_DIRECTORY}"
-        "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
-        PARENT_SCOPE
+    get_property(
+        _architecture_specific
+        DIRECTORY "${PROJECT_SOURCE_DIR}"
+        PROPERTY _CANON_PACKAGE_ARCHITECTURE_SPECIFIC
     )
+    if (_architecture_specific)
+        include(GNUInstallDirs)
+        set(_install_directory "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
+    else()
+        set(_install_directory "share/cmake/${PROJECT_NAME}")
+    endif()
+
+    set("${OUT_DIRECTORY}" "${_install_directory}" PARENT_SCOPE)
 endfunction()
 
 # Selects Canon's package compatibility policy from the project's major version.
@@ -506,30 +513,21 @@ function(_canon_package_version_compatibility OUT_COMPATIBILITY)
     set("${OUT_COMPATIBILITY}" "${_compatibility}" PARENT_SCOPE)
 endfunction()
 
-# Regenerates the package version file from the project's current install policy.
+# Writes the package version file from the project's finalized install policy.
 function(_canon_write_package_version_file)
     if ("${PROJECT_VERSION}" STREQUAL "")
-        return()
-    endif()
-
-    get_property(
-        _package_registered
-        DIRECTORY "${PROJECT_SOURCE_DIR}"
-        PROPERTY _CANON_PACKAGE_REGISTERED
-    )
-    if (NOT _package_registered)
         return()
     endif()
 
     _canon_package_version_compatibility(_compatibility)
 
     get_property(
-        _has_binary
+        _architecture_specific
         DIRECTORY "${PROJECT_SOURCE_DIR}"
-        PROPERTY _CANON_PACKAGE_HAS_BINARY
+        PROPERTY _CANON_PACKAGE_ARCHITECTURE_SPECIFIC
     )
     set(_architecture_arguments)
-    if (NOT _has_binary)
+    if (NOT _architecture_specific)
         list(APPEND _architecture_arguments ARCH_INDEPENDENT)
     endif()
 
@@ -542,13 +540,12 @@ function(_canon_write_package_version_file)
     )
 endfunction()
 
-# Records that this project's installed package contains an architecture-specific artifact.
-function(_canon_mark_package_binary)
+# Raises this project's package architecture to architecture-specific.
+function(_canon_mark_package_architecture_specific)
     set_property(
         DIRECTORY "${PROJECT_SOURCE_DIR}"
-        PROPERTY _CANON_PACKAGE_HAS_BINARY TRUE
+        PROPERTY _CANON_PACKAGE_ARCHITECTURE_SPECIFIC TRUE
     )
-    _canon_write_package_version_file()
 endfunction()
 
 # Represents one value as a literal CMake bracket argument.
@@ -625,21 +622,26 @@ check_required_components(@CANON_PACKAGE_NAME@)
     )
 endfunction()
 
-# Registers the project-wide export and package configuration for managed libraries.
-function(_canon_register_package)
+# Finalizes the project-wide export and package configuration after target declarations.
+function(_canon_finalize_package)
     get_property(
         _package_registered
         DIRECTORY "${PROJECT_SOURCE_DIR}"
         PROPERTY _CANON_PACKAGE_REGISTERED
     )
-    if (_package_registered)
+    if (NOT _package_registered)
+        get_property(
+            _dependency_keys
+            DIRECTORY "${PROJECT_SOURCE_DIR}"
+            PROPERTY _CANON_PACKAGE_DEPENDENCY_KEYS
+        )
+        if (_dependency_keys)
+            message(FATAL_ERROR
+                "canon_apply_dependency(): package dependencies were declared, but project "
+                "'${PROJECT_NAME}' has no installable Canon package")
+        endif()
         return()
     endif()
-
-    set_property(
-        DIRECTORY "${PROJECT_SOURCE_DIR}"
-        PROPERTY _CANON_PACKAGE_REGISTERED TRUE
-    )
 
     _canon_package_install_directory(_install_directory)
     _canon_write_package_config_file()
@@ -661,6 +663,36 @@ function(_canon_register_package)
         )
     endif()
     install(FILES ${_package_files} DESTINATION "${_install_directory}")
+endfunction()
+
+# Schedules one package finalization at the end of this project's source directory.
+function(_canon_schedule_package_finalization)
+    get_property(
+        _finalizer_scheduled
+        DIRECTORY "${PROJECT_SOURCE_DIR}"
+        PROPERTY _CANON_PACKAGE_FINALIZER_SCHEDULED
+    )
+    if (_finalizer_scheduled)
+        return()
+    endif()
+
+    set_property(
+        DIRECTORY "${PROJECT_SOURCE_DIR}"
+        PROPERTY _CANON_PACKAGE_FINALIZER_SCHEDULED TRUE
+    )
+    cmake_language(
+        DEFER DIRECTORY "${PROJECT_SOURCE_DIR}"
+        CALL _canon_finalize_package
+    )
+endfunction()
+
+# Records that a managed library makes this project an installable CMake package.
+function(_canon_register_package)
+    set_property(
+        DIRECTORY "${PROJECT_SOURCE_DIR}"
+        PROPERTY _CANON_PACKAGE_REGISTERED TRUE
+    )
+    _canon_schedule_package_finalization()
 endfunction()
 
 # Records how this project's installed package recovers one external dependency.
@@ -719,14 +751,7 @@ function(canon_apply_dependency PACKAGE)
         PROPERTY "${_dependency_property}" "${_dependency_call}"
     )
 
-    get_property(
-        _package_registered
-        DIRECTORY "${PROJECT_SOURCE_DIR}"
-        PROPERTY _CANON_PACKAGE_REGISTERED
-    )
-    if (_package_registered)
-        _canon_write_package_config_file()
-    endif()
+    _canon_schedule_package_finalization()
 endfunction()
 
 # Applies Canon's compiled-target policy and conventional installation to an executable.
@@ -754,14 +779,28 @@ function(canon_apply_executable TARGET)
         TARGETS "${TARGET}"
         RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
     )
-    _canon_mark_package_binary()
+    _canon_mark_package_architecture_specific()
 endfunction()
 
 # Installs a managed library and each of its public HEADERS file sets.
 function(_canon_install_library TARGET)
-    include(GNUInstallDirs)
-
     get_property(_header_sets TARGET "${TARGET}" PROPERTY INTERFACE_HEADER_SETS)
+
+    get_target_property(_type "${TARGET}" TYPE)
+    if ("${_type}" STREQUAL "INTERFACE_LIBRARY")
+        set(_file_set_arguments)
+        foreach(_header_set IN LISTS _header_sets)
+            list(APPEND _file_set_arguments FILE_SET "${_header_set}")
+        endforeach()
+        install(
+            TARGETS "${TARGET}"
+            EXPORT "${PROJECT_NAME}Targets"
+            ${_file_set_arguments}
+        )
+        return()
+    endif()
+
+    include(GNUInstallDirs)
     set(_file_set_arguments)
     foreach(_header_set IN LISTS _header_sets)
         list(APPEND _file_set_arguments
@@ -769,7 +808,6 @@ function(_canon_install_library TARGET)
             DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
         )
     endforeach()
-
     install(
         TARGETS "${TARGET}"
         EXPORT "${PROJECT_NAME}Targets"
@@ -858,7 +896,7 @@ function(canon_apply_library TARGET)
         return()
     endif()
 
-    _canon_mark_package_binary()
+    _canon_mark_package_architecture_specific()
     canon_apply_target("${TARGET}")
     target_compile_features("${TARGET}" PUBLIC cxx_std_26)
 

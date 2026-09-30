@@ -373,3 +373,8 @@ _canon_add_script_test(
     dependencies.quiet
     dependency-quiet-error.cmake
 )
+
+_canon_add_script_test(
+    dependencies.no-package
+    dependency-no-package-error.cmake
+)

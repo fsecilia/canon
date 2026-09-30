@@ -46,8 +46,18 @@ if (NOT "${_install_result}" EQUAL 0)
         "stderr:\n${_install_stderr}")
 endif()
 
-# Require each library-bearing project to install its package configuration and export.
-foreach(_package IN ITEMS HeaderOnlyPackage MixedPackage ToolPackage VersionlessPackage)
+# Require architecture-independent package metadata below share/cmake.
+foreach(_package IN ITEMS HeaderOnlyPackage VersionlessPackage)
+    set(_package_dir "${_install_prefix}/share/cmake/${_package}")
+    foreach(_file IN ITEMS "${_package}Config.cmake" "${_package}Targets.cmake")
+        if (NOT EXISTS "${_package_dir}/${_file}")
+            message(FATAL_ERROR "Canon package install did not produce '${_package_dir}/${_file}'")
+        endif()
+    endforeach()
+endforeach()
+
+# Require architecture-specific package metadata below the configured library directory.
+foreach(_package IN ITEMS MixedPackage ToolPackage)
     set(_package_dir "${_install_prefix}/artifact-lib/cmake/${_package}")
     foreach(_file IN ITEMS "${_package}Config.cmake" "${_package}Targets.cmake")
         if (NOT EXISTS "${_package_dir}/${_file}")
@@ -57,7 +67,12 @@ foreach(_package IN ITEMS HeaderOnlyPackage MixedPackage ToolPackage Versionless
 endforeach()
 
 # Versioned projects install a version file; versionless projects do not invent one.
-foreach(_package IN ITEMS HeaderOnlyPackage MixedPackage ToolPackage)
+set(_header_version_file
+    "${_install_prefix}/share/cmake/HeaderOnlyPackage/HeaderOnlyPackageConfigVersion.cmake")
+if (NOT EXISTS "${_header_version_file}")
+    message(FATAL_ERROR "Canon package install did not produce '${_header_version_file}'")
+endif()
+foreach(_package IN ITEMS MixedPackage ToolPackage)
     set(_version_file
         "${_install_prefix}/artifact-lib/cmake/${_package}/${_package}ConfigVersion.cmake")
     if (NOT EXISTS "${_version_file}")
@@ -65,7 +80,7 @@ foreach(_package IN ITEMS HeaderOnlyPackage MixedPackage ToolPackage)
     endif()
 endforeach()
 set(_versionless_file
-    "${_install_prefix}/artifact-lib/cmake/VersionlessPackage/VersionlessPackageConfigVersion.cmake")
+    "${_install_prefix}/share/cmake/VersionlessPackage/VersionlessPackageConfigVersion.cmake")
 if (EXISTS "${_versionless_file}")
     message(FATAL_ERROR "Canon package install unexpectedly produced '${_versionless_file}'")
 endif()
@@ -73,6 +88,7 @@ endif()
 # Consume each package through find_package() and its exported namespaced targets.
 _canon_build_package_consumer(
     "${_install_prefix}"
+    share/cmake
     HeaderOnlyPackage
     0.7.1
     HeaderOnlyPackage::header_api
@@ -80,6 +96,7 @@ _canon_build_package_consumer(
 )
 _canon_build_package_consumer(
     "${_install_prefix}"
+    artifact-lib/cmake
     MixedPackage
     1.2.0
     MixedPackage::mixed_headers
@@ -87,6 +104,7 @@ _canon_build_package_consumer(
 )
 _canon_build_package_consumer(
     "${_install_prefix}"
+    artifact-lib/cmake
     MixedPackage
     1.2.0
     MixedPackage::mixed_core
@@ -95,6 +113,7 @@ _canon_build_package_consumer(
 )
 _canon_build_package_consumer(
     "${_install_prefix}"
+    artifact-lib/cmake
     ToolPackage
     0.8.1
     ToolPackage::tool_api
@@ -102,6 +121,7 @@ _canon_build_package_consumer(
 )
 _canon_build_package_consumer(
     "${_install_prefix}"
+    share/cmake
     VersionlessPackage
     ""
     VersionlessPackage::versionless_api

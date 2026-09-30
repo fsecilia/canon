@@ -33,7 +33,15 @@ function(_canon_configure_package_fixture BUILD_DIR)
 endfunction()
 
 # Configure and build one consumer against an installed generated package.
-function(_canon_build_package_consumer INSTALL_PREFIX NAME VERSION TARGET ABSENT_TARGET)
+function(
+    _canon_build_package_consumer
+    INSTALL_PREFIX
+    PACKAGE_DIRECTORY
+    NAME
+    VERSION
+    TARGET
+    ABSENT_TARGET
+)
     string(MAKE_C_IDENTIFIER "${NAME}_${TARGET}" _consumer_name)
     set(_build_dir "${CANON_TEST_BINARY_DIR}/consumer-${_consumer_name}")
 
@@ -44,7 +52,7 @@ function(_canon_build_package_consumer INSTALL_PREFIX NAME VERSION TARGET ABSENT
         -G "${CANON_GENERATOR}"
         "-DCANON_PACKAGE_NAME=${NAME}"
         "-DCANON_PACKAGE_TARGET=${TARGET}"
-        "-D${NAME}_DIR=${INSTALL_PREFIX}/artifact-lib/cmake/${NAME}"
+        "-D${NAME}_DIR=${INSTALL_PREFIX}/${PACKAGE_DIRECTORY}/${NAME}"
         "-DCMAKE_CXX_COMPILER=${CANON_CXX_COMPILER}"
         -DCMAKE_BUILD_TYPE=Debug
     )
