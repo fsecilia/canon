@@ -763,6 +763,31 @@ function(_canon_install_library TARGET)
     )
 endfunction()
 
+# Returns the library name used by Canon's public package target.
+function(_canon_library_public_name TARGET OUT_NAME)
+    get_target_property(_public_name "${TARGET}" EXPORT_NAME)
+    if ("${_public_name}" STREQUAL "_public_name-NOTFOUND")
+        set(_public_name "${TARGET}")
+    endif()
+    set("${OUT_NAME}" "${_public_name}" PARENT_SCOPE)
+endfunction()
+
+# Adds the build-tree alias that matches the installed package target name.
+function(_canon_add_build_tree_alias TARGET)
+    _canon_library_public_name("${TARGET}" _public_name)
+    set(_alias "${PROJECT_NAME}::${_public_name}")
+    if (TARGET "${_alias}")
+        get_target_property(_aliased_target "${_alias}" ALIASED_TARGET)
+        if ("${_aliased_target}" STREQUAL "${TARGET}")
+            return()
+        endif()
+        message(FATAL_ERROR
+            "canon_apply_library(): public target '${_alias}' already exists")
+    endif()
+
+    add_library("${_alias}" ALIAS "${TARGET}")
+endfunction()
+
 # Applies Canon's library policy and conventional installation to a library.
 function(canon_apply_library TARGET)
     if (NOT TARGET "${TARGET}")
@@ -783,6 +808,8 @@ function(canon_apply_library TARGET)
         message(FATAL_ERROR
             "canon_apply_library(): FRAMEWORK target '${TARGET}' is not supported")
     endif()
+
+    _canon_add_build_tree_alias("${TARGET}")
 
     if (_type STREQUAL "INTERFACE_LIBRARY")
         target_compile_features("${TARGET}" INTERFACE cxx_std_26)

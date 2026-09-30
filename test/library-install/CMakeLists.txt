@@ -23,12 +23,14 @@ target_sources(
 canon_apply_library(sample_static)
 
 add_library(sample_shared SHARED sample.cpp)
+set_target_properties(sample_shared PROPERTIES EXPORT_NAME SharedPublic)
 canon_apply_library(sample_shared)
 
 add_library(sample_module MODULE sample.cpp)
 canon_apply_library(sample_module)
 
 add_library(sample_interface INTERFACE)
+set_target_properties(sample_interface PROPERTIES EXPORT_NAME InterfacePublic)
 target_sources(
     sample_interface
     INTERFACE
@@ -69,3 +71,21 @@ foreach(_library IN ITEMS sample_static sample_shared sample_module)
         message(FATAL_ERROR "${_library} does not publish Canon's C++26 requirement")
     endif()
 endforeach()
+
+function(_require_alias ALIAS TARGET)
+    if (NOT TARGET "${ALIAS}")
+        message(FATAL_ERROR "Canon did not create build-tree alias '${ALIAS}'")
+    endif()
+
+    get_target_property(_aliased_target "${ALIAS}" ALIASED_TARGET)
+    if (NOT "${_aliased_target}" STREQUAL "${TARGET}")
+        message(FATAL_ERROR
+            "Canon alias '${ALIAS}' targets '${_aliased_target}', expected '${TARGET}'")
+    endif()
+endfunction()
+
+_require_alias(CanonLibraryInstall::sample_static sample_static)
+_require_alias(CanonLibraryInstall::SharedPublic sample_shared)
+_require_alias(CanonLibraryInstall::sample_module sample_module)
+_require_alias(CanonLibraryInstall::InterfacePublic sample_interface)
+_require_alias(CanonLibraryInstall::sample_interface_empty sample_interface_empty)

@@ -82,7 +82,7 @@ INTERFACE libraries publish the same C++26 usage requirement but have no compile
 
 ## Package installation
 
-The first managed library registers an installable CMake package for the current project. Canon installs the project export and generated package files beneath `${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}`. Imported targets use the `${PROJECT_NAME}::` namespace; projects can use CMake's native `EXPORT_NAME` target property when an exported target needs a different name.
+The first managed library registers an installable CMake package for the current project. Canon installs the project export and generated package files beneath `${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}`. Imported targets use the `${PROJECT_NAME}::` namespace. `canon_apply_library()` creates the matching namespaced alias in the build tree. If a project sets CMake's native `EXPORT_NAME` target property, Canon uses that public name for the alias too. Project code and installed consumers can therefore use the same public target name.
 
 A versioned project receives `<Project>Config.cmake`, `<Project>ConfigVersion.cmake`, and `<Project>Targets.cmake`. Before 1.0, compatible package versions must share the same minor version. Starting with 1.0, compatible versions must share the same major version. Header-only packages are architecture-independent; a package containing an installed compiled library or executable is architecture-specific. Versionless projects omit `ConfigVersion.cmake`.
 
