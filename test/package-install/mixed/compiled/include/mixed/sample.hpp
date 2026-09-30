@@ -5,4 +5,6 @@
 
 #pragma once
 
-auto mixedValue() -> int;
+#include <mixed_package/mixed_core/export.hpp>
+
+MIXED_PACKAGE_MIXED_CORE_API auto mixedValue() -> int;

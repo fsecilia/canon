@@ -91,6 +91,7 @@ _canon_build_package_consumer(
     1.2.0
     MixedPackage::mixed_core
     ""
+    -DCANON_PACKAGE_SOURCE=mixed_core.cpp
 )
 _canon_build_package_consumer(
     "${_install_prefix}"

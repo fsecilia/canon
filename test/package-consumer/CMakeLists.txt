@@ -26,6 +26,10 @@ if (DEFINED CANON_ABSENT_TARGET
     message(FATAL_ERROR "Package unexpectedly exported target '${CANON_ABSENT_TARGET}'")
 endif()
 
-add_executable(package_consumer main.cpp)
+if (DEFINED CANON_PACKAGE_SOURCE AND NOT "${CANON_PACKAGE_SOURCE}" STREQUAL "")
+    add_executable(package_consumer "${CANON_PACKAGE_SOURCE}")
+else()
+    add_executable(package_consumer main.cpp)
+endif()
 set_property(TARGET package_consumer PROPERTY CXX_SCAN_FOR_MODULES FALSE)
 target_link_libraries(package_consumer PRIVATE "${CANON_PACKAGE_TARGET}")
