@@ -384,6 +384,7 @@ function(_canon_add_coverage_targets)
     )
 
     set(_output_dir "${CMAKE_BINARY_DIR}/coverage")
+    set(_summary_file "${_output_dir}/summary.json")
     add_custom_target(
         coverage-report
         COMMAND "${CMAKE_COMMAND}" -E make_directory "${_output_dir}"
@@ -393,11 +394,16 @@ function(_canon_add_coverage_targets)
             "${CMAKE_BINARY_DIR}"
             --gcov-executable "${_gcov_command}"
             --exclude ".*_test\\.cpp$"
-            --exclude ".*/external/.*"
+            --exclude "(^|.*/)external(/|$)"
             --html-details "${_output_dir}/index.html"
+            --json-summary "${_summary_file}"
             --delete
             --print-summary
-        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+        COMMAND
+            "${CMAKE_COMMAND}"
+            "-DCANON_COVERAGE_SUMMARY_FILE=${_summary_file}"
+            -P "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/CanonCoverageVerify.cmake"
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
         COMMENT "Generating coverage report"
         USES_TERMINAL
         VERBATIM

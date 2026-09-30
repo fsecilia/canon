@@ -14,13 +14,17 @@ foreach(_required_variable
     endif()
 endforeach()
 
-# Start each nested coverage configure from a clean build tree.
-file(REMOVE_RECURSE "${CANON_TEST_BINARY_DIR}")
+# Place the source below an ancestor named external while keeping the build tree outside it.
+set(_fixture_root "${CANON_TEST_BINARY_DIR}-fixture")
+set(_source_dir "${_fixture_root}/external/coverage")
+file(REMOVE_RECURSE "${CANON_TEST_BINARY_DIR}" "${_fixture_root}")
+file(MAKE_DIRECTORY "${_source_dir}")
+file(COPY "${CANON_SOURCE_DIR}/test/coverage/" DESTINATION "${_source_dir}")
 
 # Configure the fixture with the active compiler, toolchain, and validated coverage tools.
 set(_configure_command
     "${CMAKE_COMMAND}"
-    -S "${CANON_SOURCE_DIR}/test/coverage"
+    -S "${_source_dir}"
     -B "${CANON_TEST_BINARY_DIR}"
     -G "${CANON_GENERATOR}"
     "-DCANON_SOURCE_DIR=${CANON_SOURCE_DIR}"

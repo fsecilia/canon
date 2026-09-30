@@ -26,6 +26,7 @@ install(
         cmake/Canon.cmake
         cmake/CanonConfig.cmake
         cmake/CanonCoverageClean.cmake
+        cmake/CanonCoverageVerify.cmake
         "${CMAKE_CURRENT_BINARY_DIR}/CanonConfigVersion.cmake"
     DESTINATION share/cmake/Canon
 )
@@ -194,6 +195,11 @@ if (_canon_coverage_test_arguments)
     _canon_add_script_test(
         coverage
         coverage-consumer.cmake
+        ${_canon_coverage_test_arguments}
+    )
+    _canon_add_script_test(
+        coverage.empty-report
+        coverage-empty-report.cmake
         ${_canon_coverage_test_arguments}
     )
 endif()
