@@ -3,6 +3,7 @@
 
 foreach(_required_variable
     CANON_SOURCE_DIR
+    CANON_TEST_BINARY_DIR
     CANON_CXX_COMPILER
     CANON_CXX_COMPILER_ID
     CANON_CXX_COMPILER_FRONTEND_VARIANT
@@ -71,7 +72,7 @@ if (NOT "${_resolved_executable}" STREQUAL "")
 endif()
 
 # Automatic discovery may fail, but it must remain a visible soft failure and must not seed an override.
-set(CMAKE_CXX_COMPILER "${CMAKE_COMMAND}")
+set(CMAKE_CXX_COMPILER "${CANON_TEST_BINARY_DIR}/missing-cxx-compiler")
 set(CMAKE_CXX_COMPILER_ID "${CANON_CXX_COMPILER_ID}")
 set(CMAKE_CXX_COMPILER_FRONTEND_VARIANT "${CANON_CXX_COMPILER_FRONTEND_VARIANT}")
 set(CMAKE_CXX_COMPILER_VERSION "${CANON_CXX_COMPILER_VERSION}")
