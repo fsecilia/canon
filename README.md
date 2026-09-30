@@ -95,13 +95,13 @@ Executables installed with `canon_apply_executable()` are not exported as packag
 Use `canon_apply_dependency()` when an installed package must recover another package before importing its targets:
 
 ```cmake
-find_package(Zlib 1.2 CONFIG REQUIRED)
-canon_apply_dependency(Zlib 1.2 CONFIG)
+find_package(fmt 11 CONFIG REQUIRED)
+canon_apply_dependency(fmt 11 CONFIG)
 
-target_link_libraries(example PUBLIC Zlib::Zlib)
+target_link_libraries(example PUBLIC fmt::fmt)
 ```
 
-`canon_apply_dependency()` does not locate, vendor, or link the dependency. It records the arguments Canon needs to emit the corresponding `find_dependency()` call in the installed package configuration. This is also required when a dependency is provided from the source tree during the build but must be found as a package by downstream consumers. Do not pass `REQUIRED` or `QUIET`; `find_dependency()` inherits those requirements from the outer `find_package()` call.
+`canon_apply_dependency()` does not locate, vendor, or link the dependency. In this example, Canon records `find_dependency(fmt 11 CONFIG)` in the installed package configuration. Use it also when a dependency comes from the source tree during the build but downstream consumers must find that dependency as a package. Do not pass `REQUIRED` or `QUIET`; `find_dependency()` inherits those requirements from the outer `find_package()` call.
 
 ## Developer controls
 
