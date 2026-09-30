@@ -40,6 +40,8 @@ For each managed target, Canon currently:
 
 Canon intentionally leaves Release static and object libraries without IPO. Those artifacts remain ordinary object code that can be consumed across compatible compiler toolchains, at the cost of excluding their compiled object code from later whole-program IPO. Header-defined code compiled directly into an IPO-enabled final target remains eligible for that target's optimization.
 
+Canon requires the C++26 language level but does not set `CXX_EXTENSIONS`. The caller owns whether the compiler uses GNU-style extensions or a strict ISO dialect.
+
 Use `canon_apply_executable()` for a normal executable that should also be installed:
 
 ```cmake
