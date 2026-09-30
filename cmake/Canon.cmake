@@ -69,12 +69,10 @@ endfunction()
 function(_canon_apply_compiler_policy TARGET)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         set(_build_options
-            -fdiagnostics-color=always
             -fstrict-aliasing
         )
     elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
         set(_build_options
-            -fcolor-diagnostics
             -fstrict-aliasing
         )
     else()
