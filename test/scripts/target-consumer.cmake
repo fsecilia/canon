@@ -62,6 +62,43 @@ if (NOT _build_result EQUAL 0)
         "stderr:\n${_build_stderr}")
 endif()
 
+# An exported shared-library symbol must remain linkable from an unmanaged consumer.
+execute_process(
+    COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}" --target visibility_exported
+    RESULT_VARIABLE _visibility_exported_result
+    OUTPUT_VARIABLE _visibility_exported_stdout
+    ERROR_VARIABLE _visibility_exported_stderr
+)
+if (NOT _visibility_exported_result EQUAL 0)
+    message(FATAL_ERROR
+        "Exported visibility probe failed to link\n"
+        "stdout:\n${_visibility_exported_stdout}\n"
+        "stderr:\n${_visibility_exported_stderr}")
+endif()
+
+# An unexported shared-library symbol must fail at the consumer link boundary.
+execute_process(
+    COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}" --target visibility_hidden
+    RESULT_VARIABLE _visibility_hidden_result
+    OUTPUT_VARIABLE _visibility_hidden_stdout
+    ERROR_VARIABLE _visibility_hidden_stderr
+)
+set(_visibility_hidden_output "${_visibility_hidden_stdout}\n${_visibility_hidden_stderr}")
+if (_visibility_hidden_result EQUAL 0)
+    message(FATAL_ERROR "Unexported visibility probe unexpectedly linked")
+endif()
+if (NOT _visibility_hidden_output MATCHES "sampleHiddenAnswer")
+    message(FATAL_ERROR
+        "Unexported visibility probe failed for an unrelated reason: expected the hidden symbol "
+        "in the linker diagnostic\n${_visibility_hidden_output}")
+endif()
+if (NOT _visibility_hidden_output MATCHES
+    "undefined reference|undefined symbol|Undefined symbols|unresolved external symbol")
+    message(FATAL_ERROR
+        "Unexported visibility probe failed without the expected unresolved-symbol diagnostic\n"
+        "${_visibility_hidden_output}")
+endif()
+
 # Build the warning probe separately so strict warnings have an observable build result.
 execute_process(
     COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}" --target warning_probe

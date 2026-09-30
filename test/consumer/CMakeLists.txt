@@ -63,6 +63,19 @@ add_executable(sample_test sample_test.cpp)
 target_link_libraries(sample_test PRIVATE sample_static)
 canon_apply_target(sample_test)
 
+# Exercise shared-library visibility through unmanaged consumer links.
+add_executable(visibility_exported EXCLUDE_FROM_ALL visibility_exported.cpp)
+target_link_libraries(visibility_exported PRIVATE sample_shared)
+
+add_executable(visibility_hidden EXCLUDE_FROM_ALL visibility_hidden.cpp)
+target_link_libraries(visibility_hidden PRIVATE sample_shared)
+
+# Keep the probes unmanaged while avoiding a module-scanner dependency in the fixture.
+set_target_properties(
+    visibility_exported visibility_hidden
+    PROPERTIES CXX_SCAN_FOR_MODULES FALSE
+)
+
 # Give the project-owned CTest cases a known working directory.
 set(_sample_test_working_dir "${CMAKE_CURRENT_BINARY_DIR}/sample-test-working-directory")
 file(MAKE_DIRECTORY "${_sample_test_working_dir}")
