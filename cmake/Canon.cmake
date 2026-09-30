@@ -71,13 +71,11 @@ function(_canon_apply_compiler_policy TARGET)
         set(_build_options
             -fdiagnostics-color=always
             -fstrict-aliasing
-            -fsized-deallocation
         )
     elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
         set(_build_options
             -fcolor-diagnostics
             -fstrict-aliasing
-            -fsized-deallocation
         )
     else()
         message(FATAL_ERROR
