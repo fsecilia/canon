@@ -914,7 +914,7 @@ function(canon_add_documentation)
     set(DOXYGEN_QT_AUTOBRIEF YES)
     set(DOXYGEN_ENABLE_PREPROCESSING YES)
     set(DOXYGEN_EXTRACT_ALL NO)
-    set(DOXYGEN_EXCLUDE_SYMBOLS "*::detail*")
+    set(DOXYGEN_EXCLUDE_SYMBOLS detail "*::detail")
 
     doxygen_add_docs(
         doc

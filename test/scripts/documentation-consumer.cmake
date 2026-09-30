@@ -70,9 +70,13 @@ endif()
 # Read generated pages once so the public and excluded-input contracts can be checked together.
 file(GLOB_RECURSE _html_files "${_html_dir}/*.html")
 set(_html "")
+set(_symbol_html "")
 foreach(_file IN LISTS _html_files)
     file(READ "${_file}" _contents)
     string(APPEND _html "\n${_contents}")
+    if (NOT _file MATCHES "_source\\.html$")
+        string(APPEND _symbol_html "\n${_contents}")
+    endif()
 endforeach()
 
 if (NOT _html MATCHES "CANON_DOCUMENTATION_MAIN_PAGE_MARKER")
@@ -81,6 +85,23 @@ endif()
 if (NOT _html MATCHES "documented::answer")
     message(FATAL_ERROR "Documentation output did not contain the documented API")
 endif()
+
+foreach(_excluded_symbol IN ITEMS hiddenTopLevelDetail hiddenNestedDetail)
+    if (_symbol_html MATCHES "${_excluded_symbol}")
+        message(FATAL_ERROR "Documentation output contained excluded symbol '${_excluded_symbol}'")
+    endif()
+endforeach()
+
+foreach(_visible_symbol IN ITEMS
+    visibleTopLevelDetails
+    visibleTopLevelDetailHelper
+    visibleNestedDetails
+    visibleNestedDetailHelper
+)
+    if (NOT _symbol_html MATCHES "${_visible_symbol}")
+        message(FATAL_ERROR "Documentation output omitted public symbol '${_visible_symbol}'")
+    endif()
+endforeach()
 
 foreach(_excluded_marker IN ITEMS
     CANON_DOCUMENTATION_BINARY_MARKER

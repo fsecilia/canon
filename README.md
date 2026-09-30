@@ -155,7 +155,7 @@ The call adds `doc` and `doc-clean` targets. Canon looks for Doxygen 1.9 or newe
 
 Canon uses CMake's native `FindDoxygen` module and `doxygen_add_docs()`. When Doxygen is available, generated documentation is written beneath `${PROJECT_BINARY_DIR}/doxygen`, and Doxygen warnings fail the `doc` build. The warning log is kept at `${PROJECT_BINARY_DIR}/doxygen-warnings.log`.
 
-Canon uses the project `README.md` as the main page when one exists. Documentation input excludes the active project binary tree, the conventional source-side `build/` tree, `external/`, `standards/`, `test/`, and files matching `*_test.cpp`. Symbols beneath `detail` namespaces are also excluded. Graphviz support is used when CMake's Doxygen finder discovers `dot`; it is not required.
+Canon uses the project `README.md` as the main page when one exists. Documentation input excludes the active project binary tree, the conventional source-side `build/` tree, `external/`, `standards/`, `test/`, and files matching `*_test.cpp`. Canon excludes symbols named `detail` so top-level and nested implementation-detail namespaces are omitted. Doxygen's `EXCLUDE_SYMBOLS` cannot distinguish symbol kinds, so public non-namespace symbols named `detail` are also excluded. The naming rules in `standards/` avoid that collision. Graphviz support is used when CMake's Doxygen finder discovers `dot`; it is not required.
 
 Canon does not generate documentation during ordinary builds or installation. Generated HTML is registered as the `Documentation` install component and remains excluded from a normal installation. Build `doc` first, then install the component explicitly:
 
