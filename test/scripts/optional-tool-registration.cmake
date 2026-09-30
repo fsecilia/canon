@@ -86,6 +86,7 @@ if (DEFINED CANON_EXPECT_DOCUMENTATION_ENABLED)
     foreach(_test IN ITEMS
         canon.integration.documentation
         canon.integration.documentation.install
+        canon.integration.documentation.policy
         canon.integration.documentation.nested
         canon.integration.documentation-warning
     )

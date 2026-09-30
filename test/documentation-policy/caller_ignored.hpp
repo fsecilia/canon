@@ -1,0 +1,4 @@
+// SPDX-License-Identifier: MIT
+
+/// \file
+/// CANON_DOCUMENTATION_CALLER_PATTERN_MARKER

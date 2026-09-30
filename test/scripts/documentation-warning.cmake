@@ -36,6 +36,29 @@ if (NOT _configure_result EQUAL 0)
         "stderr:\n${_configure_stderr}")
 endif()
 
+set(_doxyfile "${_binary_dir}/Doxyfile.CanonDocumentationWarningFixture-doc")
+
+function(_canon_expect_doxygen_setting NAME VALUE)
+    file(STRINGS "${_doxyfile}" _setting_lines REGEX "^${NAME}[\t ]*=")
+    list(LENGTH _setting_lines _setting_count)
+    if (NOT "${_setting_count}" EQUAL 1)
+        message(FATAL_ERROR "Expected one Doxygen setting named '${NAME}', found ${_setting_count}")
+    endif()
+    list(GET _setting_lines 0 _setting_line)
+    string(REGEX REPLACE "^[^=]*=[\t ]*" "" _actual_value "${_setting_line}")
+    string(STRIP "${_actual_value}" _actual_value)
+    if (NOT "${_actual_value}" STREQUAL "${VALUE}")
+        message(FATAL_ERROR
+            "Expected Canon-owned Doxygen setting '${NAME} = ${VALUE}', found '${_setting_line}'")
+    endif()
+endfunction()
+
+_canon_expect_doxygen_setting(OUTPUT_DIRECTORY "${_binary_dir}/doxygen")
+_canon_expect_doxygen_setting(HTML_OUTPUT html)
+_canon_expect_doxygen_setting(GENERATE_HTML YES)
+_canon_expect_doxygen_setting(WARN_AS_ERROR FAIL_ON_WARNINGS)
+_canon_expect_doxygen_setting(WARN_LOGFILE "${_binary_dir}/doxygen-warnings.log")
+
 # A Doxygen warning must fail the public documentation target.
 execute_process(
     COMMAND "${CMAKE_COMMAND}" --build "${_binary_dir}" --target doc

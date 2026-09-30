@@ -954,28 +954,44 @@ function(canon_add_documentation)
     endif()
 
     set(_readme "${PROJECT_SOURCE_DIR}/README.md")
-    if (EXISTS "${_readme}")
+    if (EXISTS "${_readme}" AND NOT DEFINED DOXYGEN_USE_MDFILE_AS_MAINPAGE)
         set(DOXYGEN_USE_MDFILE_AS_MAINPAGE "${_readme}")
     endif()
 
     set(DOXYGEN_OUTPUT_DIRECTORY "${_output_directory}")
-    set(DOXYGEN_EXCLUDE
+    set(DOXYGEN_HTML_OUTPUT html)
+    set(DOXYGEN_GENERATE_HTML YES)
+    set(DOXYGEN_WARN_AS_ERROR FAIL_ON_WARNINGS)
+    set(DOXYGEN_WARN_LOGFILE "${_warning_log}")
+
+    list(APPEND DOXYGEN_EXCLUDE
         "${PROJECT_BINARY_DIR}"
         "${PROJECT_SOURCE_DIR}/build"
         "${PROJECT_SOURCE_DIR}/external"
         "${PROJECT_SOURCE_DIR}/standards"
         "${PROJECT_SOURCE_DIR}/test"
     )
-    set(DOXYGEN_EXCLUDE_PATTERNS "*_test.cpp")
-    set(DOXYGEN_STRIP_FROM_PATH "${PROJECT_SOURCE_DIR}")
-    set(DOXYGEN_QUIET YES)
-    set(DOXYGEN_WARN_AS_ERROR FAIL_ON_WARNINGS)
-    set(DOXYGEN_WARN_LOGFILE "${_warning_log}")
-    set(DOXYGEN_JAVADOC_AUTOBRIEF YES)
-    set(DOXYGEN_QT_AUTOBRIEF YES)
-    set(DOXYGEN_ENABLE_PREPROCESSING YES)
-    set(DOXYGEN_EXTRACT_ALL NO)
-    set(DOXYGEN_EXCLUDE_SYMBOLS detail "*::detail")
+    list(APPEND DOXYGEN_EXCLUDE_PATTERNS "*_test.cpp")
+    list(APPEND DOXYGEN_EXCLUDE_SYMBOLS detail "*::detail")
+
+    if (NOT DEFINED DOXYGEN_STRIP_FROM_PATH)
+        set(DOXYGEN_STRIP_FROM_PATH "${PROJECT_SOURCE_DIR}")
+    endif()
+    if (NOT DEFINED DOXYGEN_QUIET)
+        set(DOXYGEN_QUIET YES)
+    endif()
+    if (NOT DEFINED DOXYGEN_JAVADOC_AUTOBRIEF)
+        set(DOXYGEN_JAVADOC_AUTOBRIEF YES)
+    endif()
+    if (NOT DEFINED DOXYGEN_QT_AUTOBRIEF)
+        set(DOXYGEN_QT_AUTOBRIEF YES)
+    endif()
+    if (NOT DEFINED DOXYGEN_ENABLE_PREPROCESSING)
+        set(DOXYGEN_ENABLE_PREPROCESSING YES)
+    endif()
+    if (NOT DEFINED DOXYGEN_EXTRACT_ALL)
+        set(DOXYGEN_EXTRACT_ALL NO)
+    endif()
 
     doxygen_add_docs(
         "${_doc_target}"
