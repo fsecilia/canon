@@ -8,6 +8,17 @@ option(CANON_ENABLE_COVERAGE "Enable coverage instrumentation on Canon-managed t
 option(CANON_ENABLE_TIDY "Run clang-tidy as part of compiling Canon-managed targets." OFF)
 option(CANON_ENABLE_WARNINGS "Enable Canon's strict compiler warnings." OFF)
 
+set(
+    CANON_GCOV_EXECUTABLE
+    ""
+    CACHE FILEPATH "Override the gcov executable used by Canon coverage."
+)
+set(
+    CANON_LLVM_COV_EXECUTABLE
+    ""
+    CACHE FILEPATH "Override the llvm-cov executable used by Canon coverage."
+)
+
 set(_CANON_MINIMUM_CLANG_TIDY_VERSION 21.1.6)
 
 # Reports the semantic version printed by a candidate clang-tidy executable.
@@ -163,60 +174,192 @@ function(_canon_apply_asan TARGET)
     endif()
 endfunction()
 
-# Selects the compiler-matched gcov backend used by gcovr.
+# Validates the family and major version reported by a coverage companion.
+function(_canon_validate_coverage_version_output OUTPUT FAMILY EXPECTED_MAJOR OUT_VALID OUT_REASON)
+    if ("${FAMILY}" STREQUAL "GNU")
+        string(REGEX MATCH "^[^\r\n]*" _first_line "${OUTPUT}")
+        string(REGEX MATCH "^gcov([ \t(]|$)" _family_match "${_first_line}")
+        if ("${_family_match}" STREQUAL "")
+            set(${OUT_VALID} FALSE PARENT_SCOPE)
+            set(${OUT_REASON} "does not identify itself as GNU gcov" PARENT_SCOPE)
+            return()
+        endif()
+        string(REGEX MATCH "[0-9]+(\\.[0-9]+)+" _version "${_first_line}")
+    elseif ("${FAMILY}" STREQUAL "LLVM")
+        string(REGEX MATCH "LLVM version[ \t]+([0-9]+(\\.[0-9]+)+)" _family_match "${OUTPUT}")
+        if ("${_family_match}" STREQUAL "")
+            set(${OUT_VALID} FALSE PARENT_SCOPE)
+            set(${OUT_REASON} "does not identify itself as LLVM llvm-cov" PARENT_SCOPE)
+            return()
+        endif()
+        set(_version "${CMAKE_MATCH_1}")
+    else()
+        message(FATAL_ERROR "Canon internal error: unknown coverage family '${FAMILY}'")
+    endif()
+
+    if ("${_version}" STREQUAL "")
+        set(${OUT_VALID} FALSE PARENT_SCOPE)
+        set(${OUT_REASON} "does not report a recognizable version" PARENT_SCOPE)
+        return()
+    endif()
+
+    string(REGEX MATCH "^[0-9]+" _tool_major "${_version}")
+    if (NOT "${_tool_major}" STREQUAL "${EXPECTED_MAJOR}")
+        set(${OUT_VALID} FALSE PARENT_SCOPE)
+        set(
+            ${OUT_REASON}
+            "reports major version ${_tool_major}, but the compiler uses major version ${EXPECTED_MAJOR}"
+            PARENT_SCOPE
+        )
+        return()
+    endif()
+
+    set(${OUT_VALID} TRUE PARENT_SCOPE)
+    set(${OUT_REASON} "" PARENT_SCOPE)
+endfunction()
+
+# Validates one candidate coverage companion executable.
+function(_canon_validate_coverage_tool EXECUTABLE FAMILY EXPECTED_MAJOR OUT_VALID OUT_REASON)
+    execute_process(
+        COMMAND "${EXECUTABLE}" --version
+        RESULT_VARIABLE _result
+        OUTPUT_VARIABLE _stdout
+        ERROR_VARIABLE _stderr
+    )
+    if (NOT "${_result}" STREQUAL "0")
+        set(${OUT_VALID} FALSE PARENT_SCOPE)
+        set(
+            ${OUT_REASON}
+            "could not be executed with --version (result: ${_result})"
+            PARENT_SCOPE
+        )
+        return()
+    endif()
+
+    set(_output "${_stdout}${_stderr}")
+    _canon_validate_coverage_version_output(
+        "${_output}"
+        "${FAMILY}"
+        "${EXPECTED_MAJOR}"
+        _valid
+        _reason
+    )
+    set(${OUT_VALID} "${_valid}" PARENT_SCOPE)
+    set(${OUT_REASON} "${_reason}" PARENT_SCOPE)
+endfunction()
+
+# Resolves exactly the program name reported by the compiler driver.
+function(_canon_resolve_reported_coverage_tool CANDIDATE OUT_EXECUTABLE)
+    if (IS_ABSOLUTE "${CANDIDATE}")
+        if (EXISTS "${CANDIDATE}" AND NOT IS_DIRECTORY "${CANDIDATE}")
+            set(${OUT_EXECUTABLE} "${CANDIDATE}" PARENT_SCOPE)
+        else()
+            set(${OUT_EXECUTABLE} "" PARENT_SCOPE)
+        endif()
+        return()
+    endif()
+
+    if ("${CANDIDATE}" MATCHES "[/\\\\]")
+        if (EXISTS "${CANDIDATE}" AND NOT IS_DIRECTORY "${CANDIDATE}")
+            get_filename_component(_absolute_candidate "${CANDIDATE}" ABSOLUTE)
+            set(${OUT_EXECUTABLE} "${_absolute_candidate}" PARENT_SCOPE)
+        else()
+            set(${OUT_EXECUTABLE} "" PARENT_SCOPE)
+        endif()
+        return()
+    endif()
+
+    set(_coverage_executable "_coverage_executable-NOTFOUND")
+    find_program(_coverage_executable NAMES "${CANDIDATE}" NO_CACHE)
+    if (_coverage_executable)
+        set(${OUT_EXECUTABLE} "${_coverage_executable}" PARENT_SCOPE)
+    else()
+        set(${OUT_EXECUTABLE} "" PARENT_SCOPE)
+    endif()
+endfunction()
+
+# Selects and validates the compiler-matched gcov backend used by gcovr.
 function(_canon_find_coverage_backend OUT_COMMAND)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        if (NOT CANON_GCOV_EXECUTABLE)
-            execute_process(
-                COMMAND "${CMAKE_CXX_COMPILER}" -print-prog-name=gcov
-                OUTPUT_VARIABLE _gcov_candidate
-                OUTPUT_STRIP_TRAILING_WHITESPACE
-                COMMAND_ERROR_IS_FATAL ANY
-            )
-            if (IS_ABSOLUTE "${_gcov_candidate}" AND EXISTS "${_gcov_candidate}")
-                set(
-                    CANON_GCOV_EXECUTABLE
-                    "${_gcov_candidate}"
-                    CACHE FILEPATH "gcov executable used by Canon coverage"
-                )
-            else()
-                find_program(
-                    CANON_GCOV_EXECUTABLE
-                    NAMES "${_gcov_candidate}" gcov
-                    REQUIRED
-                    DOC "gcov executable used by Canon coverage"
-                )
-            endif()
-        endif()
-        set(${OUT_COMMAND} "${CANON_GCOV_EXECUTABLE}" PARENT_SCOPE)
-        return()
+        set(_program_name gcov)
+        set(_family GNU)
+        set(_override_variable CANON_GCOV_EXECUTABLE)
+        set(_command_suffix "")
+    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        set(_program_name llvm-cov)
+        set(_family LLVM)
+        set(_override_variable CANON_LLVM_COV_EXECUTABLE)
+        set(_command_suffix " gcov")
+    else()
+        message(FATAL_ERROR
+            "Canon coverage does not support compiler '${CMAKE_CXX_COMPILER_ID}'")
     endif()
 
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        get_filename_component(_compiler_dir "${CMAKE_CXX_COMPILER}" DIRECTORY)
-        find_program(
-            CANON_LLVM_COV_EXECUTABLE
-            NAMES llvm-cov
-            HINTS "${_compiler_dir}"
-            REQUIRED
-            DOC "llvm-cov executable used by Canon coverage"
+    string(REGEX MATCH "^[0-9]+" _compiler_major "${CMAKE_CXX_COMPILER_VERSION}")
+    if ("${_compiler_major}" STREQUAL "")
+        message(FATAL_ERROR
+            "Canon could not determine the major version of compiler "
+            "'${CMAKE_CXX_COMPILER_VERSION}'")
+    endif()
+
+    set(_explicit_override FALSE)
+    if (NOT "${${_override_variable}}" STREQUAL "")
+        set(_coverage_executable "${${_override_variable}}")
+        set(_explicit_override TRUE)
+    endif()
+
+    if (NOT _explicit_override)
+        execute_process(
+            COMMAND "${CMAKE_CXX_COMPILER}" "-print-prog-name=${_program_name}"
+            RESULT_VARIABLE _driver_result
+            OUTPUT_VARIABLE _reported_program
+            OUTPUT_STRIP_TRAILING_WHITESPACE
         )
-        set(${OUT_COMMAND} "${CANON_LLVM_COV_EXECUTABLE} gcov" PARENT_SCOPE)
+        if (NOT "${_driver_result}" STREQUAL "0" OR "${_reported_program}" STREQUAL "")
+            message(WARNING
+                "Canon coverage reporting is disabled: compiler '${CMAKE_CXX_COMPILER}' "
+                "did not report a usable ${_program_name} companion")
+            set(${OUT_COMMAND} "" PARENT_SCOPE)
+            return()
+        endif()
+
+        _canon_resolve_reported_coverage_tool("${_reported_program}" _coverage_executable)
+        if ("${_coverage_executable}" STREQUAL "")
+            message(WARNING
+                "Canon coverage reporting is disabled: compiler '${CMAKE_CXX_COMPILER}' "
+                "reported '${_reported_program}' for ${_program_name}, but that exact program "
+                "could not be resolved")
+            set(${OUT_COMMAND} "" PARENT_SCOPE)
+            return()
+        endif()
+    endif()
+
+    _canon_validate_coverage_tool(
+        "${_coverage_executable}"
+        "${_family}"
+        "${_compiler_major}"
+        _valid
+        _reason
+    )
+    if (NOT _valid)
+        if (_explicit_override)
+            message(FATAL_ERROR
+                "Canon coverage override ${_override_variable}='${_coverage_executable}' is invalid: "
+                "${_reason}")
+        endif()
+
+        message(WARNING
+            "Canon coverage reporting is disabled: compiler '${CMAKE_CXX_COMPILER}' reported "
+            "'${_reported_program}' for ${_program_name}, but '${_coverage_executable}' ${_reason}")
+        set(${OUT_COMMAND} "" PARENT_SCOPE)
         return()
     endif()
 
-    message(FATAL_ERROR
-        "Canon coverage does not support compiler '${CMAKE_CXX_COMPILER_ID}'")
+    set(${OUT_COMMAND} "${_coverage_executable}${_command_suffix}" PARENT_SCOPE)
 endfunction()
 
 # Creates cleanup and report targets for the top-level project that owns the coverage build.
 function(_canon_add_coverage_targets)
-    find_program(
-        CANON_GCOVR_EXECUTABLE
-        NAMES gcovr
-        REQUIRED
-        DOC "gcovr executable used by Canon coverage"
-    )
     _canon_find_coverage_backend(_gcov_command)
 
     add_custom_target(
@@ -227,6 +370,17 @@ function(_canon_add_coverage_targets)
             -P "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/CanonCoverageClean.cmake"
         COMMENT "Cleaning coverage data"
         VERBATIM
+    )
+
+    if ("${_gcov_command}" STREQUAL "")
+        return()
+    endif()
+
+    find_program(
+        CANON_GCOVR_EXECUTABLE
+        NAMES gcovr
+        REQUIRED
+        DOC "gcovr executable used by Canon coverage"
     )
 
     set(_output_dir "${CMAKE_BINARY_DIR}/coverage")

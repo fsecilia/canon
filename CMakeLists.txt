@@ -57,9 +57,9 @@ if (CANON_CLANG_TIDY_EXECUTABLE)
 endif()
 
 find_program(CANON_GCOVR_EXECUTABLE NAMES gcovr)
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    get_filename_component(_canon_compiler_dir "${CMAKE_CXX_COMPILER}" DIRECTORY)
-    find_program(CANON_LLVM_COV_EXECUTABLE NAMES llvm-cov HINTS "${_canon_compiler_dir}")
+set(_canon_coverage_backend "")
+if (CANON_GCOVR_EXECUTABLE)
+    _canon_find_coverage_backend(_canon_coverage_backend)
 endif()
 
 function(_canon_add_script_test NAME SCRIPT)
@@ -161,20 +161,32 @@ _canon_add_script_test(
     asan-consumer.cmake
 )
 
+_canon_add_script_test(
+    coverage.backend
+    coverage-backend.cmake
+    "-DCANON_CXX_COMPILER_ID=${CMAKE_CXX_COMPILER_ID}"
+    "-DCANON_CXX_COMPILER_VERSION=${CMAKE_CXX_COMPILER_VERSION}"
+)
+
+_canon_add_script_test(
+    coverage.override-error
+    coverage-backend-error.cmake
+    "-DCANON_CXX_COMPILER_ID=${CMAKE_CXX_COMPILER_ID}"
+)
+
 set(_canon_coverage_test_arguments)
-if (CANON_GCOVR_EXECUTABLE)
+if (CANON_GCOVR_EXECUTABLE AND NOT "${_canon_coverage_backend}" STREQUAL "")
     list(APPEND _canon_coverage_test_arguments
         "-DCANON_GCOVR_EXECUTABLE=${CANON_GCOVR_EXECUTABLE}")
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        if (CANON_LLVM_COV_EXECUTABLE)
-            list(APPEND _canon_coverage_test_arguments
-                "-DCANON_LLVM_COV_EXECUTABLE=${CANON_LLVM_COV_EXECUTABLE}")
-        else()
-            set(_canon_coverage_test_arguments)
-            message(STATUS "Canon coverage validation unavailable: llvm-cov was not found")
-        endif()
+    if (DEFINED CANON_GCOV_EXECUTABLE AND NOT "${CANON_GCOV_EXECUTABLE}" STREQUAL "")
+        list(APPEND _canon_coverage_test_arguments
+            "-DCANON_GCOV_EXECUTABLE=${CANON_GCOV_EXECUTABLE}")
     endif()
-else()
+    if (DEFINED CANON_LLVM_COV_EXECUTABLE AND NOT "${CANON_LLVM_COV_EXECUTABLE}" STREQUAL "")
+        list(APPEND _canon_coverage_test_arguments
+            "-DCANON_LLVM_COV_EXECUTABLE=${CANON_LLVM_COV_EXECUTABLE}")
+    endif()
+elseif (NOT CANON_GCOVR_EXECUTABLE)
     message(STATUS "Canon coverage validation unavailable: gcovr was not found")
 endif()
 

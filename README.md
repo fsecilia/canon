@@ -121,7 +121,11 @@ Canon does not set `ASAN_OPTIONS` or otherwise control the sanitizer runtime. Pr
 
 Coverage instrumentation is controlled by `CANON_ENABLE_COVERAGE`. It is off by default. When enabled, Canon adds gcov-compatible compile instrumentation to managed targets. GCC also receives `-fprofile-abs-path` so profile data records stable source paths. Compile instrumentation remains private. Static and object libraries publish the coverage runtime link requirement to consumers, while targets with their own link step satisfy that requirement directly.
 
-For a top-level coverage build, Canon adds two targets when the first managed target receives coverage. `coverage-clean` removes stale `.gcda` files from the build tree. `coverage-report` runs gcovr, writes detailed HTML beneath `coverage/`, excludes `external/` and `*_test.cpp`, prints a summary, and removes the generated `.gcda` data after reporting. GCC uses its matching `gcov` program; Clang uses `llvm-cov gcov`.
+For a top-level coverage build, Canon adds `coverage-clean` when the first managed target receives coverage. The target removes stale `.gcda` files from the build tree. Canon asks the active compiler driver for its coverage companion. It checks the reported tool's compiler family and major version before adding `coverage-report`. GCC uses the compiler-reported `gcov`; Clang uses the compiler-reported `llvm-cov gcov`.
+
+If automatic discovery fails validation, Canon warns and leaves coverage reporting disabled. It does not search for alternate tool names. `CANON_GCOV_EXECUTABLE` and `CANON_LLVM_COV_EXECUTABLE` are explicit overrides for unusual installations. Automatic discovery never populates them, and an invalid override is a configuration error.
+
+`coverage-report` runs gcovr, writes detailed HTML beneath `coverage/`, excludes `external/` and `*_test.cpp`, prints a summary, and removes the generated `.gcda` data after reporting.
 
 Canon's shared `coverage` workflow uses a dedicated Debug build tree and sequences configure, cleanup, build, CTest, and report generation. Run the complete workflow with:
 
