@@ -142,7 +142,8 @@ _canon_add_script_test(
 
 _canon_add_script_test(
     tidy.version
-    scripts/tidy-version.cmake
+    tooling/test.cmake
+    -DCANON_TEST_CASE=version
 )
 
 _canon_add_script_test(
@@ -205,7 +206,8 @@ endif()
 
 _canon_add_script_test(
     tidy
-    scripts/tooling-consumer.cmake
+    tooling/test.cmake
+    -DCANON_TEST_CASE=consumer
     "-DCANON_CLANG_TIDY_EXECUTABLE=${CANON_CLANG_TIDY_EXECUTABLE}"
 )
 if (NOT _canon_clang_tidy_supported)
@@ -217,27 +219,29 @@ endif()
 
 _canon_add_script_test(
     documentation
-    scripts/documentation-consumer.cmake
+    documentation/test.cmake
+    -DCANON_TEST_CASE=consumer
     "-DCANON_DOXYGEN_EXECUTABLE=${DOXYGEN_EXECUTABLE}"
 )
 _canon_add_script_test(
     documentation.install
-    scripts/documentation-install.cmake
+    documentation/test.cmake
+    -DCANON_TEST_CASE=install
     "-DCANON_DOXYGEN_EXECUTABLE=${DOXYGEN_EXECUTABLE}"
 )
 _canon_add_script_test(
     documentation.policy
-    scripts/documentation-policy.cmake
+    documentation-policy/test.cmake
     "-DCANON_DOXYGEN_EXECUTABLE=${DOXYGEN_EXECUTABLE}"
 )
 _canon_add_script_test(
     documentation.nested
-    scripts/documentation-nested.cmake
+    documentation-nested/test.cmake
     "-DCANON_DOXYGEN_EXECUTABLE=${DOXYGEN_EXECUTABLE}"
 )
 _canon_add_script_test(
     documentation-warning
-    scripts/documentation-warning.cmake
+    documentation-warning/test.cmake
     "-DCANON_DOXYGEN_EXECUTABLE=${DOXYGEN_EXECUTABLE}"
 )
 if (NOT Doxygen_FOUND)
@@ -254,7 +258,7 @@ endif()
 
 _canon_add_script_test(
     documentation-unavailable
-    scripts/documentation-unavailable.cmake
+    documentation-unavailable/test.cmake
 )
 
 _canon_add_script_test(

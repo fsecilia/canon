@@ -1,22 +1,21 @@
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2026 Frank Secilia
 
-foreach(_required_variable
+include("${CANON_SOURCE_DIR}/test/support/CanonTest.cmake")
+
+canon_test_require_variables(
     CANON_SOURCE_DIR
     CANON_TEST_BINARY_DIR
     CANON_GENERATOR
     CANON_DOXYGEN_EXECUTABLE
 )
-    if (NOT DEFINED ${_required_variable} OR "${${_required_variable}}" STREQUAL "")
-        message(FATAL_ERROR "${_required_variable} is required")
-    endif()
-endforeach()
 
 file(REMOVE_RECURSE "${CANON_TEST_BINARY_DIR}")
 set(_source_dir "${CANON_SOURCE_DIR}/test/documentation-policy")
 set(_binary_dir "${CANON_TEST_BINARY_DIR}")
 
-execute_process(
+canon_test_run(
+    DESCRIPTION "documentation caller-policy configure"
     COMMAND
         "${CMAKE_COMMAND}"
         -S "${_source_dir}"
@@ -24,16 +23,7 @@ execute_process(
         -G "${CANON_GENERATOR}"
         "-DCANON_SOURCE_DIR=${CANON_SOURCE_DIR}"
         "-DDOXYGEN_EXECUTABLE=${CANON_DOXYGEN_EXECUTABLE}"
-    RESULT_VARIABLE _configure_result
-    OUTPUT_VARIABLE _configure_stdout
-    ERROR_VARIABLE _configure_stderr
 )
-if (NOT "${_configure_result}" EQUAL 0)
-    message(FATAL_ERROR
-        "Documentation caller-policy configure failed\n"
-        "stdout:\n${_configure_stdout}\n"
-        "stderr:\n${_configure_stderr}")
-endif()
 
 set(_doxyfile "${_binary_dir}/Doxyfile.CanonDocumentationPolicyFixture-doc")
 if (NOT EXISTS "${_doxyfile}")
@@ -83,18 +73,10 @@ foreach(_required_text IN ITEMS
     endif()
 endforeach()
 
-execute_process(
+canon_test_run(
+    DESCRIPTION "documentation caller-policy build"
     COMMAND "${CMAKE_COMMAND}" --build "${_binary_dir}" --target doc
-    RESULT_VARIABLE _doc_result
-    OUTPUT_VARIABLE _doc_stdout
-    ERROR_VARIABLE _doc_stderr
 )
-if (NOT "${_doc_result}" EQUAL 0)
-    message(FATAL_ERROR
-        "Documentation caller-policy build failed\n"
-        "stdout:\n${_doc_stdout}\n"
-        "stderr:\n${_doc_stderr}")
-endif()
 
 set(_html_dir "${_binary_dir}/doxygen/html")
 file(GLOB_RECURSE _html_files "${_html_dir}/*.html")
