@@ -18,7 +18,7 @@ endif()
 
 Adjust the vendored path to match the project layout. Canon's installed Config package uses the same compatibility policy as other Canon-managed packages: versions before 1.0 are compatible within the same minor version, while versions starting at 1.0 are compatible within the same major version.
 
-Canon currently supports GNU GCC and LLVM Clang using Clang's GNU-compatible frontend. AppleClang, clang-cl, and MSVC are not supported.
+Canon's current test matrix uses GNU GCC 14 and LLVM Clang 17 with Clang's GNU-compatible frontend. Canon does not reject other compilers by identity. They must support C++26. Developer features that need compiler-specific support fail with a clear diagnostic when Canon has no implementation for that toolchain.
 
 ## Compiled targets
 
@@ -36,9 +36,9 @@ For each managed target, Canon currently:
 * enables position-independent code;
 * hides symbols by default;
 * enables interprocedural optimization for Release executables, shared libraries, and module libraries when supported; and
-* applies the supported compiler-specific build options.
+* applies compiler-specific build options when Canon has policy for the toolchain.
 
-Canon intentionally leaves Release static and object libraries without IPO. Those artifacts remain ordinary object code that can be consumed across supported compiler toolchains, at the cost of excluding their compiled object code from later whole-program IPO. Header-defined code compiled directly into an IPO-enabled final target remains eligible for that target's optimization.
+Canon intentionally leaves Release static and object libraries without IPO. Those artifacts remain ordinary object code that can be consumed across compatible compiler toolchains, at the cost of excluding their compiled object code from later whole-program IPO. Header-defined code compiled directly into an IPO-enabled final target remains eligible for that target's optimization.
 
 Use `canon_apply_executable()` for a normal executable that should also be installed:
 
@@ -105,7 +105,7 @@ Warnings are controlled by `CANON_ENABLE_WARNINGS`. It is off by default. Canon'
 
 This keeps the distinction explicit. Family development builds use strict warnings. A project configured normally does not inherit warnings-as-errors merely because it uses Canon.
 
-With warnings enabled, GCC uses the warning set maintained by Canon and treats warnings as errors. Clang uses `-Weverything`, treats warnings as errors, and suppresses only the intentional C++98 compatibility diagnostic.
+With warnings enabled, GCC uses Canon's warning set and treats warnings as errors. Clang's GNU-compatible frontend uses `-Weverything`, treats warnings as errors, and applies Canon's deliberate suppressions. Other compilers may still use Canon, but this option fails if Canon has no warning policy for them.
 
 ## AddressSanitizer
 

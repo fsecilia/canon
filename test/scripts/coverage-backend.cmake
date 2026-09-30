@@ -5,6 +5,7 @@ foreach(_required_variable
     CANON_SOURCE_DIR
     CANON_CXX_COMPILER
     CANON_CXX_COMPILER_ID
+    CANON_CXX_COMPILER_FRONTEND_VARIANT
     CANON_CXX_COMPILER_VERSION
 )
     if (NOT DEFINED ${_required_variable} OR "${${_required_variable}}" STREQUAL "")
@@ -72,6 +73,7 @@ endif()
 # Automatic discovery may fail, but it must remain a visible soft failure and must not seed an override.
 set(CMAKE_CXX_COMPILER "${CMAKE_COMMAND}")
 set(CMAKE_CXX_COMPILER_ID "${CANON_CXX_COMPILER_ID}")
+set(CMAKE_CXX_COMPILER_FRONTEND_VARIANT "${CANON_CXX_COMPILER_FRONTEND_VARIANT}")
 set(CMAKE_CXX_COMPILER_VERSION "${CANON_CXX_COMPILER_VERSION}")
 set(CANON_GCOV_EXECUTABLE "")
 set(CANON_LLVM_COV_EXECUTABLE "")

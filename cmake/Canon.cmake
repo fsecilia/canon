@@ -42,42 +42,14 @@ function(_canon_apply_cxx_option TARGET OPTION)
     target_compile_options("${TARGET}" PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${OPTION}>")
 endfunction()
 
-# Rejects compiler frontends outside Canon's supported GNU-style toolchains.
-function(_canon_require_supported_compiler)
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        return()
-    endif()
-
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
-        AND CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "GNU")
-        return()
-    endif()
-
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        message(FATAL_ERROR
-            "Canon supports GNU GCC and LLVM Clang with the GNU frontend; "
-            "compiler '${CMAKE_CXX_COMPILER_ID}' with frontend "
-            "'${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}' is not supported")
-    endif()
-
-    message(FATAL_ERROR
-        "Canon supports GNU GCC and LLVM Clang with the GNU frontend; "
-        "compiler '${CMAKE_CXX_COMPILER_ID}' is not supported")
-endfunction()
-
-# Applies the compiler-specific build policy shared by Canon-managed compiled targets.
+# Applies compiler-specific build options when Canon has policy for the active toolchain.
 function(_canon_apply_compiler_policy TARGET)
+    set(_build_options)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        set(_build_options
-            -fstrict-aliasing
-        )
-    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        set(_build_options
-            -fstrict-aliasing
-        )
-    else()
-        message(FATAL_ERROR
-            "Canon does not provide compiler policy for '${CMAKE_CXX_COMPILER_ID}'")
+        list(APPEND _build_options -fstrict-aliasing)
+    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
+        AND CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "GNU")
+        list(APPEND _build_options -fstrict-aliasing)
     endif()
 
     foreach(_option IN LISTS _build_options)
@@ -132,7 +104,8 @@ function(_canon_apply_warnings TARGET)
             -Wshadow
         )
         set(_warning_suppressions)
-    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
+        AND CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "GNU")
         set(_warning_options
             -Weverything
             -Werror
@@ -146,7 +119,8 @@ function(_canon_apply_warnings TARGET)
         )
     else()
         message(FATAL_ERROR
-            "Canon does not provide warning policy for '${CMAKE_CXX_COMPILER_ID}'")
+            "Canon warnings do not support compiler '${CMAKE_CXX_COMPILER_ID}' "
+            "with frontend '${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}'")
     endif()
 
     foreach(_option IN LISTS _warning_options _warning_suppressions)
@@ -280,14 +254,16 @@ function(_canon_find_coverage_backend OUT_COMMAND)
         set(_family GNU)
         set(_override_variable CANON_GCOV_EXECUTABLE)
         set(_command_suffix "")
-    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
+        AND CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "GNU")
         set(_program_name llvm-cov)
         set(_family LLVM)
         set(_override_variable CANON_LLVM_COV_EXECUTABLE)
         set(_command_suffix " gcov")
     else()
         message(FATAL_ERROR
-            "Canon coverage does not support compiler '${CMAKE_CXX_COMPILER_ID}'")
+            "Canon coverage does not support compiler '${CMAKE_CXX_COMPILER_ID}' "
+            "with frontend '${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}'")
     endif()
 
     string(REGEX MATCH "^[0-9]+" _compiler_major "${CMAKE_CXX_COMPILER_VERSION}")
@@ -467,8 +443,6 @@ function(canon_apply_target TARGET)
         message(FATAL_ERROR
             "canon_apply_target(): target '${TARGET}' has type '${_type}', which has no compiled-target Canon policy")
     endif()
-
-    _canon_require_supported_compiler()
 
     set_target_properties("${TARGET}" PROPERTIES
         CXX_SCAN_FOR_MODULES FALSE
