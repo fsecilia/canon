@@ -858,27 +858,36 @@ function(canon_add_documentation)
     include(GNUInstallDirs)
     find_package(Doxygen 1.9 QUIET OPTIONAL_COMPONENTS dot)
 
+    set(_doc_target "${PROJECT_NAME}-doc")
+    set(_clean_target "${PROJECT_NAME}-doc-clean")
     set(_output_directory "${PROJECT_BINARY_DIR}/doxygen")
     set(_warning_log "${PROJECT_BINARY_DIR}/doxygen-warnings.log")
 
-    install(
-        DIRECTORY "${_output_directory}/html/"
-        TYPE DOC
-        COMPONENT Documentation
-        EXCLUDE_FROM_ALL
-    )
+    if (PROJECT_IS_TOP_LEVEL)
+        install(
+            DIRECTORY "${_output_directory}/html/"
+            TYPE DOC
+            COMPONENT Documentation
+            EXCLUDE_FROM_ALL
+        )
+    endif()
 
     add_custom_target(
-        doc-clean
+        "${_clean_target}"
         COMMAND "${CMAKE_COMMAND}" -E rm -rf "${_output_directory}"
         COMMAND "${CMAKE_COMMAND}" -E rm -f "${_warning_log}"
         COMMENT "Cleaning generated API documentation"
         VERBATIM
     )
 
+    if (PROJECT_IS_TOP_LEVEL)
+        add_custom_target(doc-clean)
+        add_dependencies(doc-clean "${_clean_target}")
+    endif()
+
     if (NOT Doxygen_FOUND)
         add_custom_target(
-            doc
+            "${_doc_target}"
             COMMAND
                 "${CMAKE_COMMAND}" -E echo
                 "Doxygen 1.9 or newer was not found when this build tree was configured."
@@ -889,6 +898,10 @@ function(canon_add_documentation)
             COMMENT "Unable to generate API documentation"
             VERBATIM
         )
+        if (PROJECT_IS_TOP_LEVEL)
+            add_custom_target(doc)
+            add_dependencies(doc "${_doc_target}")
+        endif()
         return()
     endif()
 
@@ -917,9 +930,14 @@ function(canon_add_documentation)
     set(DOXYGEN_EXCLUDE_SYMBOLS detail "*::detail")
 
     doxygen_add_docs(
-        doc
+        "${_doc_target}"
         "${PROJECT_SOURCE_DIR}"
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
         COMMENT "Generating API documentation"
     )
+
+    if (PROJECT_IS_TOP_LEVEL)
+        add_custom_target(doc)
+        add_dependencies(doc "${_doc_target}")
+    endif()
 endfunction()

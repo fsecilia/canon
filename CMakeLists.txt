@@ -226,6 +226,11 @@ if (Doxygen_FOUND)
         "-DCANON_DOXYGEN_EXECUTABLE=${DOXYGEN_EXECUTABLE}"
     )
     _canon_add_script_test(
+        documentation.nested
+        documentation-nested.cmake
+        "-DCANON_DOXYGEN_EXECUTABLE=${DOXYGEN_EXECUTABLE}"
+    )
+    _canon_add_script_test(
         documentation-warning
         documentation-warning.cmake
         "-DCANON_DOXYGEN_EXECUTABLE=${DOXYGEN_EXECUTABLE}"

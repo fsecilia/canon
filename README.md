@@ -151,9 +151,11 @@ Call `canon_add_documentation()` when a project provides Doxygen documentation:
 canon_add_documentation()
 ```
 
-The call adds `doc` and `doc-clean` targets. Canon looks for Doxygen 1.9 or newer during configuration, but a missing Doxygen installation does not make configuration or ordinary builds fail. If Doxygen was not found, building `doc` fails with a diagnostic that asks the user to install Doxygen and reconfigure. `doc-clean` remains available either way.
+Each project receives `${PROJECT_NAME}-doc` and `${PROJECT_NAME}-doc-clean` targets for its own documentation. The top-level project also receives `doc` and `doc-clean` convenience targets. A nested project can generate and clean its documentation on its own. Its documentation is not added to the outer project's `Documentation` install component.
 
-Canon uses CMake's native `FindDoxygen` module and `doxygen_add_docs()`. When Doxygen is available, generated documentation is written beneath `${PROJECT_BINARY_DIR}/doxygen`, and Doxygen warnings fail the `doc` build. The warning log is kept at `${PROJECT_BINARY_DIR}/doxygen-warnings.log`.
+Canon looks for Doxygen 1.9 or newer during configuration. A missing Doxygen installation does not make configuration or ordinary builds fail. If Doxygen was not found, building the project's documentation target fails with a diagnostic that asks the user to install Doxygen and reconfigure. Its cleanup target remains available either way.
+
+Canon uses CMake's native `FindDoxygen` module and `doxygen_add_docs()`. When Doxygen is available, generated documentation is written beneath `${PROJECT_BINARY_DIR}/doxygen`, and Doxygen warnings fail the project's documentation target. The warning log is kept at `${PROJECT_BINARY_DIR}/doxygen-warnings.log`.
 
 Canon uses the project `README.md` as the main page when one exists. Documentation input excludes the active project binary tree, the conventional source-side `build/` tree, `external/`, `standards/`, `test/`, and files matching `*_test.cpp`. Canon excludes symbols named `detail` so top-level and nested implementation-detail namespaces are omitted. Doxygen's `EXCLUDE_SYMBOLS` cannot distinguish symbol kinds, so public non-namespace symbols named `detail` are also excluded. The naming rules in `standards/` avoid that collision. Graphviz support is used when CMake's Doxygen finder discovers `dot`; it is not required.
 
