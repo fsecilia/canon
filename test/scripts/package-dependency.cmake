@@ -64,7 +64,7 @@ write_basic_package_version_file(
 
 # Exact duplicate declarations collapse while distinct evaluated argument values remain ordered.
 set(_config_file
-    "${_install_prefix}/artifact-lib/cmake/DependentPackage/DependentPackageConfig.cmake")
+    "${_install_prefix}/share/cmake/DependentPackage/DependentPackageConfig.cmake")
 file(READ "${_config_file}" _config)
 string(REGEX MATCHALL "find_dependency\\(" _dependency_calls "${_config}")
 list(LENGTH _dependency_calls _dependency_call_count)
@@ -96,6 +96,7 @@ endif()
 # The installed target refers to the external target, so consumption proves dependency recovery works.
 _canon_build_package_consumer(
     "${_install_prefix}"
+    share/cmake
     DependentPackage
     0.9.1
     DependentPackage::dependent_api

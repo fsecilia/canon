@@ -486,14 +486,21 @@ function(canon_apply_target TARGET)
     endif()
 endfunction()
 
-# Returns the conventional install directory for this project's CMake package files.
+# Returns the install directory for this project's finalized package architecture.
 function(_canon_package_install_directory OUT_DIRECTORY)
-    include(GNUInstallDirs)
-    set(
-        "${OUT_DIRECTORY}"
-        "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
-        PARENT_SCOPE
+    get_property(
+        _architecture_specific
+        DIRECTORY "${PROJECT_SOURCE_DIR}"
+        PROPERTY _CANON_PACKAGE_ARCHITECTURE_SPECIFIC
     )
+    if (_architecture_specific)
+        include(GNUInstallDirs)
+        set(_install_directory "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
+    else()
+        set(_install_directory "share/cmake/${PROJECT_NAME}")
+    endif()
+
+    set("${OUT_DIRECTORY}" "${_install_directory}" PARENT_SCOPE)
 endfunction()
 
 # Selects Canon's package compatibility policy from the project's major version.
@@ -515,12 +522,12 @@ function(_canon_write_package_version_file)
     _canon_package_version_compatibility(_compatibility)
 
     get_property(
-        _has_binary
+        _architecture_specific
         DIRECTORY "${PROJECT_SOURCE_DIR}"
-        PROPERTY _CANON_PACKAGE_HAS_BINARY
+        PROPERTY _CANON_PACKAGE_ARCHITECTURE_SPECIFIC
     )
     set(_architecture_arguments)
-    if (NOT _has_binary)
+    if (NOT _architecture_specific)
         list(APPEND _architecture_arguments ARCH_INDEPENDENT)
     endif()
 
@@ -533,11 +540,11 @@ function(_canon_write_package_version_file)
     )
 endfunction()
 
-# Records that this project's installed package contains an architecture-specific artifact.
-function(_canon_mark_package_binary)
+# Raises this project's package architecture to architecture-specific.
+function(_canon_mark_package_architecture_specific)
     set_property(
         DIRECTORY "${PROJECT_SOURCE_DIR}"
-        PROPERTY _CANON_PACKAGE_HAS_BINARY TRUE
+        PROPERTY _CANON_PACKAGE_ARCHITECTURE_SPECIFIC TRUE
     )
 endfunction()
 
@@ -762,7 +769,7 @@ function(canon_apply_executable TARGET)
         TARGETS "${TARGET}"
         RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
     )
-    _canon_mark_package_binary()
+    _canon_mark_package_architecture_specific()
 endfunction()
 
 # Installs a managed library and each of its public HEADERS file sets.
@@ -866,7 +873,7 @@ function(canon_apply_library TARGET)
         return()
     endif()
 
-    _canon_mark_package_binary()
+    _canon_mark_package_architecture_specific()
     canon_apply_target("${TARGET}")
     target_compile_features("${TARGET}" PUBLIC cxx_std_26)
 
