@@ -94,9 +94,9 @@ endforeach()
 foreach(_header IN ITEMS
     arbitrary/sample.hpp
     interface_api/sample.hpp
-    sample_static/export.hpp
-    sample_shared/export.hpp
-    sample_module/export.hpp
+    canon_library_install/export.hpp
+    canon_library_install/ipv6_address/export.hpp
+    canon_library_install/sample_module/export.hpp
 )
     set(_installed_header "${_install_prefix}/${_include_directory}/${_header}")
     if (NOT EXISTS "${_installed_header}")

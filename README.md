@@ -68,14 +68,16 @@ canon_apply_library(example)
 
 Declare the library's public `HEADERS` file sets before calling `canon_apply_library()`. Canon discovers their names, installs them beneath CMake's conventional include directory, and preserves each file's path relative to its file-set base directory.
 
-Compiled libraries receive the common compiled-target policy and publish C++26 as a usage requirement. Canon also uses CMake's `GenerateExportHeader` module to create `<target>/export.hpp` and publishes that file through a public `HEADERS` file set named `canon_export_header`.
+Compiled libraries receive the common compiled-target policy and publish C++26 as a usage requirement. Canon also uses CMake's `GenerateExportHeader` module to publish an export header through a public `HEADERS` file set named `canon_export_header`. Generated headers live below `generated/` in the build tree and install below the matching public include path.
 
-The primary export annotation uses the target name normalized as a lowercase C identifier plus `_api`. For a target named `example`, a public declaration can use the generated header like this:
+The header path and `_API` macro follow the package's public target identity. Canon derives each identity component mechanically from common PascalCase boundaries. It lowercases the result for header paths and uppercases it for preprocessor macros. If the public library name matches the project name, Canon uses the shorter primary-library form. For example, `Example::Example` uses `example/export.hpp` and `EXAMPLE_API`. A secondary target such as `Example::Core` uses `example/core/export.hpp` and `EXAMPLE_CORE_API`.
+
+The mechanical rule is deterministic, not semantic, so unusual acronym spelling may need an override. Set the `CANON_EXPORT_IDENTITY` target property before `canon_apply_library()` to replace the derived public-library identity used by both the header path and generated macro family. The value is an uppercase C identifier. For example, `IPv6Address` derives `I_PV6_ADDRESS`, which produces `i_pv6_address/export.hpp` and `I_PV6_ADDRESS_API`. Set `CANON_EXPORT_IDENTITY` to `IPV6_ADDRESS` to use `ipv6_address/export.hpp` and `IPV6_ADDRESS_API` instead.
 
 ```cpp
-#include "example/export.hpp"
+#include <example/export.hpp>
 
-example_api auto exampleAnswer() -> int;
+EXAMPLE_API auto exampleAnswer() -> int;
 ```
 
 INTERFACE libraries publish the same C++26 usage requirement but have no compiled-target policy or generated export header. Canon installs and exports them together with their public header file sets. `FRAMEWORK` libraries are not supported.

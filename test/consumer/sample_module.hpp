@@ -5,6 +5,6 @@
 
 #pragma once
 
-#include "sample_module/export.hpp"
+#include <canon_consumer/sample_module/export.hpp>
 
-sample_module_api auto sampleModuleAnswer() -> int;
+CANON_CONSUMER_SAMPLE_MODULE_API auto sampleModuleAnswer() -> int;

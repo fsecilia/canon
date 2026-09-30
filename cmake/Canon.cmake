@@ -772,6 +772,29 @@ function(_canon_library_public_name TARGET OUT_NAME)
     set("${OUT_NAME}" "${_public_name}" PARENT_SCOPE)
 endfunction()
 
+# Returns a deterministic export-identity component for a name.
+function(_canon_default_export_identity NAME OUT_NAME)
+    string(MAKE_C_IDENTIFIER "${NAME}" _identity)
+    string(REGEX REPLACE "([A-Z]+)([A-Z][a-z])" "\\1_\\2" _identity "${_identity}")
+    string(REGEX REPLACE "([a-z0-9])([A-Z])" "\\1_\\2" _identity "${_identity}")
+    string(TOUPPER "${_identity}" _identity)
+    set("${OUT_NAME}" "${_identity}" PARENT_SCOPE)
+endfunction()
+
+# Returns the configured or derived public export identity for a library.
+function(_canon_export_identity TARGET OUT_NAME)
+    get_target_property(_identity "${TARGET}" CANON_EXPORT_IDENTITY)
+    if ("${_identity}" STREQUAL "_identity-NOTFOUND")
+        _canon_library_public_name("${TARGET}" _public_name)
+        _canon_default_export_identity("${_public_name}" _identity)
+    elseif (NOT "${_identity}" MATCHES "^[A-Z_][A-Z0-9_]*$")
+        message(FATAL_ERROR
+            "canon_apply_library(): CANON_EXPORT_IDENTITY for '${TARGET}' must be an uppercase C identifier")
+    endif()
+
+    set("${OUT_NAME}" "${_identity}" PARENT_SCOPE)
+endfunction()
+
 # Adds the build-tree alias that matches the installed package target name.
 function(_canon_add_build_tree_alias TARGET)
     _canon_library_public_name("${TARGET}" _public_name)
@@ -822,19 +845,31 @@ function(canon_apply_library TARGET)
     canon_apply_target("${TARGET}")
     target_compile_features("${TARGET}" PUBLIC cxx_std_26)
 
-    string(MAKE_C_IDENTIFIER "${TARGET}" _api_name)
-    string(TOLOWER "${_api_name}" _api_name)
+    _canon_library_public_name("${TARGET}" _public_name)
+    _canon_default_export_identity("${PROJECT_NAME}" _package_identity)
+    _canon_export_identity("${TARGET}" _public_identity)
+    string(TOLOWER "${_package_identity}" _package_path)
+    string(TOLOWER "${_public_identity}" _public_path)
+
+    if ("${_public_name}" STREQUAL "${PROJECT_NAME}")
+        set(_header_directory "${_public_path}")
+        set(_api_name "${_public_identity}")
+    else()
+        set(_header_directory "${_package_path}/${_public_path}")
+        set(_api_name "${_package_identity}_${_public_identity}")
+    endif()
 
     include(GenerateExportHeader)
     get_target_property(_target_binary_dir "${TARGET}" BINARY_DIR)
-    set(_include_dir "${_target_binary_dir}/canon/include")
-    set(_header "${_include_dir}/${TARGET}/export.hpp")
-    file(MAKE_DIRECTORY "${_include_dir}/${TARGET}")
+    set(_include_dir "${_target_binary_dir}/generated")
+    set(_header "${_include_dir}/${_header_directory}/export.hpp")
+    file(MAKE_DIRECTORY "${_include_dir}/${_header_directory}")
 
     generate_export_header(
         "${TARGET}"
+        BASE_NAME "${_api_name}"
         EXPORT_FILE_NAME "${_header}"
-        EXPORT_MACRO_NAME "${_api_name}_api"
+        EXPORT_MACRO_NAME "${_api_name}_API"
     )
     target_sources(
         "${TARGET}"

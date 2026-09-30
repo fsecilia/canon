@@ -3,10 +3,10 @@
 /// \file
 /// \copyright Copyright (C) 2026 Frank Secilia
 
-#include <asan_shared/export.hpp>
+#include <canon_asan_fixture/asan_shared/export.hpp>
 
-asan_shared_api auto asanSharedValue() -> int;
+CANON_ASAN_FIXTURE_ASAN_SHARED_API auto asanSharedValue() -> int;
 
-asan_shared_api auto asanSharedValue() -> int {
+CANON_ASAN_FIXTURE_ASAN_SHARED_API auto asanSharedValue() -> int {
     return 23;
 }

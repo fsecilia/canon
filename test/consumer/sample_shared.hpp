@@ -5,6 +5,6 @@
 
 #pragma once
 
-#include "sample_shared/export.hpp"
+#include <canon_consumer/shared_public/export.hpp>
 
-sample_shared_api auto sampleSharedAnswer() -> int;
+CANON_CONSUMER_SHARED_PUBLIC_API auto sampleSharedAnswer() -> int;
