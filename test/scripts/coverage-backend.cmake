@@ -72,17 +72,30 @@ if (NOT "${_resolved_executable}" STREQUAL "")
 endif()
 
 # Automatic discovery may fail, but it must remain a visible soft failure and must not seed an override.
-set(CMAKE_CXX_COMPILER "${CANON_TEST_BINARY_DIR}/missing-cxx-compiler")
-set(CMAKE_CXX_COMPILER_ID "${CANON_CXX_COMPILER_ID}")
-set(CMAKE_CXX_COMPILER_FRONTEND_VARIANT "${CANON_CXX_COMPILER_FRONTEND_VARIANT}")
-set(CMAKE_CXX_COMPILER_VERSION "${CANON_CXX_COMPILER_VERSION}")
-set(CANON_GCOV_EXECUTABLE "")
-set(CANON_LLVM_COV_EXECUTABLE "")
-_canon_find_coverage_backend(_backend)
-if (NOT "${_backend}" STREQUAL "")
-    message(FATAL_ERROR "failed automatic coverage discovery unexpectedly produced '${_backend}'")
+execute_process(
+    COMMAND
+        "${CMAKE_COMMAND}"
+        "-DCANON_SOURCE_DIR=${CANON_SOURCE_DIR}"
+        "-DCANON_TEST_BINARY_DIR=${CANON_TEST_BINARY_DIR}"
+        "-DCANON_CXX_COMPILER_ID=${CANON_CXX_COMPILER_ID}"
+        "-DCANON_CXX_COMPILER_FRONTEND_VARIANT=${CANON_CXX_COMPILER_FRONTEND_VARIANT}"
+        "-DCANON_CXX_COMPILER_VERSION=${CANON_CXX_COMPILER_VERSION}"
+        -P "${CANON_SOURCE_DIR}/test/scripts/coverage-backend-unavailable.cmake"
+    RESULT_VARIABLE _unavailable_result
+    OUTPUT_VARIABLE _unavailable_stdout
+    ERROR_VARIABLE _unavailable_stderr
+)
+if (NOT "${_unavailable_result}" EQUAL 0)
+    message(FATAL_ERROR
+        "Coverage-backend unavailable probe failed\n"
+        "stdout:\n${_unavailable_stdout}\n"
+        "stderr:\n${_unavailable_stderr}")
 endif()
-if (NOT "${CANON_GCOV_EXECUTABLE}" STREQUAL ""
-    OR NOT "${CANON_LLVM_COV_EXECUTABLE}" STREQUAL "")
-    message(FATAL_ERROR "automatic coverage discovery populated an explicit override variable")
+
+set(_unavailable_output "${_unavailable_stdout}\n${_unavailable_stderr}")
+if (NOT "${_unavailable_output}" MATCHES "did not report a usable")
+    message(FATAL_ERROR
+        "Coverage-backend unavailable probe did not report the expected warning\n"
+        "stdout:\n${_unavailable_stdout}\n"
+        "stderr:\n${_unavailable_stderr}")
 endif()

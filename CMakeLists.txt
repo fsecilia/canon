@@ -59,16 +59,20 @@ endif()
 
 find_program(CANON_GCOVR_EXECUTABLE NAMES gcovr)
 set(_canon_coverage_backend "")
-if (CANON_GCOVR_EXECUTABLE)
-    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"
-        OR ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang"
-            AND "${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}" STREQUAL "GNU"))
-        _canon_find_coverage_backend(_canon_coverage_backend)
-    else()
-        message(WARNING
-            "Canon coverage validation unavailable: compiler '${CMAKE_CXX_COMPILER_ID}' "
-            "with frontend '${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}' has no supported backend")
+set(_canon_coverage_disabled_reason "")
+if (NOT CANON_GCOVR_EXECUTABLE)
+    set(_canon_coverage_disabled_reason "gcovr was not found")
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"
+    OR ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang"
+        AND "${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}" STREQUAL "GNU"))
+    _canon_find_coverage_backend(_canon_coverage_backend)
+    if ("${_canon_coverage_backend}" STREQUAL "")
+        set(_canon_coverage_disabled_reason "no usable compiler-matched coverage backend was found")
     endif()
+else()
+    string(CONCAT _canon_coverage_disabled_reason
+        "compiler '${CMAKE_CXX_COMPILER_ID}' with frontend "
+        "'${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}' has no supported backend")
 endif()
 
 function(_canon_add_script_test NAME SCRIPT)
@@ -174,8 +178,6 @@ if (CANON_GCOVR_EXECUTABLE AND NOT "${_canon_coverage_backend}" STREQUAL "")
         list(APPEND _canon_coverage_test_arguments
             "-DCANON_LLVM_COV_EXECUTABLE=${CANON_LLVM_COV_EXECUTABLE}")
     endif()
-elseif (NOT CANON_GCOVR_EXECUTABLE)
-    message(WARNING "Canon coverage validation unavailable: gcovr was not found")
 endif()
 
 _canon_add_script_test(
@@ -194,6 +196,11 @@ if (NOT _canon_coverage_tests_enabled)
         canon.integration.coverage.empty-report
         PROPERTIES DISABLED TRUE
     )
+    message(WARNING
+        "Canon coverage tests are disabled: ${_canon_coverage_disabled_reason}\n"
+        "  canon.integration.coverage\n"
+        "  canon.integration.coverage.empty-report\n"
+        "  canon.integration.presets.coverage")
 endif()
 
 _canon_add_script_test(
@@ -307,6 +314,12 @@ _canon_add_script_test(
     "-DCANON_EXPECT_COVERAGE_ENABLED=${_canon_coverage_tests_enabled}"
     "-DCANON_EXPECT_TIDY_ENABLED=${_canon_clang_tidy_supported}"
     "-DCANON_EXPECT_DOCUMENTATION_ENABLED=${Doxygen_FOUND}"
+)
+
+_canon_add_script_test(
+    coverage.gcovr-unavailable
+    coverage-gcovr-unavailable.cmake
+    "-DCANON_CTEST_COMMAND=${CMAKE_CTEST_COMMAND}"
 )
 
 _canon_add_script_test(
