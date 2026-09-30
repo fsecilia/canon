@@ -72,7 +72,6 @@ function(_canon_apply_compiler_policy TARGET)
             -fdiagnostics-color=always
             -fstrict-aliasing
             -fsized-deallocation
-            -ftemplate-backtrace-limit=1
         )
     elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
         set(_build_options
