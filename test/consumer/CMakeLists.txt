@@ -30,6 +30,7 @@ set_target_properties(sample_shared PROPERTIES EXPORT_NAME SharedPublic)
 add_library(sample_module MODULE sample_module.cpp)
 add_library(sample_object OBJECT sample_object.cpp)
 add_library(warning_probe STATIC EXCLUDE_FROM_ALL warning_probe.cpp)
+add_library(warning_probe_demoted STATIC EXCLUDE_FROM_ALL warning_probe.cpp)
 add_library(sample_interface INTERFACE)
 target_sources(
     sample_interface
@@ -49,9 +50,16 @@ foreach(_library IN ITEMS sample_static sample_shared sample_module)
     canon_apply_library("${_library}")
 endforeach()
 
-foreach(_target IN ITEMS sample_object warning_probe)
+foreach(_target IN ITEMS sample_object warning_probe warning_probe_demoted)
     canon_apply_target("${_target}")
 endforeach()
+
+if (CANON_ENABLE_WARNINGS)
+    target_compile_options(
+        warning_probe_demoted
+        PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:-Wno-error=unused-parameter>"
+    )
+endif()
 
 target_link_libraries(noisy PRIVATE sample_interface)
 
@@ -149,6 +157,7 @@ set(_compiled_targets
     sample_module
     sample_object
     warning_probe
+    warning_probe_demoted
     consumer
     sample_test
 )
@@ -243,7 +252,7 @@ foreach(_target IN LISTS _ipo_final_targets)
     endif()
 endforeach()
 
-foreach(_target IN ITEMS sample_static sample_object warning_probe)
+foreach(_target IN ITEMS sample_static sample_object warning_probe warning_probe_demoted)
     get_target_property(_ipo_property "${_target}" INTERPROCEDURAL_OPTIMIZATION_RELEASE)
     if (NOT "${_ipo_property}" STREQUAL "_ipo_property-NOTFOUND")
         message(FATAL_ERROR "${_target} unexpectedly enables Release IPO")

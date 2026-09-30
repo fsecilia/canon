@@ -113,6 +113,20 @@ if (CANON_ENABLE_WARNINGS)
             "stdout:\n${_warning_probe_stdout}\n"
             "stderr:\n${_warning_probe_stderr}")
     endif()
+
+    # Demoting only the intended warning must make the otherwise-identical probe build.
+    execute_process(
+        COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}" --target warning_probe_demoted
+        RESULT_VARIABLE _warning_probe_demoted_result
+        OUTPUT_VARIABLE _warning_probe_demoted_stdout
+        ERROR_VARIABLE _warning_probe_demoted_stderr
+    )
+    if (NOT _warning_probe_demoted_result EQUAL 0)
+        message(FATAL_ERROR
+            "Canon warning probe still failed after demoting unused-parameter\n"
+            "stdout:\n${_warning_probe_demoted_stdout}\n"
+            "stderr:\n${_warning_probe_demoted_stderr}")
+    endif()
 elseif (NOT _warning_probe_result EQUAL 0)
     message(FATAL_ERROR
         "Canon warning probe failed with warnings disabled\n"
