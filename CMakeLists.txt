@@ -148,12 +148,13 @@ _canon_add_script_test(
 
 _canon_add_script_test(
     asan
-    scripts/asan-consumer.cmake
+    asan/test.cmake
 )
 
 _canon_add_script_test(
     coverage.backend
-    scripts/coverage-backend.cmake
+    coverage/test.cmake
+    -DCANON_TEST_CASE=backend
     "-DCANON_CXX_COMPILER_ID=${CMAKE_CXX_COMPILER_ID}"
     "-DCANON_CXX_COMPILER_FRONTEND_VARIANT=${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}"
     "-DCANON_CXX_COMPILER_VERSION=${CMAKE_CXX_COMPILER_VERSION}"
@@ -161,7 +162,8 @@ _canon_add_script_test(
 
 _canon_add_script_test(
     coverage.override-error
-    scripts/coverage-backend-error.cmake
+    coverage/test.cmake
+    -DCANON_TEST_CASE=override-error
     "-DCANON_CXX_COMPILER_ID=${CMAKE_CXX_COMPILER_ID}"
 )
 
@@ -183,12 +185,13 @@ endif()
 
 _canon_add_script_test(
     coverage
-    scripts/coverage-consumer.cmake
+    coverage/test.cmake
+    -DCANON_TEST_CASE=consumer
     ${_canon_coverage_test_arguments}
 )
 _canon_add_script_test(
     coverage.empty-report
-    scripts/coverage-empty-report.cmake
+    coverage-empty/test.cmake
     ${_canon_coverage_test_arguments}
 )
 if (NOT _canon_coverage_tests_enabled)
@@ -312,7 +315,7 @@ endif()
 
 _canon_add_script_test(
     optional-tools.registration
-    scripts/optional-tool-registration.cmake
+    support/OptionalToolRegistration.cmake
     "-DCANON_CTEST_COMMAND=${CMAKE_CTEST_COMMAND}"
     "-DCANON_TEST_ROOT=${CMAKE_CURRENT_BINARY_DIR}"
     "-DCANON_EXPECT_COVERAGE_ENABLED=${_canon_coverage_tests_enabled}"
@@ -322,7 +325,8 @@ _canon_add_script_test(
 
 _canon_add_script_test(
     coverage.gcovr-unavailable
-    scripts/coverage-gcovr-unavailable.cmake
+    coverage/test.cmake
+    -DCANON_TEST_CASE=gcovr-unavailable
     "-DCANON_CTEST_COMMAND=${CMAKE_CTEST_COMMAND}"
 )
 

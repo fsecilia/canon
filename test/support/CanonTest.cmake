@@ -13,7 +13,7 @@ endfunction()
 
 function(canon_test_run)
     set(_options EXPECT_FAILURE NORMALIZE_WHITESPACE)
-    set(_one_value_arguments DESCRIPTION)
+    set(_one_value_arguments DESCRIPTION OUTPUT_VARIABLE)
     set(_multi_value_arguments COMMAND EXPECTED_OUTPUT EXPECTED_REGEX)
     cmake_parse_arguments(
         PARSE_ARGV 0
@@ -85,4 +85,8 @@ function(canon_test_run)
                 "stderr:\n${_stderr}")
         endif()
     endforeach()
+
+    if (NOT "${_test_OUTPUT_VARIABLE}" STREQUAL "")
+        set(${_test_OUTPUT_VARIABLE} "${_stdout}" PARENT_SCOPE)
+    endif()
 endfunction()

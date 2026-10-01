@@ -99,7 +99,7 @@ elseif ("${CANON_TEST_CASE}" STREQUAL "version")
             "-DCANON_CTEST_COMMAND=${CMAKE_CTEST_COMMAND}"
             "-DCANON_TEST_ROOT=${_harness_binary_dir}"
             -DCANON_EXPECT_TIDY_ENABLED=FALSE
-            -P "${CANON_SOURCE_DIR}/test/scripts/optional-tool-registration.cmake"
+            -P "${CANON_SOURCE_DIR}/test/support/OptionalToolRegistration.cmake"
     )
 else()
     message(FATAL_ERROR "Unknown tooling test case '${CANON_TEST_CASE}'")
