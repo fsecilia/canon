@@ -16,6 +16,7 @@ if (NOT CANON_ENABLE_COVERAGE)
 endif()
 
 include(CTest)
+include("${CANON_SOURCE_DIR}/test/support/CanonFixtureAssertions.cmake")
 
 add_library(covered STATIC covered.cpp external/excluded.cpp)
 canon_apply_library(covered)
@@ -39,39 +40,15 @@ add_test(
     COMMAND "${CMAKE_COMMAND}" -E echo "project-owned coverage test"
 )
 
-function(_require_compile_option TARGET OPTION)
-    get_target_property(_options "${TARGET}" COMPILE_OPTIONS)
-    if ("${_options}" STREQUAL "_options-NOTFOUND")
-        message(FATAL_ERROR "${TARGET} has no compile options")
-    endif()
-
-    set(_required "$<$<COMPILE_LANGUAGE:CXX>:${OPTION}>")
-    if (NOT "${_required}" IN_LIST _options)
-        message(FATAL_ERROR "${TARGET} is missing coverage compile option '${OPTION}'")
-    endif()
-endfunction()
-
 # Verify compile instrumentation on every managed target in the fixture.
 foreach(_target IN ITEMS covered covered_test)
-    _require_compile_option("${_target}" "--coverage")
+    canon_test_require_cxx_compile_option("${_target}" "--coverage")
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-        _require_compile_option("${_target}" "-fprofile-abs-path")
+        canon_test_require_cxx_compile_option("${_target}" "-fprofile-abs-path")
     endif()
 endforeach()
 
 # Static-library consumers must inherit the coverage runtime without compile instrumentation.
-get_target_property(_covered_link_options covered INTERFACE_LINK_OPTIONS)
-if (NOT "--coverage" IN_LIST _covered_link_options)
-    message(FATAL_ERROR "covered does not publish the coverage link requirement")
-endif()
-
-get_target_property(_link_options covered_test LINK_OPTIONS)
-if (NOT "--coverage" IN_LIST _link_options)
-    message(FATAL_ERROR "covered_test is missing the coverage link option")
-endif()
-
-get_target_property(_unmanaged_compile_options covered_unmanaged COMPILE_OPTIONS)
-if (NOT "${_unmanaged_compile_options}" STREQUAL "_unmanaged_compile_options-NOTFOUND"
-    AND "--coverage" IN_LIST _unmanaged_compile_options)
-    message(FATAL_ERROR "covered_unmanaged inherited coverage compile instrumentation")
-endif()
+canon_test_require_target_list_value(covered INTERFACE_LINK_OPTIONS --coverage)
+canon_test_require_target_list_value(covered_test LINK_OPTIONS --coverage)
+canon_test_forbid_target_list_value(covered_unmanaged COMPILE_OPTIONS --coverage)

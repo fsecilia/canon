@@ -12,6 +12,7 @@ if (NOT CANON_ENABLE_ASAN)
 endif()
 
 include(CTest)
+include("${CANON_SOURCE_DIR}/test/support/CanonFixtureAssertions.cmake")
 
 add_library(asan_static STATIC asan_static.cpp)
 add_library(asan_shared SHARED asan_shared.cpp)
@@ -43,48 +44,21 @@ canon_apply_target(asan_probe)
 
 # Verify the compile policy reaches each managed target involved in the fixture.
 foreach(_target IN ITEMS asan_static asan_shared asan_app asan_test asan_probe)
-    get_target_property(_compile_options "${_target}" COMPILE_OPTIONS)
-    foreach(_option IN ITEMS -fsanitize=address -fno-omit-frame-pointer)
-        string(FIND "${_compile_options}" "${_option}" _position)
-        if ("${_position}" EQUAL -1)
-            message(FATAL_ERROR "${_target} is missing ASan compile option '${_option}'")
-        endif()
-    endforeach()
+    canon_test_require_cxx_compile_option("${_target}" -fsanitize=address)
+    canon_test_require_cxx_compile_option("${_target}" -fno-omit-frame-pointer)
 endforeach()
 
 # Verify each managed target publishes the sanitizer runtime where its consumers need it.
-get_target_property(_static_link_options asan_static INTERFACE_LINK_OPTIONS)
-if (NOT "-fsanitize=address" IN_LIST _static_link_options)
-    message(FATAL_ERROR "asan_static does not publish the ASan link requirement")
-endif()
-
-get_target_property(_shared_link_options asan_shared LINK_OPTIONS)
-get_target_property(_shared_interface_link_options asan_shared INTERFACE_LINK_OPTIONS)
-foreach(_options IN ITEMS _shared_link_options _shared_interface_link_options)
-    if (NOT "-fsanitize=address" IN_LIST ${_options})
-        message(FATAL_ERROR "asan_shared is missing an ASan link requirement")
-    endif()
-endforeach()
+canon_test_require_target_list_value(asan_static INTERFACE_LINK_OPTIONS -fsanitize=address)
+canon_test_require_target_list_value(asan_shared LINK_OPTIONS -fsanitize=address)
+canon_test_require_target_list_value(asan_shared INTERFACE_LINK_OPTIONS -fsanitize=address)
 
 foreach(_target IN ITEMS asan_app asan_test asan_probe)
-    get_target_property(_link_options "${_target}" LINK_OPTIONS)
-    if (NOT "-fsanitize=address" IN_LIST _link_options)
-        message(FATAL_ERROR "${_target} is missing the ASan link option")
-    endif()
+    canon_test_require_target_list_value("${_target}" LINK_OPTIONS -fsanitize=address)
 endforeach()
 
-# Keep unmanaged target state untouched by Canon's sanitizer compile policy.
+# Keep unmanaged target state untouched by Canon's sanitizer policy.
 foreach(_target IN ITEMS unmanaged asan_unmanaged_static asan_unmanaged_shared)
-    get_target_property(_unmanaged_options "${_target}" COMPILE_OPTIONS)
-    if (NOT "${_unmanaged_options}" STREQUAL "_unmanaged_options-NOTFOUND"
-        AND "-fsanitize=address" IN_LIST _unmanaged_options)
-        message(FATAL_ERROR "${_target} inherited ASan compile instrumentation")
-    endif()
+    canon_test_forbid_target_list_value("${_target}" COMPILE_OPTIONS -fsanitize=address)
 endforeach()
-
-# Keep the unrelated unmanaged library untouched by Canon's sanitizer link policy.
-get_target_property(_unmanaged_link_options unmanaged LINK_OPTIONS)
-if (NOT "${_unmanaged_link_options}" STREQUAL "_unmanaged_link_options-NOTFOUND"
-    AND "-fsanitize=address" IN_LIST _unmanaged_link_options)
-    message(FATAL_ERROR "unmanaged inherited the ASan link option")
-endif()
+canon_test_forbid_target_list_value(unmanaged LINK_OPTIONS -fsanitize=address)

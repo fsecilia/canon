@@ -21,6 +21,7 @@ if (CANON_ENABLE_COVERAGE)
 endif()
 
 include(CTest)
+include("${CANON_SOURCE_DIR}/test/support/CanonFixtureAssertions.cmake")
 add_subdirectory(external/noisy)
 
 add_library(sample_static STATIC sample_static.cpp)
@@ -113,38 +114,6 @@ if (NOT "${_registered_tests}" STREQUAL "${_expected_tests}")
         "Consumer CTest registration: expected '${_expected_tests}', got '${_registered_tests}'")
 endif()
 
-function(_require_target_property TARGET PROPERTY EXPECTED)
-    get_target_property(_actual "${TARGET}" "${PROPERTY}")
-    if (NOT "${_actual}" STREQUAL "${EXPECTED}")
-        message(FATAL_ERROR
-            "${TARGET} property ${PROPERTY}: expected '${EXPECTED}', got '${_actual}'")
-    endif()
-endfunction()
-
-function(_require_compile_option TARGET OPTION)
-    get_target_property(_options "${TARGET}" COMPILE_OPTIONS)
-    if ("${_options}" STREQUAL "_options-NOTFOUND")
-        message(FATAL_ERROR "${TARGET} has no compile options")
-    endif()
-
-    set(_required "$<$<COMPILE_LANGUAGE:CXX>:${OPTION}>")
-    if (NOT "${_required}" IN_LIST _options)
-        message(FATAL_ERROR "${TARGET} is missing compile option '${OPTION}'")
-    endif()
-endfunction()
-
-function(_require_compile_option_after TARGET OPTION EARLIER_OPTION)
-    get_target_property(_options "${TARGET}" COMPILE_OPTIONS)
-    set(_required "$<$<COMPILE_LANGUAGE:CXX>:${OPTION}>")
-    set(_earlier "$<$<COMPILE_LANGUAGE:CXX>:${EARLIER_OPTION}>")
-    list(FIND _options "${_required}" _required_index)
-    list(FIND _options "${_earlier}" _earlier_index)
-    if ("${_required_index}" LESS_EQUAL "${_earlier_index}")
-        message(FATAL_ERROR
-            "${TARGET} compile option '${OPTION}' must follow '${EARLIER_OPTION}'")
-    endif()
-endfunction()
-
 # Verify every managed compiled target receives the shared Canon policy.
 get_property(_ipo_supported GLOBAL PROPERTY _CANON_IPO_SUPPORTED)
 if (NOT "${_ipo_supported}" STREQUAL "YES" AND NOT "${_ipo_supported}" STREQUAL "NO")
@@ -205,19 +174,19 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 endif()
 
 foreach(_target IN LISTS _compiled_targets)
-    _require_target_property("${_target}" CXX_SCAN_FOR_MODULES FALSE)
-    _require_target_property("${_target}" CXX_STANDARD 26)
-    _require_target_property("${_target}" CXX_STANDARD_REQUIRED TRUE)
-    _require_target_property("${_target}" POSITION_INDEPENDENT_CODE TRUE)
-    _require_target_property("${_target}" VISIBILITY_INLINES_HIDDEN TRUE)
-    _require_target_property("${_target}" CXX_VISIBILITY_PRESET hidden)
+    canon_test_require_target_property("${_target}" CXX_SCAN_FOR_MODULES FALSE)
+    canon_test_require_target_property("${_target}" CXX_STANDARD 26)
+    canon_test_require_target_property("${_target}" CXX_STANDARD_REQUIRED TRUE)
+    canon_test_require_target_property("${_target}" POSITION_INDEPENDENT_CODE TRUE)
+    canon_test_require_target_property("${_target}" VISIBILITY_INLINES_HIDDEN TRUE)
+    canon_test_require_target_property("${_target}" CXX_VISIBILITY_PRESET hidden)
 
     if (CANON_ENABLE_WARNINGS)
         foreach(_option IN LISTS _warning_options _warning_suppressions _warning_reenables)
-            _require_compile_option("${_target}" "${_option}")
+            canon_test_require_cxx_compile_option("${_target}" "${_option}")
         endforeach()
         if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-            _require_compile_option_after(
+            canon_test_require_cxx_compile_option_after(
                 "${_target}"
                 -Wshadow-field-in-constructor-modified
                 -Wno-shadow-field-in-constructor
@@ -242,7 +211,7 @@ set(_ipo_final_targets
 )
 foreach(_target IN LISTS _ipo_final_targets)
     if (_ipo_supported)
-        _require_target_property("${_target}" INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
+        canon_test_require_target_property("${_target}" INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
     else()
         get_target_property(_ipo_property "${_target}" INTERPROCEDURAL_OPTIMIZATION_RELEASE)
         if (NOT "${_ipo_property}" STREQUAL "_ipo_property-NOTFOUND")
@@ -268,10 +237,10 @@ foreach(_library IN ITEMS sample_static sample_shared sample_module)
     endif()
 endforeach()
 
-_require_target_property(sample_static CXX_EXTENSIONS TRUE)
-_require_target_property(sample_shared CXX_EXTENSIONS FALSE)
-_require_target_property(sample_interface INTERFACE_COMPILE_DEFINITIONS CANON_SAMPLE_INTERFACE_VALUE=73)
-_require_target_property(sample_interface INTERFACE_COMPILE_FEATURES cxx_std_17)
+canon_test_require_target_property(sample_static CXX_EXTENSIONS TRUE)
+canon_test_require_target_property(sample_shared CXX_EXTENSIONS FALSE)
+canon_test_require_target_property(sample_interface INTERFACE_COMPILE_DEFINITIONS CANON_SAMPLE_INTERFACE_VALUE=73)
+canon_test_require_target_property(sample_interface INTERFACE_COMPILE_FEATURES cxx_std_17)
 
 # Verify Canon does not leak build options through the unmanaged interface target.
 foreach(_property IN ITEMS INTERFACE_COMPILE_OPTIONS INTERFACE_LINK_OPTIONS)
