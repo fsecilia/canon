@@ -339,6 +339,13 @@ _canon_add_script_test(
 )
 
 _canon_add_script_test(
+    libraries.export-header-collision
+    library-errors/test.cmake
+    -DCANON_TEST_CASE=export-header-collision
+    "-DCANON_EXPECTED_ERROR=generated export header 'canon_library_errors/foo_bar/export.hpp' for target 'second' conflicts with target 'first'"
+)
+
+_canon_add_script_test(
     dependencies.empty
     dependency-errors/test.cmake
     -DCANON_TEST_CASE=empty

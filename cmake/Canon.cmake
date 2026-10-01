@@ -850,6 +850,21 @@ function(_canon_export_identity TARGET OUT_NAME)
     set("${OUT_NAME}" "${_identity}" PARENT_SCOPE)
 endfunction()
 
+# Claims a generated export-header path for one library in the current project.
+function(_canon_claim_export_header TARGET HEADER)
+    string(HEX "${HEADER}" _header_key)
+    set(_property "_CANON_EXPORT_HEADER_${_header_key}")
+    get_property(_owner DIRECTORY "${PROJECT_SOURCE_DIR}" PROPERTY "${_property}")
+
+    if (NOT "${_owner}" STREQUAL "" AND NOT "${_owner}" STREQUAL "${TARGET}")
+        message(FATAL_ERROR
+            "canon_apply_library(): generated export header '${HEADER}' for target '${TARGET}' "
+            "conflicts with target '${_owner}'; set a distinct CANON_EXPORT_IDENTITY")
+    endif()
+
+    set_property(DIRECTORY "${PROJECT_SOURCE_DIR}" PROPERTY "${_property}" "${TARGET}")
+endfunction()
+
 # Adds the build-tree alias that matches the installed package target name.
 function(_canon_add_build_tree_alias TARGET)
     _canon_library_public_name("${TARGET}" _public_name)
@@ -914,10 +929,13 @@ function(canon_apply_library TARGET)
         set(_api_name "${_package_identity}_${_public_identity}")
     endif()
 
+    set(_header_path "${_header_directory}/export.hpp")
+    _canon_claim_export_header("${TARGET}" "${_header_path}")
+
     include(GenerateExportHeader)
     get_target_property(_target_binary_dir "${TARGET}" BINARY_DIR)
     set(_include_dir "${_target_binary_dir}/generated")
-    set(_header "${_include_dir}/${_header_directory}/export.hpp")
+    set(_header "${_include_dir}/${_header_path}")
     file(MAKE_DIRECTORY "${_include_dir}/${_header_directory}")
 
     generate_export_header(
