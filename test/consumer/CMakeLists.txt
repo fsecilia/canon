@@ -129,6 +129,7 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
         -Wno-shadow-field-in-constructor
         -Wno-switch-default
         -Wno-switch-enum
+        -Wno-unsafe-buffer-usage-in-libc-call
         -Wno-unused-function
         -Wno-unused-member-function
         -Wno-unused-template
