@@ -11,6 +11,34 @@ function(canon_test_require_target_property TARGET PROPERTY EXPECTED)
     endif()
 endfunction()
 
+function(canon_test_require_target_property_unset TARGET PROPERTY)
+    get_target_property(_actual "${TARGET}" "${PROPERTY}")
+    if (NOT "${_actual}" STREQUAL "_actual-NOTFOUND")
+        message(FATAL_ERROR
+            "${TARGET} property ${PROPERTY}: expected unset, got '${_actual}'")
+    endif()
+endfunction()
+
+function(canon_test_require_target_property_empty TARGET PROPERTY)
+    get_target_property(_actual "${TARGET}" "${PROPERTY}")
+    if (NOT "${_actual}" STREQUAL "_actual-NOTFOUND" AND NOT "${_actual}" STREQUAL "")
+        message(FATAL_ERROR
+            "${TARGET} property ${PROPERTY}: expected empty or unset, got '${_actual}'")
+    endif()
+endfunction()
+
+function(canon_test_require_alias ALIAS TARGET)
+    if (NOT TARGET "${ALIAS}")
+        message(FATAL_ERROR "Expected alias target '${ALIAS}'")
+    endif()
+
+    get_target_property(_actual "${ALIAS}" ALIASED_TARGET)
+    if (NOT "${_actual}" STREQUAL "${TARGET}")
+        message(FATAL_ERROR
+            "Alias '${ALIAS}': expected target '${TARGET}', got '${_actual}'")
+    endif()
+endfunction()
+
 function(canon_test_require_target_list_value TARGET PROPERTY VALUE)
     get_target_property(_values "${TARGET}" "${PROPERTY}")
     if ("${_values}" STREQUAL "_values-NOTFOUND")

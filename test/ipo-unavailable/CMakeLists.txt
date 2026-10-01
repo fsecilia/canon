@@ -6,6 +6,7 @@ cmake_minimum_required(VERSION 3.31.6)
 project(CanonIpoUnavailable LANGUAGES CXX)
 
 include("${CMAKE_CURRENT_LIST_DIR}/../support/CanonSourceFixture.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/../support/CanonFixtureAssertions.cmake")
 
 # Make the first IPO probe fail without leaving invalid flags on the generated targets.
 set(_saved_cxx_flags "${CMAKE_CXX_FLAGS}")
@@ -30,8 +31,8 @@ if (NOT "${_ipo_supported}" STREQUAL "NO")
 endif()
 
 foreach(_target IN ITEMS first nonfinal second)
-    get_target_property(_ipo_property "${_target}" INTERPROCEDURAL_OPTIMIZATION_RELEASE)
-    if (NOT "${_ipo_property}" STREQUAL "_ipo_property-NOTFOUND")
-        message(FATAL_ERROR "${_target} unexpectedly enables Release IPO")
-    endif()
+    canon_test_require_target_property_unset(
+        "${_target}"
+        INTERPROCEDURAL_OPTIMIZATION_RELEASE
+    )
 endforeach()

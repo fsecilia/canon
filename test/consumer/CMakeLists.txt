@@ -213,19 +213,18 @@ foreach(_target IN LISTS _ipo_final_targets)
     if (_ipo_supported)
         canon_test_require_target_property("${_target}" INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
     else()
-        get_target_property(_ipo_property "${_target}" INTERPROCEDURAL_OPTIMIZATION_RELEASE)
-        if (NOT "${_ipo_property}" STREQUAL "_ipo_property-NOTFOUND")
-            message(FATAL_ERROR
-                "${_target} unexpectedly enables Release IPO when the toolchain does not support it")
-        endif()
+        canon_test_require_target_property_unset(
+            "${_target}"
+            INTERPROCEDURAL_OPTIMIZATION_RELEASE
+        )
     endif()
 endforeach()
 
 foreach(_target IN ITEMS sample_static sample_object warning_probe warning_probe_demoted)
-    get_target_property(_ipo_property "${_target}" INTERPROCEDURAL_OPTIMIZATION_RELEASE)
-    if (NOT "${_ipo_property}" STREQUAL "_ipo_property-NOTFOUND")
-        message(FATAL_ERROR "${_target} unexpectedly enables Release IPO")
-    endif()
+    canon_test_require_target_property_unset(
+        "${_target}"
+        INTERPROCEDURAL_OPTIMIZATION_RELEASE
+    )
 endforeach()
 
 # Verify every managed library publishes its generated export header as a public file set.
@@ -244,16 +243,8 @@ canon_test_require_target_property(sample_interface INTERFACE_COMPILE_FEATURES c
 
 # Verify Canon does not leak build options through the unmanaged interface target.
 foreach(_property IN ITEMS INTERFACE_COMPILE_OPTIONS INTERFACE_LINK_OPTIONS)
-    get_target_property(_value sample_interface "${_property}")
-    if (NOT "${_value}" STREQUAL "_value-NOTFOUND" AND NOT "${_value}" STREQUAL "")
-        message(FATAL_ERROR
-            "Canon policy leaked through sample_interface ${_property}: ${_value}")
-    endif()
+    canon_test_require_target_property_empty(sample_interface "${_property}")
 endforeach()
 
 # Verify Canon does not modify the unmanaged external target.
-get_target_property(_noisy_options noisy COMPILE_OPTIONS)
-if (NOT "${_noisy_options}" STREQUAL "_noisy_options-NOTFOUND"
-    AND NOT "${_noisy_options}" STREQUAL "")
-    message(FATAL_ERROR "Canon policy leaked to unmanaged target noisy: ${_noisy_options}")
-endif()
+canon_test_require_target_property_empty(noisy COMPILE_OPTIONS)
