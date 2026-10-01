@@ -322,76 +322,76 @@ _canon_add_script_test(
 _canon_add_script_test(
     executables.missing
     executable-errors/test.cmake
-    -DCANON_FIXTURE=missing
+    -DCANON_TEST_CASE=missing
     "-DCANON_EXPECTED_ERROR=canon_apply_executable(): target 'missing' does not exist"
 )
 
 _canon_add_script_test(
     executables.library
     executable-errors/test.cmake
-    -DCANON_FIXTURE=library
+    -DCANON_TEST_CASE=library
     "-DCANON_EXPECTED_ERROR=canon_apply_executable(): target 'sample' must be an executable"
 )
 
 _canon_add_script_test(
     executables.bundle
     executable-errors/test.cmake
-    -DCANON_FIXTURE=bundle
+    -DCANON_TEST_CASE=bundle
     "-DCANON_EXPECTED_ERROR=canon_apply_executable(): MACOSX_BUNDLE target 'sample' is not supported"
 )
 
 _canon_add_script_test(
     libraries.missing
     library-errors/test.cmake
-    -DCANON_FIXTURE=missing
+    -DCANON_TEST_CASE=missing
     "-DCANON_EXPECTED_ERROR=canon_apply_library(): target 'missing' does not exist"
 )
 
 _canon_add_script_test(
     libraries.executable
     library-errors/test.cmake
-    -DCANON_FIXTURE=executable
+    -DCANON_TEST_CASE=executable
     "-DCANON_EXPECTED_ERROR=canon_apply_library(): target 'sample' must be a STATIC, SHARED, MODULE, or INTERFACE library"
 )
 
 _canon_add_script_test(
     libraries.object
     library-errors/test.cmake
-    -DCANON_FIXTURE=object
+    -DCANON_TEST_CASE=object
     "-DCANON_EXPECTED_ERROR=canon_apply_library(): target 'sample' must be a STATIC, SHARED, MODULE, or INTERFACE library"
 )
 
 _canon_add_script_test(
     libraries.framework
     library-errors/test.cmake
-    -DCANON_FIXTURE=framework
+    -DCANON_TEST_CASE=framework
     "-DCANON_EXPECTED_ERROR=canon_apply_library(): FRAMEWORK target 'sample' is not supported"
 )
 
 _canon_add_script_test(
     dependencies.empty
     dependency-errors/test.cmake
-    -DCANON_FIXTURE=empty
+    -DCANON_TEST_CASE=empty
     "-DCANON_EXPECTED_ERROR=canon_apply_dependency(): package name must not be empty"
 )
 
 _canon_add_script_test(
     dependencies.required
     dependency-errors/test.cmake
-    -DCANON_FIXTURE=required
+    -DCANON_TEST_CASE=required
     "-DCANON_EXPECTED_ERROR=canon_apply_dependency(): 'REQUIRED' is inherited"
 )
 
 _canon_add_script_test(
     dependencies.quiet
     dependency-errors/test.cmake
-    -DCANON_FIXTURE=quiet
+    -DCANON_TEST_CASE=quiet
     "-DCANON_EXPECTED_ERROR=canon_apply_dependency(): 'QUIET' is inherited"
 )
 
 _canon_add_script_test(
     dependencies.no-package
     dependency-errors/test.cmake
-    -DCANON_FIXTURE=no-package
+    -DCANON_TEST_CASE=no-package
     "-DCANON_EXPECTED_ERROR=package dependencies were declared, but project"
 )
