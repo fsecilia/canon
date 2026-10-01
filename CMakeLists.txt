@@ -115,17 +115,20 @@ _canon_add_script_test(
 
 _canon_add_script_test(
     package.config
-    scripts/package-config.cmake
+    package-install/test.cmake
+    -DCANON_TEST_CASE=config
 )
 
 _canon_add_script_test(
     package.version
-    scripts/package-version.cmake
+    package-install/test.cmake
+    -DCANON_TEST_CASE=version
 )
 
 _canon_add_script_test(
     package.dependencies
-    scripts/package-dependency.cmake
+    package-install/test.cmake
+    -DCANON_TEST_CASE=dependencies
 )
 
 _canon_add_script_test(
