@@ -4,14 +4,7 @@
 project(ToolPackage VERSION 0.8.6 LANGUAGES CXX)
 
 add_library(tool_api INTERFACE)
-target_sources(
-    tool_api
-    INTERFACE
-        FILE_SET public_headers
-        TYPE HEADERS
-        BASE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/include"
-        FILES "${CMAKE_CURRENT_SOURCE_DIR}/include/tool_package/sample.hpp"
-)
+_canon_package_fixture_add_headers(tool_api INTERFACE tool_package/sample.hpp)
 canon_apply_library(tool_api)
 
 add_executable(sample_tool "${CMAKE_CURRENT_LIST_DIR}/../../support/empty_main.cpp")
