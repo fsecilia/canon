@@ -147,6 +147,12 @@ foreach(_target IN LISTS _compiled_targets)
     canon_test_require_target_property("${_target}" VISIBILITY_INLINES_HIDDEN TRUE)
     canon_test_require_target_property("${_target}" CXX_VISIBILITY_PRESET hidden)
 
+    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"
+        OR ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang"
+            AND "${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}" STREQUAL "GNU"))
+        canon_test_require_cxx_compile_option("${_target}" -fstrict-aliasing)
+    endif()
+
     if (CANON_ENABLE_WARNINGS)
         foreach(_option IN LISTS _warning_options _warning_suppressions _warning_reenables)
             canon_test_require_cxx_compile_option("${_target}" "${_option}")
