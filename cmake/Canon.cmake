@@ -347,7 +347,7 @@ function(_canon_find_coverage_backend OUT_COMMAND)
     set(${OUT_COMMAND} "${_coverage_executable}${_command_suffix}" PARENT_SCOPE)
 endfunction()
 
-# Creates cleanup and report targets for the top-level project that owns the coverage build.
+# Creates build-wide cleanup and report targets for coverage-enabled Canon targets.
 function(_canon_add_coverage_targets)
     _canon_find_coverage_backend(_gcov_command)
 
@@ -399,7 +399,7 @@ function(_canon_add_coverage_targets)
     )
 endfunction()
 
-# Adds gcov-compatible instrumentation and top-level reporting helpers.
+# Adds gcov-compatible instrumentation and build-wide reporting helpers.
 function(_canon_apply_coverage TARGET)
     _canon_apply_cxx_option("${TARGET}" "--coverage")
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
@@ -413,12 +413,10 @@ function(_canon_apply_coverage TARGET)
         target_link_options("${TARGET}" PRIVATE --coverage)
     endif()
 
-    if (PROJECT_IS_TOP_LEVEL)
-        get_property(_targets_added GLOBAL PROPERTY _CANON_COVERAGE_TARGETS_ADDED)
-        if (NOT _targets_added)
-            _canon_add_coverage_targets()
-            set_property(GLOBAL PROPERTY _CANON_COVERAGE_TARGETS_ADDED TRUE)
-        endif()
+    get_property(_targets_added GLOBAL PROPERTY _CANON_COVERAGE_TARGETS_ADDED)
+    if (NOT _targets_added)
+        _canon_add_coverage_targets()
+        set_property(GLOBAL PROPERTY _CANON_COVERAGE_TARGETS_ADDED TRUE)
     endif()
 endfunction()
 

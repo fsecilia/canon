@@ -22,7 +22,7 @@ add_library(covered STATIC covered.cpp external/excluded.cpp)
 canon_apply_library(covered)
 
 if (NOT TARGET coverage-clean OR NOT TARGET coverage-report)
-    message(FATAL_ERROR "coverage helpers were not created for the top-level coverage build")
+    message(FATAL_ERROR "coverage helpers were not created for the coverage build")
 endif()
 
 add_executable(covered_test covered_test.cpp)

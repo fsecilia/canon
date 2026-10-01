@@ -158,6 +158,12 @@ _canon_add_script_test(
     ${_canon_coverage_test_arguments}
 )
 _canon_add_script_test(
+    coverage.nested
+    coverage/test.cmake
+    -DCANON_TEST_CASE=nested
+    ${_canon_coverage_test_arguments}
+)
+_canon_add_script_test(
     coverage.empty-report
     coverage-empty/test.cmake
     ${_canon_coverage_test_arguments}
@@ -165,12 +171,14 @@ _canon_add_script_test(
 if (NOT _canon_coverage_tests_enabled)
     set_tests_properties(
         canon.integration.coverage
+        canon.integration.coverage.nested
         canon.integration.coverage.empty-report
         PROPERTIES DISABLED TRUE
     )
     message(WARNING
         "Canon coverage tests are disabled: ${_canon_coverage_disabled_reason}\n"
         "  canon.integration.coverage\n"
+        "  canon.integration.coverage.nested\n"
         "  canon.integration.coverage.empty-report\n"
         "  canon.integration.presets.coverage")
 endif()
