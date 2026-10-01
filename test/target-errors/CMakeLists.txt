@@ -5,14 +5,11 @@ cmake_minimum_required(VERSION 3.31.6)
 
 project(CanonTargetErrors LANGUAGES NONE)
 
-if (NOT DEFINED CANON_SOURCE_DIR OR "${CANON_SOURCE_DIR}" STREQUAL "")
-    message(FATAL_ERROR "CANON_SOURCE_DIR is required")
-endif()
 if (NOT DEFINED CANON_TEST_CASE OR "${CANON_TEST_CASE}" STREQUAL "")
     message(FATAL_ERROR "CANON_TEST_CASE is required")
 endif()
 
-include("${CANON_SOURCE_DIR}/cmake/Canon.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/../support/CanonSourceFixture.cmake")
 
 # Trigger the requested invalid canon_apply_target() call during configure.
 if ("${CANON_TEST_CASE}" STREQUAL "missing")

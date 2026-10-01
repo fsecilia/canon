@@ -5,11 +5,7 @@ cmake_minimum_required(VERSION 3.31.6)
 
 project(CanonLibraryInstall LANGUAGES CXX)
 
-if (NOT DEFINED CANON_SOURCE_DIR OR "${CANON_SOURCE_DIR}" STREQUAL "")
-    message(FATAL_ERROR "CANON_SOURCE_DIR is required")
-endif()
-
-include("${CANON_SOURCE_DIR}/cmake/Canon.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/../support/CanonSourceFixture.cmake")
 
 add_library(sample_static STATIC sample_static.cpp)
 set_target_properties(sample_static PROPERTIES EXPORT_NAME CanonLibraryInstall)

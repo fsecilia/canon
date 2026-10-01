@@ -14,5 +14,5 @@ target_sources(
 )
 canon_apply_library(tool_api)
 
-add_executable(sample_tool main.cpp)
+add_executable(sample_tool "${CMAKE_CURRENT_LIST_DIR}/../../support/empty_main.cpp")
 canon_apply_executable(sample_tool)

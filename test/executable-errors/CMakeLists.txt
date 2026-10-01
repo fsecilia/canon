@@ -5,13 +5,11 @@ cmake_minimum_required(VERSION 3.31.6)
 
 project(CanonExecutableErrors LANGUAGES NONE)
 
-foreach(_required_variable CANON_SOURCE_DIR CANON_TEST_CASE)
-    if (NOT DEFINED ${_required_variable} OR "${${_required_variable}}" STREQUAL "")
-        message(FATAL_ERROR "${_required_variable} is required")
-    endif()
-endforeach()
+if (NOT DEFINED CANON_TEST_CASE OR "${CANON_TEST_CASE}" STREQUAL "")
+    message(FATAL_ERROR "CANON_TEST_CASE is required")
+endif()
 
-include("${CANON_SOURCE_DIR}/cmake/Canon.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/../support/CanonSourceFixture.cmake")
 
 if ("${CANON_TEST_CASE}" STREQUAL "missing")
     canon_apply_executable(missing)
