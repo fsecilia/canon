@@ -280,27 +280,32 @@ _canon_add_script_test(
 
 _canon_add_script_test(
     presets.listings
-    scripts/preset-listings.cmake
+    presets/test.cmake
+    -DCANON_TEST_CASE=listings
 )
 
 _canon_add_script_test(
     presets.debug
-    scripts/preset-debug.cmake
+    presets/test.cmake
+    -DCANON_TEST_CASE=debug
 )
 
 _canon_add_script_test(
     presets.release
-    scripts/preset-release.cmake
+    presets/test.cmake
+    -DCANON_TEST_CASE=release
 )
 
 _canon_add_script_test(
     presets.asan
-    scripts/preset-asan.cmake
+    presets/test.cmake
+    -DCANON_TEST_CASE=asan
 )
 
 _canon_add_script_test(
     presets.coverage
-    scripts/preset-coverage.cmake
+    presets/test.cmake
+    -DCANON_TEST_CASE=coverage
     ${_canon_coverage_test_arguments}
 )
 if (NOT _canon_coverage_tests_enabled)
@@ -309,7 +314,8 @@ endif()
 
 _canon_add_script_test(
     presets.tidy
-    scripts/preset-tidy.cmake
+    presets/test.cmake
+    -DCANON_TEST_CASE=tidy
     "-DCANON_CLANG_TIDY_EXECUTABLE=${CANON_CLANG_TIDY_EXECUTABLE}"
 )
 if (NOT _canon_clang_tidy_supported)
