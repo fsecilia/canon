@@ -100,6 +100,7 @@ if ("${CANON_TEST_CASE}" STREQUAL "backend")
 
     canon_test_run(
         DESCRIPTION "coverage-backend unavailable probe"
+        NORMALIZE_WHITESPACE
         COMMAND
             "${CMAKE_COMMAND}"
             "-DCANON_SOURCE_DIR=${CANON_SOURCE_DIR}"
