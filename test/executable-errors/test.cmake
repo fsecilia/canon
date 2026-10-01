@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Frank Secilia
+
+include("${CANON_SOURCE_DIR}/test/support/CanonTest.cmake")
+
+canon_test_require_variables(
+    CANON_SOURCE_DIR
+    CANON_TEST_BINARY_DIR
+    CANON_GENERATOR
+    CANON_TEST_CASE
+    CANON_EXPECTED_ERROR
+)
+
+file(REMOVE_RECURSE "${CANON_TEST_BINARY_DIR}")
+
+canon_test_run(
+    DESCRIPTION "Canon executable error case '${CANON_TEST_CASE}'"
+    EXPECT_FAILURE
+    EXPECTED_OUTPUT "${CANON_EXPECTED_ERROR}"
+    COMMAND
+        "${CMAKE_COMMAND}"
+        -S "${CANON_SOURCE_DIR}/test/executable-errors"
+        -B "${CANON_TEST_BINARY_DIR}"
+        -G "${CANON_GENERATOR}"
+        "-DCANON_SOURCE_DIR=${CANON_SOURCE_DIR}"
+        "-DCANON_TEST_CASE=${CANON_TEST_CASE}"
+)

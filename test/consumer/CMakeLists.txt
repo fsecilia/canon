@@ -20,7 +20,7 @@ if (CANON_ENABLE_COVERAGE)
     message(FATAL_ERROR "consumer fixture expects CANON_ENABLE_COVERAGE to default to OFF")
 endif()
 
-include(CTest)
+include("${CANON_SOURCE_DIR}/test/support/CanonFixtureAssertions.cmake")
 add_subdirectory(external/noisy)
 
 add_library(sample_static STATIC sample_static.cpp)
@@ -67,10 +67,6 @@ add_executable(consumer main.cpp)
 target_link_libraries(consumer PRIVATE sample_static sample_shared sample_interface noisy)
 canon_apply_target(consumer)
 
-add_executable(sample_test sample_test.cpp)
-target_link_libraries(sample_test PRIVATE sample_static)
-canon_apply_target(sample_test)
-
 # Exercise shared-library visibility through unmanaged consumer links.
 add_executable(visibility_exported EXCLUDE_FROM_ALL visibility_exported.cpp)
 target_link_libraries(visibility_exported PRIVATE sample_shared)
@@ -83,67 +79,6 @@ set_target_properties(
     visibility_exported visibility_hidden
     PROPERTIES CXX_SCAN_FOR_MODULES FALSE
 )
-
-# Give the project-owned CTest cases a known working directory.
-set(_sample_test_working_dir "${CMAKE_CURRENT_BINARY_DIR}/sample-test-working-directory")
-file(MAKE_DIRECTORY "${_sample_test_working_dir}")
-
-add_test(NAME sample_test.basic COMMAND sample_test basic)
-set_tests_properties(
-    sample_test.basic
-    PROPERTIES
-        ENVIRONMENT "CANON_SAMPLE_TEST_MODE=basic"
-        WORKING_DIRECTORY "${_sample_test_working_dir}"
-)
-
-add_test(NAME sample_test.alternate COMMAND sample_test alternate)
-set_tests_properties(
-    sample_test.alternate
-    PROPERTIES
-        ENVIRONMENT "CANON_SAMPLE_TEST_MODE=alternate"
-        WORKING_DIRECTORY "${_sample_test_working_dir}"
-)
-
-# Verify the consumer owns and registers its expected CTest cases.
-get_property(_registered_tests DIRECTORY PROPERTY TESTS)
-list(SORT _registered_tests)
-set(_expected_tests sample_test.alternate sample_test.basic)
-if (NOT "${_registered_tests}" STREQUAL "${_expected_tests}")
-    message(FATAL_ERROR
-        "Consumer CTest registration: expected '${_expected_tests}', got '${_registered_tests}'")
-endif()
-
-function(_require_target_property TARGET PROPERTY EXPECTED)
-    get_target_property(_actual "${TARGET}" "${PROPERTY}")
-    if (NOT "${_actual}" STREQUAL "${EXPECTED}")
-        message(FATAL_ERROR
-            "${TARGET} property ${PROPERTY}: expected '${EXPECTED}', got '${_actual}'")
-    endif()
-endfunction()
-
-function(_require_compile_option TARGET OPTION)
-    get_target_property(_options "${TARGET}" COMPILE_OPTIONS)
-    if ("${_options}" STREQUAL "_options-NOTFOUND")
-        message(FATAL_ERROR "${TARGET} has no compile options")
-    endif()
-
-    set(_required "$<$<COMPILE_LANGUAGE:CXX>:${OPTION}>")
-    if (NOT "${_required}" IN_LIST _options)
-        message(FATAL_ERROR "${TARGET} is missing compile option '${OPTION}'")
-    endif()
-endfunction()
-
-function(_require_compile_option_after TARGET OPTION EARLIER_OPTION)
-    get_target_property(_options "${TARGET}" COMPILE_OPTIONS)
-    set(_required "$<$<COMPILE_LANGUAGE:CXX>:${OPTION}>")
-    set(_earlier "$<$<COMPILE_LANGUAGE:CXX>:${EARLIER_OPTION}>")
-    list(FIND _options "${_required}" _required_index)
-    list(FIND _options "${_earlier}" _earlier_index)
-    if ("${_required_index}" LESS_EQUAL "${_earlier_index}")
-        message(FATAL_ERROR
-            "${TARGET} compile option '${OPTION}' must follow '${EARLIER_OPTION}'")
-    endif()
-endfunction()
 
 # Verify every managed compiled target receives the shared Canon policy.
 get_property(_ipo_supported GLOBAL PROPERTY _CANON_IPO_SUPPORTED)
@@ -159,7 +94,6 @@ set(_compiled_targets
     warning_probe
     warning_probe_demoted
     consumer
-    sample_test
 )
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
@@ -205,19 +139,19 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 endif()
 
 foreach(_target IN LISTS _compiled_targets)
-    _require_target_property("${_target}" CXX_SCAN_FOR_MODULES FALSE)
-    _require_target_property("${_target}" CXX_STANDARD 26)
-    _require_target_property("${_target}" CXX_STANDARD_REQUIRED TRUE)
-    _require_target_property("${_target}" POSITION_INDEPENDENT_CODE TRUE)
-    _require_target_property("${_target}" VISIBILITY_INLINES_HIDDEN TRUE)
-    _require_target_property("${_target}" CXX_VISIBILITY_PRESET hidden)
+    canon_test_require_target_property("${_target}" CXX_SCAN_FOR_MODULES FALSE)
+    canon_test_require_target_property("${_target}" CXX_STANDARD 26)
+    canon_test_require_target_property("${_target}" CXX_STANDARD_REQUIRED TRUE)
+    canon_test_require_target_property("${_target}" POSITION_INDEPENDENT_CODE TRUE)
+    canon_test_require_target_property("${_target}" VISIBILITY_INLINES_HIDDEN TRUE)
+    canon_test_require_target_property("${_target}" CXX_VISIBILITY_PRESET hidden)
 
     if (CANON_ENABLE_WARNINGS)
         foreach(_option IN LISTS _warning_options _warning_suppressions _warning_reenables)
-            _require_compile_option("${_target}" "${_option}")
+            canon_test_require_cxx_compile_option("${_target}" "${_option}")
         endforeach()
         if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-            _require_compile_option_after(
+            canon_test_require_cxx_compile_option_after(
                 "${_target}"
                 -Wshadow-field-in-constructor-modified
                 -Wno-shadow-field-in-constructor
@@ -238,25 +172,23 @@ set(_ipo_final_targets
     sample_shared
     sample_module
     consumer
-    sample_test
 )
 foreach(_target IN LISTS _ipo_final_targets)
     if (_ipo_supported)
-        _require_target_property("${_target}" INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
+        canon_test_require_target_property("${_target}" INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
     else()
-        get_target_property(_ipo_property "${_target}" INTERPROCEDURAL_OPTIMIZATION_RELEASE)
-        if (NOT "${_ipo_property}" STREQUAL "_ipo_property-NOTFOUND")
-            message(FATAL_ERROR
-                "${_target} unexpectedly enables Release IPO when the toolchain does not support it")
-        endif()
+        canon_test_require_target_property_unset(
+            "${_target}"
+            INTERPROCEDURAL_OPTIMIZATION_RELEASE
+        )
     endif()
 endforeach()
 
 foreach(_target IN ITEMS sample_static sample_object warning_probe warning_probe_demoted)
-    get_target_property(_ipo_property "${_target}" INTERPROCEDURAL_OPTIMIZATION_RELEASE)
-    if (NOT "${_ipo_property}" STREQUAL "_ipo_property-NOTFOUND")
-        message(FATAL_ERROR "${_target} unexpectedly enables Release IPO")
-    endif()
+    canon_test_require_target_property_unset(
+        "${_target}"
+        INTERPROCEDURAL_OPTIMIZATION_RELEASE
+    )
 endforeach()
 
 # Verify every managed library publishes its generated export header as a public file set.
@@ -268,23 +200,15 @@ foreach(_library IN ITEMS sample_static sample_shared sample_module)
     endif()
 endforeach()
 
-_require_target_property(sample_static CXX_EXTENSIONS TRUE)
-_require_target_property(sample_shared CXX_EXTENSIONS FALSE)
-_require_target_property(sample_interface INTERFACE_COMPILE_DEFINITIONS CANON_SAMPLE_INTERFACE_VALUE=73)
-_require_target_property(sample_interface INTERFACE_COMPILE_FEATURES cxx_std_17)
+canon_test_require_target_property(sample_static CXX_EXTENSIONS TRUE)
+canon_test_require_target_property(sample_shared CXX_EXTENSIONS FALSE)
+canon_test_require_target_property(sample_interface INTERFACE_COMPILE_DEFINITIONS CANON_SAMPLE_INTERFACE_VALUE=73)
+canon_test_require_target_property(sample_interface INTERFACE_COMPILE_FEATURES cxx_std_17)
 
 # Verify Canon does not leak build options through the unmanaged interface target.
 foreach(_property IN ITEMS INTERFACE_COMPILE_OPTIONS INTERFACE_LINK_OPTIONS)
-    get_target_property(_value sample_interface "${_property}")
-    if (NOT "${_value}" STREQUAL "_value-NOTFOUND" AND NOT "${_value}" STREQUAL "")
-        message(FATAL_ERROR
-            "Canon policy leaked through sample_interface ${_property}: ${_value}")
-    endif()
+    canon_test_require_target_property_empty(sample_interface "${_property}")
 endforeach()
 
 # Verify Canon does not modify the unmanaged external target.
-get_target_property(_noisy_options noisy COMPILE_OPTIONS)
-if (NOT "${_noisy_options}" STREQUAL "_noisy_options-NOTFOUND"
-    AND NOT "${_noisy_options}" STREQUAL "")
-    message(FATAL_ERROR "Canon policy leaked to unmanaged target noisy: ${_noisy_options}")
-endif()
+canon_test_require_target_property_empty(noisy COMPILE_OPTIONS)

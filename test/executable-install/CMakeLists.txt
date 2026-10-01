@@ -5,13 +5,9 @@ cmake_minimum_required(VERSION 3.31.6)
 
 project(CanonExecutableInstall LANGUAGES CXX)
 
-if (NOT DEFINED CANON_SOURCE_DIR OR "${CANON_SOURCE_DIR}" STREQUAL "")
-    message(FATAL_ERROR "CANON_SOURCE_DIR is required")
-endif()
+include("${CMAKE_CURRENT_LIST_DIR}/../support/CanonSourceFixture.cmake")
 
-include("${CANON_SOURCE_DIR}/cmake/Canon.cmake")
-
-add_executable(sample main.cpp)
+add_executable(sample "${CMAKE_CURRENT_LIST_DIR}/../support/empty_main.cpp")
 canon_apply_executable(sample)
 
 file(
