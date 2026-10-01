@@ -155,6 +155,14 @@ endfunction()
 
 # Adds AddressSanitizer instrumentation and propagates required runtime linking.
 function(_canon_apply_asan TARGET)
+    if (NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"
+        AND NOT ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang"
+            AND "${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}" STREQUAL "GNU"))
+        message(FATAL_ERROR
+            "Canon ASan does not support compiler '${CMAKE_CXX_COMPILER_ID}' "
+            "with frontend '${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}'")
+    endif()
+
     _canon_apply_cxx_option("${TARGET}" "-fsanitize=address")
     _canon_apply_cxx_option("${TARGET}" "-fno-omit-frame-pointer")
 

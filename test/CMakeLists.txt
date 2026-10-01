@@ -120,6 +120,14 @@ _canon_add_script_test(
 )
 
 _canon_add_script_test(
+    asan.unsupported
+    target-errors/test.cmake
+    -DCANON_TEST_CASE=asan-unsupported
+    "-DCANON_EXPECTED_ERROR=Canon ASan does not support compiler 'Clang'"
+    "-DCANON_EXPECTED_DETAIL=with frontend 'MSVC'"
+)
+
+_canon_add_script_test(
     coverage.backend
     coverage/test.cmake
     -DCANON_TEST_CASE=backend
