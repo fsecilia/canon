@@ -16,9 +16,15 @@ if (NOT COMMAND canon_apply_target)
 endif()
 ```
 
-Adjust the vendored path to match the project layout. Canon's installed Config package uses the same compatibility policy as other Canon-managed packages: versions before 1.0 are compatible within the same minor version, while versions starting at 1.0 are compatible within the same major version.
+Adjust the vendored path to match the project layout.
 
-Canon's current test matrix uses GNU GCC 14 and LLVM Clang 17 with Clang's GNU-compatible frontend. Canon does not reject other compilers by identity. They must support C++26. Developer features that need compiler-specific support fail with a clear diagnostic when Canon has no implementation for that toolchain.
+Canon's installed Config package uses the same compatibility policy as other Canon-managed packages: versions before 1.0 are compatible within the same minor version, while versions starting at 1.0 are compatible within the same major version.
+
+## Tool versions
+
+Canon requires CMake 3.31.6 or newer. Its test matrix uses GNU GCC 14 and LLVM Clang 17 through Clang's GNU-compatible frontend.
+
+Canon does not reject other compilers by identity. They must support C++26. Developer features that require compiler-specific support fail with a clear diagnostic when Canon has no implementation for the active compiler or frontend.
 
 ## Compiled targets
 

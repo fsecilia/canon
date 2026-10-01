@@ -1,6 +1,13 @@
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2026 Frank Secilia
 
+set(_CANON_MINIMUM_CMAKE_VERSION 3.31.6)
+if ("${CMAKE_VERSION}" VERSION_LESS "${_CANON_MINIMUM_CMAKE_VERSION}")
+    message(FATAL_ERROR
+        "Canon requires CMake ${_CANON_MINIMUM_CMAKE_VERSION} or newer; "
+        "found ${CMAKE_VERSION}")
+endif()
+
 include_guard(GLOBAL)
 
 option(CANON_ENABLE_ASAN "Enable AddressSanitizer on Canon-managed targets." OFF)

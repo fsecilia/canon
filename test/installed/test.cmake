@@ -35,6 +35,22 @@ if (NOT EXISTS "${_coverage_clean_script}")
     message(FATAL_ERROR "Canon install did not include '${_coverage_clean_script}'")
 endif()
 
+set(_minimum_version_probe "${CANON_TEST_BINARY_DIR}/minimum-version.cmake")
+file(WRITE "${_minimum_version_probe}" [=[
+set(CMAKE_VERSION 3.30.0)
+include("${CANON_CONFIG_FILE}")
+]=])
+canon_test_run(
+    DESCRIPTION "Installed Canon CMake minimum"
+    EXPECT_FAILURE
+    NORMALIZE_WHITESPACE
+    COMMAND
+        "${CMAKE_COMMAND}"
+        "-DCANON_CONFIG_FILE=${_install_prefix}/share/cmake/Canon/CanonConfig.cmake"
+        -P "${_minimum_version_probe}"
+    EXPECTED_OUTPUT "Canon requires CMake 3.31.6 or newer; found 3.30.0"
+)
+
 set(_consumer_configure_command
     "${CMAKE_COMMAND}"
     -S "${CANON_SOURCE_DIR}/test/installed"
