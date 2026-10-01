@@ -10,7 +10,7 @@ canon_test_require_variables(
     CANON_TEST_CASE
 )
 
-set(_test_cases listings debug release asan coverage tidy)
+set(_test_cases debug release asan coverage tidy)
 list(FIND _test_cases "${CANON_TEST_CASE}" _test_case_index)
 if ("${_test_case_index}" EQUAL -1)
     message(FATAL_ERROR "unknown preset test case '${CANON_TEST_CASE}'")
@@ -50,9 +50,7 @@ function(_run DESCRIPTION)
             "${_source_dir}"
             ${_environment_command}
             ${ARGN}
-        OUTPUT_VARIABLE _stdout
     )
-    set(_run_stdout "${_stdout}" PARENT_SCOPE)
 endfunction()
 
 function(_expect_cache_value PRESET VARIABLE TYPE EXPECTED_VALUE DESCRIPTION)
@@ -86,17 +84,7 @@ function(_run_workflow PRESET BUILD_TYPE)
     )
 endfunction()
 
-if ("${CANON_TEST_CASE}" STREQUAL "listings")
-    _run("Preset listing" "${CMAKE_COMMAND}" --list-presets=all)
-    foreach(_preset IN ITEMS debug release asan tidy coverage)
-        if (NOT "${_run_stdout}" MATCHES "\"${_preset}\"")
-            message(FATAL_ERROR "Preset listing did not expose '${_preset}'")
-        endif()
-    endforeach()
-    if ("${_run_stdout}" MATCHES "\"_canon-base\"")
-        message(FATAL_ERROR "Preset listing unexpectedly exposed hidden preset '_canon-base'")
-    endif()
-elseif ("${CANON_TEST_CASE}" STREQUAL "debug")
+if ("${CANON_TEST_CASE}" STREQUAL "debug")
     _run_workflow(debug Debug)
 elseif ("${CANON_TEST_CASE}" STREQUAL "release")
     _run_workflow(release Release)

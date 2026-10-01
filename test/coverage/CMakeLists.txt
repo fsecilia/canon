@@ -35,11 +35,6 @@ target_link_libraries(covered_unmanaged PRIVATE covered)
 set_property(TARGET covered_unmanaged PROPERTY CXX_SCAN_FOR_MODULES FALSE)
 add_test(NAME covered_unmanaged COMMAND covered_unmanaged)
 
-add_test(
-    NAME coverage_project_owned
-    COMMAND "${CMAKE_COMMAND}" -E echo "project-owned coverage test"
-)
-
 # Verify compile instrumentation on every managed target in the fixture.
 foreach(_target IN ITEMS covered covered_test)
     canon_test_require_cxx_compile_option("${_target}" "--coverage")

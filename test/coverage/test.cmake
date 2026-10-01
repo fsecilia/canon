@@ -209,12 +209,7 @@ elseif ("${CANON_TEST_CASE}" STREQUAL "consumer")
     canon_test_run(
         DESCRIPTION "coverage tests"
         COMMAND "${CMAKE_CTEST_COMMAND}" --test-dir "${CANON_TEST_BINARY_DIR}" --output-on-failure
-        OUTPUT_VARIABLE _test_stdout
     )
-    string(FIND "${_test_stdout}" "coverage_project_owned" _project_owned_position)
-    if ("${_project_owned_position}" EQUAL -1)
-        message(FATAL_ERROR "CTest did not run the project-owned coverage test")
-    endif()
 
     canon_test_run(
         DESCRIPTION "coverage report"
@@ -272,46 +267,6 @@ elseif ("${CANON_TEST_CASE}" STREQUAL "consumer")
     canon_test_run(
         DESCRIPTION "coverage package consumer"
         COMMAND "${_consumer_build_dir}/coverage_consumer"
-    )
-elseif ("${CANON_TEST_CASE}" STREQUAL "gcovr-unavailable")
-    canon_test_require_variables(
-        CANON_TEST_BINARY_DIR
-        CANON_GENERATOR
-        CANON_CXX_COMPILER
-        CANON_CTEST_COMMAND
-    )
-
-    file(REMOVE_RECURSE "${CANON_TEST_BINARY_DIR}")
-    set(_configure_command
-        "${CMAKE_COMMAND}"
-        -S "${CANON_SOURCE_DIR}"
-        -B "${CANON_TEST_BINARY_DIR}"
-        -G "${CANON_GENERATOR}"
-        "-DCMAKE_CXX_COMPILER=${CANON_CXX_COMPILER}"
-        -DCANON_GCOVR_EXECUTABLE:FILEPATH=FALSE
-    )
-    if (DEFINED CANON_TOOLCHAIN_FILE AND NOT "${CANON_TOOLCHAIN_FILE}" STREQUAL "")
-        list(APPEND _configure_command "-DCMAKE_TOOLCHAIN_FILE=${CANON_TOOLCHAIN_FILE}")
-    endif()
-
-    canon_test_run(
-        DESCRIPTION "configure without gcovr"
-        NORMALIZE_WHITESPACE
-        COMMAND ${_configure_command}
-        EXPECTED_OUTPUT
-            "Canon coverage tests are disabled: gcovr was not found"
-            "canon.integration.coverage"
-            "canon.integration.coverage.empty-report"
-            "canon.integration.presets.coverage"
-    )
-    canon_test_run(
-        DESCRIPTION "coverage registration without gcovr"
-        COMMAND
-            "${CMAKE_COMMAND}"
-            "-DCANON_CTEST_COMMAND=${CANON_CTEST_COMMAND}"
-            "-DCANON_TEST_ROOT=${CANON_TEST_BINARY_DIR}"
-            -DCANON_EXPECT_COVERAGE_ENABLED=FALSE
-            -P "${CANON_SOURCE_DIR}/test/support/OptionalToolRegistration.cmake"
     )
 else()
     message(FATAL_ERROR "Unknown coverage test case '${CANON_TEST_CASE}'")

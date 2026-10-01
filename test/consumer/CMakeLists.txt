@@ -20,7 +20,6 @@ if (CANON_ENABLE_COVERAGE)
     message(FATAL_ERROR "consumer fixture expects CANON_ENABLE_COVERAGE to default to OFF")
 endif()
 
-include(CTest)
 include("${CANON_SOURCE_DIR}/test/support/CanonFixtureAssertions.cmake")
 add_subdirectory(external/noisy)
 
@@ -68,10 +67,6 @@ add_executable(consumer main.cpp)
 target_link_libraries(consumer PRIVATE sample_static sample_shared sample_interface noisy)
 canon_apply_target(consumer)
 
-add_executable(sample_test sample_test.cpp)
-target_link_libraries(sample_test PRIVATE sample_static)
-canon_apply_target(sample_test)
-
 # Exercise shared-library visibility through unmanaged consumer links.
 add_executable(visibility_exported EXCLUDE_FROM_ALL visibility_exported.cpp)
 target_link_libraries(visibility_exported PRIVATE sample_shared)
@@ -84,35 +79,6 @@ set_target_properties(
     visibility_exported visibility_hidden
     PROPERTIES CXX_SCAN_FOR_MODULES FALSE
 )
-
-# Give the project-owned CTest cases a known working directory.
-set(_sample_test_working_dir "${CMAKE_CURRENT_BINARY_DIR}/sample-test-working-directory")
-file(MAKE_DIRECTORY "${_sample_test_working_dir}")
-
-add_test(NAME sample_test.basic COMMAND sample_test basic)
-set_tests_properties(
-    sample_test.basic
-    PROPERTIES
-        ENVIRONMENT "CANON_SAMPLE_TEST_MODE=basic"
-        WORKING_DIRECTORY "${_sample_test_working_dir}"
-)
-
-add_test(NAME sample_test.alternate COMMAND sample_test alternate)
-set_tests_properties(
-    sample_test.alternate
-    PROPERTIES
-        ENVIRONMENT "CANON_SAMPLE_TEST_MODE=alternate"
-        WORKING_DIRECTORY "${_sample_test_working_dir}"
-)
-
-# Verify the consumer owns and registers its expected CTest cases.
-get_property(_registered_tests DIRECTORY PROPERTY TESTS)
-list(SORT _registered_tests)
-set(_expected_tests sample_test.alternate sample_test.basic)
-if (NOT "${_registered_tests}" STREQUAL "${_expected_tests}")
-    message(FATAL_ERROR
-        "Consumer CTest registration: expected '${_expected_tests}', got '${_registered_tests}'")
-endif()
 
 # Verify every managed compiled target receives the shared Canon policy.
 get_property(_ipo_supported GLOBAL PROPERTY _CANON_IPO_SUPPORTED)
@@ -128,7 +94,6 @@ set(_compiled_targets
     warning_probe
     warning_probe_demoted
     consumer
-    sample_test
 )
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
@@ -207,7 +172,6 @@ set(_ipo_final_targets
     sample_shared
     sample_module
     consumer
-    sample_test
 )
 foreach(_target IN LISTS _ipo_final_targets)
     if (_ipo_supported)

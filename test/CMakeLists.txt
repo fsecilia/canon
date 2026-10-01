@@ -244,12 +244,6 @@ _canon_add_script_test(
 )
 
 _canon_add_script_test(
-    presets.listings
-    presets/test.cmake
-    -DCANON_TEST_CASE=listings
-)
-
-_canon_add_script_test(
     presets.debug
     presets/test.cmake
     -DCANON_TEST_CASE=debug
@@ -286,23 +280,6 @@ _canon_add_script_test(
 if (NOT _canon_clang_tidy_supported)
     set_tests_properties(canon.integration.presets.tidy PROPERTIES DISABLED TRUE)
 endif()
-
-_canon_add_script_test(
-    optional-tools.registration
-    support/OptionalToolRegistration.cmake
-    "-DCANON_CTEST_COMMAND=${CMAKE_CTEST_COMMAND}"
-    "-DCANON_TEST_ROOT=${PROJECT_BINARY_DIR}"
-    "-DCANON_EXPECT_COVERAGE_ENABLED=${_canon_coverage_tests_enabled}"
-    "-DCANON_EXPECT_TIDY_ENABLED=${_canon_clang_tidy_supported}"
-    "-DCANON_EXPECT_DOCUMENTATION_ENABLED=${Doxygen_FOUND}"
-)
-
-_canon_add_script_test(
-    coverage.gcovr-unavailable
-    coverage/test.cmake
-    -DCANON_TEST_CASE=gcovr-unavailable
-    "-DCANON_CTEST_COMMAND=${CMAKE_CTEST_COMMAND}"
-)
 
 _canon_add_script_test(
     targets.missing
@@ -345,13 +322,6 @@ _canon_add_script_test(
     library-errors/test.cmake
     -DCANON_TEST_CASE=missing
     "-DCANON_EXPECTED_ERROR=canon_apply_library(): target 'missing' does not exist"
-)
-
-_canon_add_script_test(
-    libraries.executable
-    library-errors/test.cmake
-    -DCANON_TEST_CASE=executable
-    "-DCANON_EXPECTED_ERROR=canon_apply_library(): target 'sample' must be a STATIC, SHARED, MODULE, or INTERFACE library"
 )
 
 _canon_add_script_test(

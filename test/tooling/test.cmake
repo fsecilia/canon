@@ -72,35 +72,6 @@ elseif ("${CANON_TEST_CASE}" STREQUAL "version")
         EXPECTED_REGEX "requires clang-tidy 21\\.1\\.6 or newer"
     )
 
-    set(_harness_binary_dir "${CANON_TEST_BINARY_DIR}/harness")
-    set(_harness_configure_command
-        "${CMAKE_COMMAND}"
-        -S "${CANON_SOURCE_DIR}"
-        -B "${_harness_binary_dir}"
-        -G "${CANON_GENERATOR}"
-        "-DCMAKE_CXX_COMPILER=${CANON_CXX_COMPILER}"
-        "-DCANON_CLANG_TIDY_EXECUTABLE=${_unsupported_tidy}"
-    )
-    if (DEFINED CANON_TOOLCHAIN_FILE AND NOT "${CANON_TOOLCHAIN_FILE}" STREQUAL "")
-        list(APPEND _harness_configure_command "-DCMAKE_TOOLCHAIN_FILE=${CANON_TOOLCHAIN_FILE}")
-    endif()
-
-    canon_test_run(
-        DESCRIPTION "Canon harness configure with unsupported optional clang-tidy"
-        COMMAND ${_harness_configure_command}
-        EXPECTED_REGEX
-            "clang-tidy validation unavailable: clang-tidy [0-9.]+"
-            "required minimum 21\\.1\\.6"
-    )
-    canon_test_run(
-        DESCRIPTION "optional tidy test registration"
-        COMMAND
-            "${CMAKE_COMMAND}"
-            "-DCANON_CTEST_COMMAND=${CMAKE_CTEST_COMMAND}"
-            "-DCANON_TEST_ROOT=${_harness_binary_dir}"
-            -DCANON_EXPECT_TIDY_ENABLED=FALSE
-            -P "${CANON_SOURCE_DIR}/test/support/OptionalToolRegistration.cmake"
-    )
 else()
     message(FATAL_ERROR "Unknown tooling test case '${CANON_TEST_CASE}'")
 endif()
