@@ -1,0 +1,10 @@
+// SPDX-License-Identifier: MIT
+
+/// \file
+/// \copyright Copyright (C) 2026 Frank Secilia
+
+auto nestedExcludedAnswer() -> int;
+
+auto nestedExcludedAnswer() -> int {
+    return 73;
+}

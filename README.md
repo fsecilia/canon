@@ -148,7 +148,7 @@ Canon adds build-wide coverage helpers when the first managed target receives co
 
 If automatic discovery fails validation, Canon warns and leaves coverage reporting disabled. It does not search for alternate tool names. `CANON_GCOV_EXECUTABLE` and `CANON_LLVM_COV_EXECUTABLE` are explicit overrides for unusual installations. Automatic discovery never populates them, and an invalid override is a configuration error.
 
-`coverage-report` runs gcovr from the project source root and writes detailed HTML beneath `coverage/`. It excludes project `external/` directories and `*_test.cpp`, prints a summary, and removes generated `.gcda` data after reporting. The report fails if filtering leaves no project source files.
+`coverage-report` runs gcovr from the project source root and writes detailed HTML beneath `coverage/`. It excludes the active project's `external/` directory and `*_test.cpp`, prints a summary, and removes generated `.gcda` data after reporting. The report fails if filtering leaves no project source files.
 
 Canon's shared `coverage` workflow uses a dedicated Debug build tree and sequences configure, cleanup, build, CTest, and report generation. Run the complete workflow with:
 

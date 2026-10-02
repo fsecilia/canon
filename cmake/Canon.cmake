@@ -49,6 +49,12 @@ function(_canon_apply_cxx_option TARGET OPTION)
     target_compile_options("${TARGET}" PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${OPTION}>")
 endfunction()
 
+# Escapes one literal value for use inside a regular expression.
+function(_canon_regex_escape_literal VALUE OUT_VALUE)
+    string(REGEX REPLACE "([][+.*()^$?|\\\\])" "\\\\\\1" _escaped "${VALUE}")
+    set(${OUT_VALUE} "${_escaped}" PARENT_SCOPE)
+endfunction()
+
 # Reports whether the active C++ compiler accepts one optional warning flag.
 function(_canon_cxx_warning_option_supported OPTION OUT_SUPPORTED)
     include(CheckCXXCompilerFlag)
@@ -371,7 +377,7 @@ function(_canon_find_coverage_backend OUT_COMMAND)
 
         message(WARNING
             "Canon coverage reporting is disabled: compiler '${CMAKE_CXX_COMPILER}' reported "
-            "'${_reported_program}' for ${_program_name}, but '${_coverage_executable}' ${_reason}")
+            "'${_reported_program}' for ${_program_name}; '${_coverage_executable}' ${_reason}")
         set(${OUT_COMMAND} "" PARENT_SCOPE)
         return()
     endif()
@@ -406,6 +412,13 @@ function(_canon_add_coverage_targets)
 
     set(_output_dir "${CMAKE_BINARY_DIR}/coverage")
     set(_summary_file "${_output_dir}/summary.json")
+    file(REAL_PATH "${PROJECT_SOURCE_DIR}" _project_source_dir)
+    cmake_path(
+        CONVERT "${_project_source_dir}/external"
+        TO_CMAKE_PATH_LIST _external_directory
+        NORMALIZE
+    )
+    _canon_regex_escape_literal("${_external_directory}" _external_regex)
     add_custom_target(
         coverage-report
         COMMAND "${CMAKE_COMMAND}" -E make_directory "${_output_dir}"
@@ -415,7 +428,7 @@ function(_canon_add_coverage_targets)
             "${CMAKE_BINARY_DIR}"
             --gcov-executable "${_gcov_command}"
             --exclude ".*_test\\.cpp$"
-            --exclude "(^|.*/)external(/|$)"
+            --exclude "${_external_regex}/"
             --html-details "${_output_dir}/index.html"
             --json-summary "${_summary_file}"
             --delete

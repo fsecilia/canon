@@ -186,6 +186,32 @@ elseif ("${CANON_TEST_CASE}" STREQUAL "nested")
         DESCRIPTION "nested coverage configure"
         COMMAND ${_configure_command}
     )
+    canon_test_run(
+        DESCRIPTION "nested coverage build"
+        COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}"
+    )
+    canon_test_run(
+        DESCRIPTION "nested coverage tests"
+        COMMAND "${CMAKE_CTEST_COMMAND}" --test-dir "${CANON_TEST_BINARY_DIR}" --output-on-failure
+    )
+    canon_test_run(
+        DESCRIPTION "nested coverage report"
+        COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}" --target coverage-report
+    )
+
+    set(_index "${CANON_TEST_BINARY_DIR}/coverage/index.html")
+    if (NOT EXISTS "${_index}")
+        message(FATAL_ERROR "nested coverage-report did not generate ${_index}")
+    endif()
+    file(READ "${_index}" _html)
+    if (NOT "${_html}" MATCHES "covered\\.cpp")
+        message(FATAL_ERROR
+            "coverage report suppressed project source beneath an ancestor external directory")
+    endif()
+    if ("${_html}" MATCHES "excluded\\.cpp")
+        message(FATAL_ERROR
+            "coverage report unexpectedly contains the active project's external/excluded.cpp")
+    endif()
 elseif ("${CANON_TEST_CASE}" STREQUAL "consumer")
     canon_test_require_variables(
         CANON_TEST_BINARY_DIR
