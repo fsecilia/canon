@@ -47,7 +47,6 @@ include("${CANON_CONFIG_FILE}")
 canon_test_run(
     DESCRIPTION "Installed Canon CMake minimum"
     EXPECT_FAILURE
-    NORMALIZE_WHITESPACE
     COMMAND
         "${CMAKE_COMMAND}"
         "-DCANON_CONFIG_FILE=${_canon_package_dir}/CanonConfig.cmake"

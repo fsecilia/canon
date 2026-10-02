@@ -12,7 +12,7 @@ function(canon_test_require_variables)
 endfunction()
 
 function(canon_test_run)
-    set(_options EXPECT_FAILURE NORMALIZE_WHITESPACE)
+    set(_options EXPECT_FAILURE)
     set(_one_value_arguments DESCRIPTION)
     set(_multi_value_arguments COMMAND EXPECTED_OUTPUT EXPECTED_REGEX)
     cmake_parse_arguments(
@@ -52,21 +52,20 @@ function(canon_test_run)
             "stderr:\n${_stderr}")
     endif()
 
-    if (DEFINED _test_EXPECTED_OUTPUT OR DEFINED _test_EXPECTED_REGEX)
-        set(_output "${_stdout}\n${_stderr}")
-        if (_test_NORMALIZE_WHITESPACE)
-            string(REGEX REPLACE "[ \t\r\n]+" " " _output "${_output}")
-        endif()
+    if (DEFINED _test_EXPECTED_OUTPUT)
+        set(_literal_output "${_stdout}\n${_stderr}")
+        string(REGEX REPLACE "[ \t\r\n]+" " " _literal_output "${_literal_output}")
+    endif()
+    if (DEFINED _test_EXPECTED_REGEX)
+        set(_regex_output "${_stdout}\n${_stderr}")
     endif()
 
     foreach(_expected_output IN LISTS _test_EXPECTED_OUTPUT)
         set(_expected_fragment "${_expected_output}")
-        if (_test_NORMALIZE_WHITESPACE)
-            string(REGEX REPLACE
-                "[ \t\r\n]+" " " _expected_fragment "${_expected_fragment}")
-        endif()
+        string(REGEX REPLACE
+            "[ \t\r\n]+" " " _expected_fragment "${_expected_fragment}")
 
-        string(FIND "${_output}" "${_expected_fragment}" _expected_output_position)
+        string(FIND "${_literal_output}" "${_expected_fragment}" _expected_output_position)
         if ("${_expected_output_position}" EQUAL -1)
             message(FATAL_ERROR
                 "${_test_DESCRIPTION} did not report the expected output\n"
@@ -77,7 +76,7 @@ function(canon_test_run)
     endforeach()
 
     foreach(_expected_regex IN LISTS _test_EXPECTED_REGEX)
-        if (NOT "${_output}" MATCHES "${_expected_regex}")
+        if (NOT "${_regex_output}" MATCHES "${_expected_regex}")
             message(FATAL_ERROR
                 "${_test_DESCRIPTION} did not report the expected output\n"
                 "expected regular expression:\n${_expected_regex}\n"

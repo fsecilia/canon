@@ -25,7 +25,6 @@ canon_test_make_configure_command(
 canon_test_run(
     DESCRIPTION "Canon library error fixture '${CANON_TEST_CASE}'"
     EXPECT_FAILURE
-    NORMALIZE_WHITESPACE
     EXPECTED_OUTPUT "${CANON_EXPECTED_ERROR}"
     COMMAND ${_configure_command}
 )
