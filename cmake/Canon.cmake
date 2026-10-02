@@ -1145,7 +1145,6 @@ function(canon_add_documentation)
 
     list(APPEND DOXYGEN_EXCLUDE
         "${PROJECT_BINARY_DIR}"
-        "${PROJECT_SOURCE_DIR}/build"
         "${PROJECT_SOURCE_DIR}/external"
         "${PROJECT_SOURCE_DIR}/standards"
         "${PROJECT_SOURCE_DIR}/test"

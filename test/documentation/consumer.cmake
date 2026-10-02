@@ -33,6 +33,10 @@ endif()
 if (NOT "${_html}" MATCHES "documented::answer")
     message(FATAL_ERROR "Documentation output did not contain the documented API")
 endif()
+if (NOT "${_html}" MATCHES "CANON_DOCUMENTATION_BUILD_MARKER")
+    message(FATAL_ERROR
+        "Documentation output unexpectedly excluded the source-side build directory")
+endif()
 
 foreach(_excluded_symbol IN ITEMS hiddenTopLevelDetail hiddenNestedDetail)
     if ("${_symbol_html}" MATCHES "${_excluded_symbol}")
@@ -53,7 +57,6 @@ endforeach()
 
 foreach(_excluded_marker IN ITEMS
     CANON_DOCUMENTATION_BINARY_MARKER
-    CANON_DOCUMENTATION_BUILD_MARKER
     CANON_DOCUMENTATION_EXTERNAL_MARKER
     CANON_DOCUMENTATION_STANDARDS_MARKER
     CANON_DOCUMENTATION_TEST_MARKER

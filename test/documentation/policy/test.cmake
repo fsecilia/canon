@@ -72,6 +72,8 @@ foreach(_required_text IN ITEMS
     "caller_ignored.hpp"
     "callerHiddenSymbol"
     "${_source_dir}/build"
+    "${_source_dir}/out"
+    "${_source_dir}/cmake-build-debug"
     "${_source_dir}/external"
     "${_source_dir}/standards"
     "${_source_dir}/test"
@@ -106,6 +108,9 @@ if (NOT "${_html}" MATCHES "CANON_DOCUMENTATION_CALLER_MAIN_PAGE_MARKER")
 endif()
 foreach(_excluded_marker IN ITEMS
     CANON_DOCUMENTATION_CALLER_EXCLUDE_MARKER
+    CANON_DOCUMENTATION_CALLER_BUILD_MARKER
+    CANON_DOCUMENTATION_CALLER_OUT_MARKER
+    CANON_DOCUMENTATION_CALLER_CMAKE_BUILD_DEBUG_MARKER
     CANON_DOCUMENTATION_CALLER_PATTERN_MARKER
 )
     if ("${_html}" MATCHES "${_excluded_marker}")

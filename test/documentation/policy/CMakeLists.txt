@@ -7,7 +7,12 @@ project(CanonDocumentationPolicyFixture LANGUAGES NONE)
 
 include("${CMAKE_CURRENT_LIST_DIR}/../../support/CanonSourceFixture.cmake")
 
-set(DOXYGEN_EXCLUDE "${PROJECT_SOURCE_DIR}/caller-excluded")
+set(DOXYGEN_EXCLUDE
+    "${PROJECT_SOURCE_DIR}/caller-excluded"
+    "${PROJECT_SOURCE_DIR}/build"
+    "${PROJECT_SOURCE_DIR}/out"
+    "${PROJECT_SOURCE_DIR}/cmake-build-debug"
+)
 set(DOXYGEN_EXCLUDE_PATTERNS "caller_ignored.hpp")
 set(DOXYGEN_EXCLUDE_SYMBOLS callerHiddenSymbol)
 set(DOXYGEN_STRIP_FROM_PATH "${CANON_SOURCE_DIR}")
