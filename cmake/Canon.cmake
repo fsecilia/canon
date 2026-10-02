@@ -474,16 +474,22 @@ function(_canon_apply_tidy TARGET)
         DOC "clang-tidy executable used by Canon"
     )
 
-    _canon_get_clang_tidy_version("${CANON_CLANG_TIDY_EXECUTABLE}" _version)
-    if ("${_version}" STREQUAL "")
-        message(FATAL_ERROR
-            "Canon could not determine the clang-tidy version from "
-            "'${CANON_CLANG_TIDY_EXECUTABLE}'")
-    endif()
-    if ("${_version}" VERSION_LESS "${_CANON_MINIMUM_CLANG_TIDY_VERSION}")
-        message(FATAL_ERROR
-            "Canon requires clang-tidy ${_CANON_MINIMUM_CLANG_TIDY_VERSION} or newer; "
-            "found ${_version} at '${CANON_CLANG_TIDY_EXECUTABLE}'")
+    string(SHA256 _tidy_key "${CANON_CLANG_TIDY_EXECUTABLE}")
+    set(_validation_property "_CANON_CLANG_TIDY_VALIDATED_${_tidy_key}")
+    get_property(_validated GLOBAL PROPERTY "${_validation_property}")
+    if (NOT _validated)
+        _canon_get_clang_tidy_version("${CANON_CLANG_TIDY_EXECUTABLE}" _version)
+        if ("${_version}" STREQUAL "")
+            message(FATAL_ERROR
+                "Canon could not determine the clang-tidy version from "
+                "'${CANON_CLANG_TIDY_EXECUTABLE}'")
+        endif()
+        if ("${_version}" VERSION_LESS "${_CANON_MINIMUM_CLANG_TIDY_VERSION}")
+            message(FATAL_ERROR
+                "Canon requires clang-tidy ${_CANON_MINIMUM_CLANG_TIDY_VERSION} or newer; "
+                "found ${_version} at '${CANON_CLANG_TIDY_EXECUTABLE}'")
+        endif()
+        set_property(GLOBAL PROPERTY "${_validation_property}" TRUE)
     endif()
 
     file(REAL_PATH "${PROJECT_SOURCE_DIR}" _project_source_dir)

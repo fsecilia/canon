@@ -17,6 +17,16 @@ canon_apply_target(tooling_app)
 add_executable(tidy_probe EXCLUDE_FROM_ALL tidy_probe.cpp)
 canon_apply_target(tidy_probe)
 
+if (DEFINED CANON_SECOND_CLANG_TIDY_EXECUTABLE
+    AND NOT "${CANON_SECOND_CLANG_TIDY_EXECUTABLE}" STREQUAL "")
+    set(
+        CANON_CLANG_TIDY_EXECUTABLE
+        "${CANON_SECOND_CLANG_TIDY_EXECUTABLE}"
+        CACHE FILEPATH "clang-tidy executable used by Canon"
+        FORCE
+    )
+endif()
+
 add_executable(tidy_header_probe EXCLUDE_FROM_ALL tidy_header_probe.cpp tidy_header_probe.hpp)
 canon_apply_target(tidy_header_probe)
 

@@ -115,6 +115,12 @@ _canon_add_script_test(
 )
 
 _canon_add_script_test(
+    tidy.validation-cache
+    tooling/validation-cache.cmake
+    "-DCANON_CLANG_TIDY_EXECUTABLE=${CANON_CLANG_TIDY_EXECUTABLE}"
+)
+
+_canon_add_script_test(
     asan
     asan/test.cmake
 )
@@ -198,7 +204,11 @@ _canon_add_script_test(
     "-DCANON_CLANG_TIDY_EXECUTABLE=${CANON_CLANG_TIDY_EXECUTABLE}"
 )
 if (NOT _canon_clang_tidy_supported)
-    set_tests_properties(canon.integration.tidy PROPERTIES DISABLED TRUE)
+    set_tests_properties(
+        canon.integration.tidy
+        canon.integration.tidy.validation-cache
+        PROPERTIES DISABLED TRUE
+    )
     if (NOT CANON_CLANG_TIDY_EXECUTABLE)
         message(WARNING "Canon clang-tidy validation unavailable: clang-tidy was not found")
     endif()
