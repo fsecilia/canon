@@ -36,8 +36,47 @@ if ("${CANON_TEST_CASE}" STREQUAL "consumer")
         DESCRIPTION "tidy configure"
         COMMAND ${_configure_command}
     )
+
+    set(_nested_root "${CANON_TEST_BINARY_DIR}/nested-source")
+    set(_nested_source_dir "${_nested_root}/external/tooling")
+    set(_nested_binary_dir "${CANON_TEST_BINARY_DIR}/nested-build")
+    file(MAKE_DIRECTORY "${_nested_root}/external")
+    file(COPY "${CANON_SOURCE_DIR}/test/tooling/" DESTINATION "${_nested_source_dir}")
+    file(COPY "${CANON_SOURCE_DIR}/test/support" DESTINATION "${_nested_root}/external")
+    configure_file(
+        "${CANON_SOURCE_DIR}/.clang-tidy"
+        "${_nested_source_dir}/.clang-tidy"
+        COPYONLY
+    )
+
+    set(_nested_configure_command
+        "${CMAKE_COMMAND}"
+        -S "${_nested_source_dir}"
+        -B "${_nested_binary_dir}"
+        -G "${CANON_GENERATOR}"
+        "-DCANON_SOURCE_DIR=${CANON_SOURCE_DIR}"
+        "-DCMAKE_CXX_COMPILER=${CANON_CXX_COMPILER}"
+        -DCMAKE_BUILD_TYPE=Debug
+        -DCANON_ENABLE_WARNINGS=ON
+        -DCANON_ENABLE_TIDY=ON
+        "-DCANON_CLANG_TIDY_EXECUTABLE=${CANON_CLANG_TIDY_EXECUTABLE}"
+    )
+    if (DEFINED CANON_TOOLCHAIN_FILE AND NOT "${CANON_TOOLCHAIN_FILE}" STREQUAL "")
+        list(APPEND _nested_configure_command "-DCMAKE_TOOLCHAIN_FILE=${CANON_TOOLCHAIN_FILE}")
+    endif()
+
     canon_test_run(
-        DESCRIPTION "tidy build with unmanaged external code"
+        DESCRIPTION "tidy configure beneath ancestor external directory"
+        COMMAND ${_nested_configure_command}
+    )
+    canon_test_run(
+        DESCRIPTION "project header beneath ancestor external directory"
+        EXPECT_FAILURE
+        COMMAND "${CMAKE_COMMAND}" --build "${_nested_binary_dir}" --target tidy_header_probe
+        EXPECTED_OUTPUT readability-identifier-naming
+    )
+    canon_test_run(
+        DESCRIPTION "tidy build with managed external header"
         COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}"
     )
     canon_test_run(

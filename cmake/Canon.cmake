@@ -486,7 +486,18 @@ function(_canon_apply_tidy TARGET)
             "found ${_version} at '${CANON_CLANG_TIDY_EXECUTABLE}'")
     endif()
 
-    set_property(TARGET "${TARGET}" PROPERTY CXX_CLANG_TIDY "${CANON_CLANG_TIDY_EXECUTABLE}")
+    file(REAL_PATH "${PROJECT_SOURCE_DIR}" _project_source_dir)
+    cmake_path(
+        CONVERT "${_project_source_dir}/external"
+        TO_CMAKE_PATH_LIST _external_directory
+        NORMALIZE
+    )
+    _canon_regex_escape_literal("${_external_directory}" _external_regex)
+    set(_tidy_command
+        "${CANON_CLANG_TIDY_EXECUTABLE}"
+        "--exclude-header-filter=^${_external_regex}/"
+    )
+    set_property(TARGET "${TARGET}" PROPERTY CXX_CLANG_TIDY "${_tidy_command}")
 endfunction()
 
 # Applies Canon's private build policy to a target that compiles C++ sources.

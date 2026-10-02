@@ -17,6 +17,9 @@ canon_apply_target(tooling_app)
 add_executable(tidy_probe EXCLUDE_FROM_ALL tidy_probe.cpp)
 canon_apply_target(tidy_probe)
 
+add_executable(tidy_header_probe EXCLUDE_FROM_ALL tidy_header_probe.cpp tidy_header_probe.hpp)
+canon_apply_target(tidy_header_probe)
+
 add_subdirectory(external/vendor)
 
 # Verify tidy is attached only to the targets that Canon manages.
