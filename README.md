@@ -22,9 +22,9 @@ Canon's installed Config package uses the same compatibility policy as other Can
 
 ## Tool versions
 
-Canon requires CMake 3.31.6 or newer. Its test matrix uses GNU GCC 14 and LLVM Clang 17 through Clang's GNU-compatible frontend.
+Canon requires CMake 3.31.6 or newer. Its test matrix uses GNU GCC 14 and LLVM Clang 19 through Clang's GNU-compatible frontend.
 
-Canon does not reject other compilers by identity. They must support C++26. Developer features that require compiler-specific support fail with a clear diagnostic when Canon has no implementation for the active compiler or frontend.
+Canon does not reject other compilers by version or identity. They must support C++26. Vendor Clang builds may carry warning groups from newer LLVM releases, so Canon probes the small set of warning suppressions known to vary across supported Clang distributions. Developer features that require compiler-specific support fail with a clear diagnostic when Canon has no implementation for the active compiler or frontend.
 
 ## Compiled targets
 
