@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  format:
+    name: Format
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@v7.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Install format tools
+        run: |
+          ci/install-format-tools.sh "$RUNNER_TEMP/canon-tools"
+          echo "$RUNNER_TEMP/canon-tools/bin" >> "$GITHUB_PATH"
+
+      - name: Check formatting
+        run: ci/check-format.sh
+
+  test:
+    name: ${{ matrix.compiler.name }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler:
+          - name: GCC 14
+            cc: gcc-14
+            cxx: g++-14
+          - name: Clang 17
+            cc: clang-17
+            cxx: clang++-17
+
+    env:
+      CC: ${{ matrix.compiler.cc }}
+      CXX: ${{ matrix.compiler.cxx }}
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@v7.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Install test tools
+        run: |
+          ci/install-test-tools.sh "$RUNNER_TEMP/canon-tools"
+          echo "$RUNNER_TEMP/canon-tools/bin" >> "$GITHUB_PATH"
+
+      - name: Run integration tests
+        run: ci/check-tests.sh
