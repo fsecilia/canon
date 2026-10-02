@@ -166,11 +166,16 @@ The checked-in `.clang-tidy` file comes from `standards/`. Editors, CI, and dire
 
 ## Documentation
 
-Call `canon_add_documentation()` when a project provides Doxygen documentation:
+Call `canon_add_documentation()` with the files or directories that belong to the project's Doxygen input. Relative paths are resolved from the project source directory:
 
 ```cmake
-canon_add_documentation()
+canon_add_documentation(
+    include
+    src
+)
 ```
+
+At least one input path is required. Explicit inputs keep nested project trees out of an outer project's documentation unless the caller deliberately includes them.
 
 Each project receives `${PROJECT_NAME}-doc` and `${PROJECT_NAME}-doc-clean` targets for its own documentation. The top-level project also receives `doc` and `doc-clean` convenience targets. A nested project can generate and clean its documentation on its own. Its documentation is not added to the outer project's `Documentation` install component.
 
@@ -178,7 +183,7 @@ Canon looks for Doxygen 1.9 or newer during configuration. A missing Doxygen ins
 
 Canon uses CMake's native `FindDoxygen` module and `doxygen_add_docs()`. When Doxygen is available, generated HTML is written beneath `${PROJECT_BINARY_DIR}/doxygen/html`, and Doxygen warnings fail the project's documentation target. The warning log is kept at `${PROJECT_BINARY_DIR}/doxygen-warnings.log`. These output and warning settings are Canon invariants because the documentation targets and install contract depend on them. Canon also owns the documentation input and working directory.
 
-Projects may customize Doxygen through the native `DOXYGEN_*` variables before calling `canon_add_documentation()`. Canon adds its required input exclusions to caller-provided `DOXYGEN_EXCLUDE`, `DOXYGEN_EXCLUDE_PATTERNS`, and `DOXYGEN_EXCLUDE_SYMBOLS` values. Ordinary settings such as `DOXYGEN_QUIET`, `DOXYGEN_JAVADOC_AUTOBRIEF`, `DOXYGEN_QT_AUTOBRIEF`, `DOXYGEN_ENABLE_PREPROCESSING`, `DOXYGEN_EXTRACT_ALL`, and `DOXYGEN_STRIP_FROM_PATH` keep an explicit caller value. Other unrelated `DOXYGEN_*` settings pass through to CMake's Doxygen integration.
+Projects may customize Doxygen through the native `DOXYGEN_*` variables before calling `canon_add_documentation()`. The function arguments own `DOXYGEN_INPUT`. Canon adds its required input exclusions to caller-provided `DOXYGEN_EXCLUDE`, `DOXYGEN_EXCLUDE_PATTERNS`, and `DOXYGEN_EXCLUDE_SYMBOLS` values. Ordinary settings such as `DOXYGEN_QUIET`, `DOXYGEN_JAVADOC_AUTOBRIEF`, `DOXYGEN_QT_AUTOBRIEF`, `DOXYGEN_ENABLE_PREPROCESSING`, `DOXYGEN_EXTRACT_ALL`, and `DOXYGEN_STRIP_FROM_PATH` keep an explicit caller value. Other unrelated `DOXYGEN_*` settings pass through to CMake's Doxygen integration.
 
 When `DOXYGEN_USE_MDFILE_AS_MAINPAGE` is not set, Canon uses the project `README.md` as the default main page if that file exists. Documentation input excludes the active project binary tree, the conventional source-side `build/` tree, `external/`, `standards/`, `test/`, and files matching `*_test.cpp`. Canon excludes symbols named `detail` so top-level and nested implementation-detail namespaces are omitted. Doxygen's `EXCLUDE_SYMBOLS` cannot distinguish symbol kinds, so public non-namespace symbols named `detail` are also excluded. The naming rules in `standards/` avoid that collision. Graphviz support is used when CMake's Doxygen finder discovers `dot`; it is not required.
 

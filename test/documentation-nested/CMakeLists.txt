@@ -7,7 +7,7 @@ project(CanonDocumentationRootFixture LANGUAGES NONE)
 
 include("${CMAKE_CURRENT_LIST_DIR}/../support/CanonSourceFixture.cmake")
 
-canon_add_documentation()
+canon_add_documentation(root.hpp)
 add_subdirectory(nested)
 
 foreach(_target IN ITEMS

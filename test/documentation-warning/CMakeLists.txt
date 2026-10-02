@@ -13,4 +13,4 @@ set(DOXYGEN_GENERATE_HTML NO)
 set(DOXYGEN_WARN_AS_ERROR NO)
 set(DOXYGEN_WARN_LOGFILE "${PROJECT_BINARY_DIR}/caller-warnings.log")
 
-canon_add_documentation()
+canon_add_documentation(warning.hpp)

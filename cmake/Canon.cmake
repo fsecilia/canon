@@ -990,6 +990,30 @@ endfunction()
 
 # Adds conventional documentation targets using CMake's native FindDoxygen integration.
 function(canon_add_documentation)
+    if (ARGC EQUAL 0)
+        message(FATAL_ERROR
+            "canon_add_documentation(): at least one documentation input path is required")
+    endif()
+
+    set(_inputs)
+    foreach(_input IN LISTS ARGN)
+        if (IS_ABSOLUTE "${_input}")
+            set(_absolute_input "${_input}")
+        else()
+            get_filename_component(
+                _absolute_input
+                "${_input}"
+                ABSOLUTE
+                BASE_DIR "${PROJECT_SOURCE_DIR}"
+            )
+        endif()
+        if (NOT EXISTS "${_absolute_input}")
+            message(FATAL_ERROR
+                "canon_add_documentation(): input '${_input}' does not exist")
+        endif()
+        list(APPEND _inputs "${_absolute_input}")
+    endforeach()
+
     include(GNUInstallDirs)
     find_package(Doxygen 1.9 QUIET OPTIONAL_COMPONENTS dot)
 
@@ -1043,7 +1067,23 @@ function(canon_add_documentation)
     set(_readme "${PROJECT_SOURCE_DIR}/README.md")
     if (EXISTS "${_readme}" AND NOT DEFINED DOXYGEN_USE_MDFILE_AS_MAINPAGE)
         set(DOXYGEN_USE_MDFILE_AS_MAINPAGE "${_readme}")
+        list(APPEND _inputs "${_readme}")
+    elseif (DEFINED DOXYGEN_USE_MDFILE_AS_MAINPAGE)
+        if (IS_ABSOLUTE "${DOXYGEN_USE_MDFILE_AS_MAINPAGE}")
+            set(_main_page "${DOXYGEN_USE_MDFILE_AS_MAINPAGE}")
+        else()
+            get_filename_component(
+                _main_page
+                "${DOXYGEN_USE_MDFILE_AS_MAINPAGE}"
+                ABSOLUTE
+                BASE_DIR "${PROJECT_SOURCE_DIR}"
+            )
+        endif()
+        if (EXISTS "${_main_page}")
+            list(APPEND _inputs "${_main_page}")
+        endif()
     endif()
+    list(REMOVE_DUPLICATES _inputs)
 
     set(DOXYGEN_OUTPUT_DIRECTORY "${_output_directory}")
     set(DOXYGEN_HTML_OUTPUT html)
@@ -1082,7 +1122,7 @@ function(canon_add_documentation)
 
     doxygen_add_docs(
         "${_doc_target}"
-        "${PROJECT_SOURCE_DIR}"
+        ${_inputs}
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
         COMMENT "Generating API documentation"
     )

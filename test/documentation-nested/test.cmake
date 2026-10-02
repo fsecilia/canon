@@ -40,6 +40,13 @@ endif()
 if (EXISTS "${_nested_output}")
     message(FATAL_ERROR "Root qualified documentation target generated nested documentation")
 endif()
+file(GLOB_RECURSE _root_html_files "${_root_output}/html/*.html")
+foreach(_root_html_file IN LISTS _root_html_files)
+    file(READ "${_root_html_file}" _root_html)
+    if ("${_root_html}" MATCHES "nestedDocumentationProbe|nested_8hpp")
+        message(FATAL_ERROR "Root documentation contains nested project API")
+    endif()
+endforeach()
 
 canon_test_run(
     DESCRIPTION "nested qualified documentation target"
