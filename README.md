@@ -82,6 +82,8 @@ The header path and `_API` macro follow the package's public target identity. Ca
 
 The mechanical rule is deterministic, not semantic, so unusual acronym spelling may need an override. Set the `CANON_EXPORT_IDENTITY` target property before `canon_apply_library()` to replace the derived public-library identity used by both the header path and generated macro family. The value is an uppercase C identifier. For example, `IPv6Address` derives `I_PV6_ADDRESS`, which produces `i_pv6_address/export.hpp` and `I_PV6_ADDRESS_API`. Set `CANON_EXPORT_IDENTITY` to `IPV6_ADDRESS` to use `ipv6_address/export.hpp` and `IPV6_ADDRESS_API` instead.
 
+Canon claims each generated `_API` macro across every Canon-managed library in the build tree. If two libraries derive the same macro, configuration fails and identifies both libraries. Set a distinct `CANON_EXPORT_IDENTITY` on one of them to resolve the collision.
+
 ```cpp
 #include <example/export.hpp>
 

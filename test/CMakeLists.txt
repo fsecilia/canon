@@ -362,6 +362,13 @@ _canon_add_script_test(
 )
 
 _canon_add_script_test(
+    libraries.export-macro-collision
+    library-errors/test.cmake
+    -DCANON_TEST_CASE=export-macro-collision
+    "-DCANON_EXPECTED_ERROR=export macro 'AXIOM_CORE_API' for library 'AxiomCore::AxiomCore (target 'axiom_core_monolith')' conflicts with library 'Axiom::Core (target 'axiom_core')'"
+)
+
+_canon_add_script_test(
     dependencies.empty
     dependency-errors/test.cmake
     -DCANON_TEST_CASE=empty

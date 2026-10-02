@@ -881,6 +881,23 @@ function(_canon_export_identity TARGET OUT_NAME)
     set("${OUT_NAME}" "${_identity}" PARENT_SCOPE)
 endfunction()
 
+# Claims one generated export macro across all Canon-managed libraries in this build tree.
+function(_canon_claim_export_macro TARGET MACRO)
+    string(HEX "${MACRO}" _macro_key)
+    set(_property "_CANON_EXPORT_MACRO_${_macro_key}")
+    get_property(_owner GLOBAL PROPERTY "${_property}")
+
+    _canon_library_public_name("${TARGET}" _public_name)
+    set(_claim "${PROJECT_NAME}::${_public_name} (target '${TARGET}')")
+    if (NOT "${_owner}" STREQUAL "" AND NOT "${_owner}" STREQUAL "${_claim}")
+        message(FATAL_ERROR
+            "canon_apply_library(): export macro '${MACRO}' for library '${_claim}' "
+            "conflicts with library '${_owner}'; set a distinct CANON_EXPORT_IDENTITY")
+    endif()
+
+    set_property(GLOBAL PROPERTY "${_property}" "${_claim}")
+endfunction()
+
 # Claims a generated export-header path for one library in the current project.
 function(_canon_claim_export_header TARGET HEADER)
     string(HEX "${HEADER}" _header_key)
@@ -962,6 +979,7 @@ function(canon_apply_library TARGET)
 
     set(_header_path "${_header_directory}/export.hpp")
     _canon_claim_export_header("${TARGET}" "${_header_path}")
+    _canon_claim_export_macro("${TARGET}" "${_api_name}_API")
 
     include(GenerateExportHeader)
     get_target_property(_target_binary_dir "${TARGET}" BINARY_DIR)
