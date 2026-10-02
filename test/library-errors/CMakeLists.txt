@@ -26,7 +26,12 @@ elseif ("${CANON_TEST_CASE}" STREQUAL "export-header-collision")
     set_target_properties(first PROPERTIES EXPORT_NAME FooBar)
     canon_apply_library(first)
     add_library(second STATIC)
-    set_target_properties(second PROPERTIES EXPORT_NAME FOOBar)
+    set_target_properties(
+        second
+        PROPERTIES
+            EXPORT_NAME Other
+            CANON_EXPORT_IDENTITY FOO_BAR
+    )
     canon_apply_library(second)
 elseif ("${CANON_TEST_CASE}" STREQUAL "export-macro-collision")
     add_subdirectory(export-macro-a)

@@ -21,12 +21,7 @@ target_sources(
 canon_apply_library(sample_static)
 
 add_library(sample_shared SHARED sample_shared.cpp)
-set_target_properties(
-    sample_shared
-    PROPERTIES
-        EXPORT_NAME SharedPublic
-        CANON_EXPORT_IDENTITY IPV6_ADDRESS
-)
+set_target_properties(sample_shared PROPERTIES EXPORT_NAME IPv6Address)
 canon_apply_library(sample_shared)
 
 add_library(sample_module MODULE sample.cpp)
@@ -76,7 +71,7 @@ foreach(_library IN ITEMS
 endforeach()
 
 canon_test_require_alias(CanonLibraryInstall::CanonLibraryInstall sample_static)
-canon_test_require_alias(CanonLibraryInstall::SharedPublic sample_shared)
+canon_test_require_alias(CanonLibraryInstall::IPv6Address sample_shared)
 canon_test_require_alias(CanonLibraryInstall::sample_module sample_module)
 canon_test_require_alias(CanonLibraryInstall::InterfacePublic sample_interface)
 canon_test_require_alias(CanonLibraryInstall::sample_interface_empty sample_interface_empty)

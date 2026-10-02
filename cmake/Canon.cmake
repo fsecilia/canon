@@ -861,7 +861,6 @@ endfunction()
 # Returns a deterministic export-identity component for a name.
 function(_canon_default_export_identity NAME OUT_NAME)
     string(MAKE_C_IDENTIFIER "${NAME}" _identity)
-    string(REGEX REPLACE "([A-Z]+)([A-Z][a-z])" "\\1_\\2" _identity "${_identity}")
     string(REGEX REPLACE "([a-z0-9])([A-Z])" "\\1_\\2" _identity "${_identity}")
     string(TOUPPER "${_identity}" _identity)
     set("${OUT_NAME}" "${_identity}" PARENT_SCOPE)
