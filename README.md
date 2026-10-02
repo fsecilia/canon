@@ -126,7 +126,7 @@ Warnings are controlled by `CANON_ENABLE_WARNINGS`. It is off by default. Canon'
 
 This keeps the distinction explicit. Family development builds use strict warnings. A project configured normally does not inherit warnings-as-errors merely because it uses Canon.
 
-With warnings enabled, GCC uses Canon's warning set and treats warnings as errors. Clang's GNU-compatible frontend uses `-Weverything`, treats warnings as errors, and applies Canon's deliberate suppressions. Other compilers may still use Canon, but this option fails if Canon has no warning policy for them.
+With warnings enabled, GCC uses Canon's warning set and treats warnings as errors. Clang's GNU-compatible frontend uses `-Weverything`, treats warnings as errors, and applies Canon's deliberate suppressions. Canon capability-probes the few suppressions whose availability differs between supported Clang distributions and omits only those unavailable groups. Other compilers may still use Canon, but this option fails if Canon has no warning policy for them.
 
 ## AddressSanitizer
 

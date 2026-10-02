@@ -118,7 +118,6 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
         -Wno-c++98-compat
         -Wno-c++98-compat-pedantic
         -Wno-c++20-compat
-        -Wno-c++23-compat
         -Wno-ctad-maybe-unsupported
         -Wno-documentation
         -Wno-documentation-unknown-command
@@ -129,11 +128,19 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
         -Wno-shadow-field-in-constructor
         -Wno-switch-default
         -Wno-switch-enum
-        -Wno-unsafe-buffer-usage-in-libc-call
         -Wno-unused-function
         -Wno-unused-member-function
         -Wno-unused-template
     )
+    foreach(_optional_warning IN ITEMS
+        c++23-compat
+        unsafe-buffer-usage-in-libc-call
+    )
+        _canon_cxx_warning_option_supported("-W${_optional_warning}" _supported)
+        if (_supported)
+            list(APPEND _warning_suppressions "-Wno-${_optional_warning}")
+        endif()
+    endforeach()
     set(_warning_reenables
         -Wshadow-field-in-constructor-modified
     )

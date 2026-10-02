@@ -49,6 +49,16 @@ function(_canon_apply_cxx_option TARGET OPTION)
     target_compile_options("${TARGET}" PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${OPTION}>")
 endfunction()
 
+# Reports whether the active C++ compiler accepts one optional warning flag.
+function(_canon_cxx_warning_option_supported OPTION OUT_SUPPORTED)
+    include(CheckCXXCompilerFlag)
+    string(SHA256 _option_key
+        "${CMAKE_CXX_COMPILER};${CMAKE_CXX_COMPILER_ID};${CMAKE_CXX_COMPILER_VERSION};${OPTION}")
+    set(_probe_variable "_CANON_CXX_WARNING_OPTION_${_option_key}")
+    check_cxx_compiler_flag("${OPTION}" "${_probe_variable}")
+    set(${OUT_SUPPORTED} "${${_probe_variable}}" PARENT_SCOPE)
+endfunction()
+
 # Applies compiler-specific build options when Canon has policy for the active toolchain.
 function(_canon_apply_compiler_policy TARGET)
     set(_build_options)
@@ -122,7 +132,6 @@ function(_canon_apply_warnings TARGET)
             -Wno-c++98-compat
             -Wno-c++98-compat-pedantic
             -Wno-c++20-compat
-            -Wno-c++23-compat
             -Wno-ctad-maybe-unsupported
             -Wno-documentation
             -Wno-documentation-unknown-command
@@ -133,11 +142,19 @@ function(_canon_apply_warnings TARGET)
             -Wno-shadow-field-in-constructor
             -Wno-switch-default
             -Wno-switch-enum
-            -Wno-unsafe-buffer-usage-in-libc-call
             -Wno-unused-function
             -Wno-unused-member-function
             -Wno-unused-template
         )
+        foreach(_optional_warning IN ITEMS
+            c++23-compat
+            unsafe-buffer-usage-in-libc-call
+        )
+            _canon_cxx_warning_option_supported("-W${_optional_warning}" _supported)
+            if (_supported)
+                list(APPEND _warning_suppressions "-Wno-${_optional_warning}")
+            endif()
+        endforeach()
         # Re-enable child groups that broader cemetery entries would otherwise disable.
         set(_warning_reenables
             -Wshadow-field-in-constructor-modified
