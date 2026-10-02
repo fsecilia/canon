@@ -226,7 +226,7 @@ _canon_add_script_test(
     "-DCANON_DOXYGEN_EXECUTABLE=${DOXYGEN_EXECUTABLE}"
 )
 _canon_add_script_test(
-    documentation-warning
+    documentation.warning
     documentation-warning/test.cmake
     "-DCANON_DOXYGEN_EXECUTABLE=${DOXYGEN_EXECUTABLE}"
 )
@@ -236,14 +236,14 @@ if (NOT Doxygen_FOUND)
         canon.integration.documentation.install
         canon.integration.documentation.policy
         canon.integration.documentation.nested
-        canon.integration.documentation-warning
+        canon.integration.documentation.warning
         PROPERTIES DISABLED TRUE
     )
     message(WARNING "Canon documentation validation unavailable: Doxygen 1.9 or newer was not found")
 endif()
 
 _canon_add_script_test(
-    documentation-unavailable
+    documentation.unavailable
     documentation-unavailable/test.cmake
 )
 
