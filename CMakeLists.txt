@@ -21,6 +21,8 @@ write_basic_package_version_file(
     ARCH_INDEPENDENT
 )
 
+_canon_package_install_directory(_canon_install_directory)
+
 install(
     FILES
         cmake/Canon.cmake
@@ -28,7 +30,7 @@ install(
         cmake/CanonCoverageClean.cmake
         cmake/CanonCoverageVerify.cmake
         "${CMAKE_CURRENT_BINARY_DIR}/CanonConfigVersion.cmake"
-    DESTINATION share/cmake/Canon
+    DESTINATION "${_canon_install_directory}"
 )
 
 include(CTest)

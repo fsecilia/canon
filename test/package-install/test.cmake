@@ -21,6 +21,7 @@ function(_canon_configure_package_fixture BUILD_DIR)
         "-DCMAKE_CXX_COMPILER=${CANON_CXX_COMPILER}"
         -DCMAKE_BUILD_TYPE=Debug
         -DCMAKE_INSTALL_LIBDIR=artifact-lib
+        -DCMAKE_INSTALL_DATADIR=artifact-data
     )
     if (DEFINED CANON_TOOLCHAIN_FILE AND NOT "${CANON_TOOLCHAIN_FILE}" STREQUAL "")
         list(APPEND _configure_command "-DCMAKE_TOOLCHAIN_FILE=${CANON_TOOLCHAIN_FILE}")
@@ -135,7 +136,7 @@ if ("${CANON_TEST_CASE}" STREQUAL "config")
     _canon_install_package_fixture("${_build_dir}" "${_install_prefix}")
 
     foreach(_package IN ITEMS HeaderOnlyPackage VersionlessPackage)
-        set(_package_dir "${_install_prefix}/share/cmake/${_package}")
+        set(_package_dir "${_install_prefix}/artifact-data/cmake/${_package}")
         foreach(_file IN ITEMS "${_package}Config.cmake" "${_package}Targets.cmake")
             if (NOT EXISTS "${_package_dir}/${_file}")
                 message(FATAL_ERROR "Canon package install did not produce '${_package_dir}/${_file}'")
@@ -153,7 +154,7 @@ if ("${CANON_TEST_CASE}" STREQUAL "config")
     endforeach()
 
     set(_header_version_file
-        "${_install_prefix}/share/cmake/HeaderOnlyPackage/HeaderOnlyPackageConfigVersion.cmake")
+        "${_install_prefix}/artifact-data/cmake/HeaderOnlyPackage/HeaderOnlyPackageConfigVersion.cmake")
     if (NOT EXISTS "${_header_version_file}")
         message(FATAL_ERROR "Canon package install did not produce '${_header_version_file}'")
     endif()
@@ -165,14 +166,14 @@ if ("${CANON_TEST_CASE}" STREQUAL "config")
         endif()
     endforeach()
     set(_versionless_file
-        "${_install_prefix}/share/cmake/VersionlessPackage/VersionlessPackageConfigVersion.cmake")
+        "${_install_prefix}/artifact-data/cmake/VersionlessPackage/VersionlessPackageConfigVersion.cmake")
     if (EXISTS "${_versionless_file}")
         message(FATAL_ERROR "Canon package install unexpectedly produced '${_versionless_file}'")
     endif()
 
     _canon_build_package_consumer(
         "${_install_prefix}"
-        share/cmake
+        artifact-data/cmake
         HeaderOnlyPackage
         0.7.1
         HeaderOnlyPackage::header_api
@@ -205,7 +206,7 @@ if ("${CANON_TEST_CASE}" STREQUAL "config")
     )
     _canon_build_package_consumer(
         "${_install_prefix}"
-        share/cmake
+        artifact-data/cmake
         VersionlessPackage
         ""
         VersionlessPackage::versionless_api
@@ -257,7 +258,7 @@ endif()
     )
 
     set(_config_file
-        "${_install_prefix}/share/cmake/DependentPackage/DependentPackageConfig.cmake")
+        "${_install_prefix}/artifact-data/cmake/DependentPackage/DependentPackageConfig.cmake")
     file(READ "${_config_file}" _config)
     string(REGEX MATCHALL "find_dependency\\(" _dependency_calls "${_config}")
     list(LENGTH _dependency_calls _dependency_call_count)
@@ -293,7 +294,7 @@ endif()
 
     _canon_build_package_consumer(
         "${_install_prefix}"
-        share/cmake
+        artifact-data/cmake
         DependentPackage
         0.9.1
         DependentPackage::dependent_api
