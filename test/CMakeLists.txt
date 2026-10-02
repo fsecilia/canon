@@ -80,20 +80,17 @@ _canon_add_script_test(
 
 _canon_add_script_test(
     package.config
-    package-install/test.cmake
-    -DCANON_TEST_CASE=config
+    package-install/config.cmake
 )
 
 _canon_add_script_test(
     package.version
-    package-install/test.cmake
-    -DCANON_TEST_CASE=version
+    package-install/version.cmake
 )
 
 _canon_add_script_test(
     package.dependencies
-    package-install/test.cmake
-    -DCANON_TEST_CASE=dependencies
+    package-install/dependencies.cmake
 )
 
 _canon_add_script_test(
@@ -110,8 +107,7 @@ _canon_add_script_test(
 
 _canon_add_script_test(
     tidy.version
-    tooling/test.cmake
-    -DCANON_TEST_CASE=version
+    tooling/version.cmake
 )
 
 _canon_add_script_test(
@@ -135,8 +131,7 @@ _canon_add_script_test(
 
 _canon_add_script_test(
     coverage.backend
-    coverage/test.cmake
-    -DCANON_TEST_CASE=backend
+    coverage/backend.cmake
     "-DCANON_CXX_COMPILER_ID=${CMAKE_CXX_COMPILER_ID}"
     "-DCANON_CXX_COMPILER_FRONTEND_VARIANT=${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}"
     "-DCANON_CXX_COMPILER_VERSION=${CMAKE_CXX_COMPILER_VERSION}"
@@ -144,8 +139,7 @@ _canon_add_script_test(
 
 _canon_add_script_test(
     coverage.override-error
-    coverage/test.cmake
-    -DCANON_TEST_CASE=override-error
+    coverage/override-error.cmake
     "-DCANON_CXX_COMPILER_ID=${CMAKE_CXX_COMPILER_ID}"
 )
 
@@ -167,14 +161,12 @@ endif()
 
 _canon_add_script_test(
     coverage
-    coverage/test.cmake
-    -DCANON_TEST_CASE=consumer
+    coverage/consumer.cmake
     ${_canon_coverage_test_arguments}
 )
 _canon_add_script_test(
     coverage.nested
-    coverage/test.cmake
-    -DCANON_TEST_CASE=nested
+    coverage/nested.cmake
     ${_canon_coverage_test_arguments}
 )
 _canon_add_script_test(
@@ -199,8 +191,7 @@ endif()
 
 _canon_add_script_test(
     tidy
-    tooling/test.cmake
-    -DCANON_TEST_CASE=consumer
+    tooling/consumer.cmake
     "-DCANON_CLANG_TIDY_EXECUTABLE=${CANON_CLANG_TIDY_EXECUTABLE}"
 )
 if (NOT _canon_clang_tidy_supported)
@@ -216,14 +207,12 @@ endif()
 
 _canon_add_script_test(
     documentation
-    documentation/test.cmake
-    -DCANON_TEST_CASE=consumer
+    documentation/consumer.cmake
     "-DCANON_DOXYGEN_EXECUTABLE=${DOXYGEN_EXECUTABLE}"
 )
 _canon_add_script_test(
     documentation.install
-    documentation/test.cmake
-    -DCANON_TEST_CASE=install
+    documentation/install.cmake
     "-DCANON_DOXYGEN_EXECUTABLE=${DOXYGEN_EXECUTABLE}"
 )
 _canon_add_script_test(
@@ -271,26 +260,22 @@ _canon_add_script_test(
 
 _canon_add_script_test(
     presets.debug
-    presets/test.cmake
-    -DCANON_TEST_CASE=debug
+    presets/debug.cmake
 )
 
 _canon_add_script_test(
     presets.release
-    presets/test.cmake
-    -DCANON_TEST_CASE=release
+    presets/release.cmake
 )
 
 _canon_add_script_test(
     presets.asan
-    presets/test.cmake
-    -DCANON_TEST_CASE=asan
+    presets/asan.cmake
 )
 
 _canon_add_script_test(
     presets.coverage
-    presets/test.cmake
-    -DCANON_TEST_CASE=coverage
+    presets/coverage.cmake
     ${_canon_coverage_test_arguments}
 )
 if (NOT _canon_coverage_tests_enabled)
@@ -299,8 +284,7 @@ endif()
 
 _canon_add_script_test(
     presets.tidy
-    presets/test.cmake
-    -DCANON_TEST_CASE=tidy
+    presets/tidy.cmake
     "-DCANON_CLANG_TIDY_EXECUTABLE=${CANON_CLANG_TIDY_EXECUTABLE}"
 )
 if (NOT _canon_clang_tidy_supported)
