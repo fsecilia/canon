@@ -12,20 +12,15 @@ canon_test_require_variables(
 
 file(REMOVE_RECURSE "${CANON_TEST_BINARY_DIR}")
 
-set(_configure_command
-    "${CMAKE_COMMAND}"
-    -S "${CANON_SOURCE_DIR}/test/asan"
-    -B "${CANON_TEST_BINARY_DIR}"
-    -G "${CANON_GENERATOR}"
+canon_test_make_configure_command(
+    _configure_command
+    "${CANON_SOURCE_DIR}/test/asan"
+    "${CANON_TEST_BINARY_DIR}"
     "-DCANON_SOURCE_DIR=${CANON_SOURCE_DIR}"
-    "-DCMAKE_CXX_COMPILER=${CANON_CXX_COMPILER}"
     -DCMAKE_BUILD_TYPE=Debug
     -DCMAKE_INSTALL_LIBDIR=artifact-lib
     -DCANON_ENABLE_ASAN=ON
 )
-if (DEFINED CANON_TOOLCHAIN_FILE AND NOT "${CANON_TOOLCHAIN_FILE}" STREQUAL "")
-    list(APPEND _configure_command "-DCMAKE_TOOLCHAIN_FILE=${CANON_TOOLCHAIN_FILE}")
-endif()
 
 canon_test_run(
     DESCRIPTION "ASan configure"
@@ -51,18 +46,13 @@ canon_test_run(
 )
 
 set(_consumer_build_dir "${CANON_TEST_BINARY_DIR}/package-consumer")
-set(_consumer_configure_command
-    "${CMAKE_COMMAND}"
-    -S "${CANON_SOURCE_DIR}/test/asan-package-consumer"
-    -B "${_consumer_build_dir}"
-    -G "${CANON_GENERATOR}"
+canon_test_make_configure_command(
+    _consumer_configure_command
+    "${CANON_SOURCE_DIR}/test/asan-package-consumer"
+    "${_consumer_build_dir}"
     "-DCanonAsanFixture_DIR=${_install_prefix}/artifact-lib/cmake/CanonAsanFixture"
-    "-DCMAKE_CXX_COMPILER=${CANON_CXX_COMPILER}"
     -DCMAKE_BUILD_TYPE=Debug
 )
-if (DEFINED CANON_TOOLCHAIN_FILE AND NOT "${CANON_TOOLCHAIN_FILE}" STREQUAL "")
-    list(APPEND _consumer_configure_command "-DCMAKE_TOOLCHAIN_FILE=${CANON_TOOLCHAIN_FILE}")
-endif()
 
 canon_test_run(
     DESCRIPTION "ASan package consumer configure"

@@ -18,15 +18,16 @@ set(_install_prefix "${CANON_TEST_BINARY_DIR}/install")
 set(_data_dir artifact-data)
 set(_canon_package_dir "${_install_prefix}/${_data_dir}/cmake/Canon")
 
+canon_test_make_configure_command(
+    _staging_configure_command
+    "${CANON_SOURCE_DIR}"
+    "${_canon_build_dir}"
+    -DBUILD_TESTING=OFF
+    "-DCMAKE_INSTALL_DATADIR=${_data_dir}"
+)
 canon_test_run(
     DESCRIPTION "Canon staging configure"
-    COMMAND
-        "${CMAKE_COMMAND}"
-        -S "${CANON_SOURCE_DIR}"
-        -B "${_canon_build_dir}"
-        -G "${CANON_GENERATOR}"
-        -DBUILD_TESTING=OFF
-        "-DCMAKE_INSTALL_DATADIR=${_data_dir}"
+    COMMAND ${_staging_configure_command}
 )
 canon_test_run(
     DESCRIPTION "Canon staging install"
@@ -54,21 +55,16 @@ canon_test_run(
     EXPECTED_OUTPUT "Canon requires CMake 3.31.6 or newer; found 3.30.0"
 )
 
-set(_consumer_configure_command
-    "${CMAKE_COMMAND}"
-    -S "${CANON_SOURCE_DIR}/test/installed"
-    -B "${_consumer_build_dir}"
-    -G "${CANON_GENERATOR}"
+canon_test_make_configure_command(
+    _consumer_configure_command
+    "${CANON_SOURCE_DIR}/test/installed"
+    "${_consumer_build_dir}"
     "-DCANON_EXPECTED_VERSION=${CANON_EXPECTED_VERSION}"
     "-DCANON_EXPECTED_DIR=${_canon_package_dir}"
     "-DCanon_DIR=${_canon_package_dir}"
     "-DCMAKE_PREFIX_PATH=${_install_prefix}"
-    "-DCMAKE_CXX_COMPILER=${CANON_CXX_COMPILER}"
     -DCMAKE_BUILD_TYPE=Debug
 )
-if (DEFINED CANON_TOOLCHAIN_FILE AND NOT "${CANON_TOOLCHAIN_FILE}" STREQUAL "")
-    list(APPEND _consumer_configure_command "-DCMAKE_TOOLCHAIN_FILE=${CANON_TOOLCHAIN_FILE}")
-endif()
 
 canon_test_run(
     DESCRIPTION "Installed Canon consumer configure"

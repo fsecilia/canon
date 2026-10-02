@@ -129,20 +129,15 @@ elseif ("${CANON_TEST_CASE}" STREQUAL "override-error")
     endif()
 
     file(REMOVE_RECURSE "${CANON_TEST_BINARY_DIR}")
-    set(_configure_command
-        "${CMAKE_COMMAND}"
-        -S "${CANON_SOURCE_DIR}/test/coverage"
-        -B "${CANON_TEST_BINARY_DIR}"
-        -G "${CANON_GENERATOR}"
+    canon_test_make_configure_command(
+        _configure_command
+        "${CANON_SOURCE_DIR}/test/coverage"
+        "${CANON_TEST_BINARY_DIR}"
         "-DCANON_SOURCE_DIR=${CANON_SOURCE_DIR}"
-        "-DCMAKE_CXX_COMPILER=${CANON_CXX_COMPILER}"
         -DCMAKE_BUILD_TYPE=Debug
         -DCANON_ENABLE_COVERAGE=ON
         "-D${_override_variable}=${CMAKE_COMMAND}"
     )
-    if (DEFINED CANON_TOOLCHAIN_FILE AND NOT "${CANON_TOOLCHAIN_FILE}" STREQUAL "")
-        list(APPEND _configure_command "-DCMAKE_TOOLCHAIN_FILE=${CANON_TOOLCHAIN_FILE}")
-    endif()
 
     canon_test_run(
         DESCRIPTION "invalid ${_override_variable} override"
@@ -161,20 +156,15 @@ elseif ("${CANON_TEST_CASE}" STREQUAL "nested")
     )
 
     file(REMOVE_RECURSE "${CANON_TEST_BINARY_DIR}")
-    set(_configure_command
-        "${CMAKE_COMMAND}"
-        -S "${CANON_SOURCE_DIR}/test/coverage-nested"
-        -B "${CANON_TEST_BINARY_DIR}"
-        -G "${CANON_GENERATOR}"
+    canon_test_make_configure_command(
+        _configure_command
+        "${CANON_SOURCE_DIR}/test/coverage-nested"
+        "${CANON_TEST_BINARY_DIR}"
         "-DCANON_SOURCE_DIR=${CANON_SOURCE_DIR}"
-        "-DCMAKE_CXX_COMPILER=${CANON_CXX_COMPILER}"
         -DCMAKE_BUILD_TYPE=Debug
         -DCANON_ENABLE_COVERAGE=ON
         "-DCANON_GCOVR_EXECUTABLE=${CANON_GCOVR_EXECUTABLE}"
     )
-    if (DEFINED CANON_TOOLCHAIN_FILE AND NOT "${CANON_TOOLCHAIN_FILE}" STREQUAL "")
-        list(APPEND _configure_command "-DCMAKE_TOOLCHAIN_FILE=${CANON_TOOLCHAIN_FILE}")
-    endif()
     if (DEFINED CANON_GCOV_EXECUTABLE AND NOT "${CANON_GCOV_EXECUTABLE}" STREQUAL "")
         list(APPEND _configure_command "-DCANON_GCOV_EXECUTABLE=${CANON_GCOV_EXECUTABLE}")
     endif()
@@ -226,21 +216,16 @@ elseif ("${CANON_TEST_CASE}" STREQUAL "consumer")
     file(MAKE_DIRECTORY "${_source_dir}")
     file(COPY "${CANON_SOURCE_DIR}/test/coverage/" DESTINATION "${_source_dir}")
 
-    set(_configure_command
-        "${CMAKE_COMMAND}"
-        -S "${_source_dir}"
-        -B "${CANON_TEST_BINARY_DIR}"
-        -G "${CANON_GENERATOR}"
+    canon_test_make_configure_command(
+        _configure_command
+        "${_source_dir}"
+        "${CANON_TEST_BINARY_DIR}"
         "-DCANON_SOURCE_DIR=${CANON_SOURCE_DIR}"
-        "-DCMAKE_CXX_COMPILER=${CANON_CXX_COMPILER}"
         -DCMAKE_BUILD_TYPE=Debug
         -DCMAKE_INSTALL_LIBDIR=artifact-lib
         -DCANON_ENABLE_COVERAGE=ON
         "-DCANON_GCOVR_EXECUTABLE=${CANON_GCOVR_EXECUTABLE}"
     )
-    if (DEFINED CANON_TOOLCHAIN_FILE AND NOT "${CANON_TOOLCHAIN_FILE}" STREQUAL "")
-        list(APPEND _configure_command "-DCMAKE_TOOLCHAIN_FILE=${CANON_TOOLCHAIN_FILE}")
-    endif()
     if (DEFINED CANON_GCOV_EXECUTABLE AND NOT "${CANON_GCOV_EXECUTABLE}" STREQUAL "")
         list(APPEND _configure_command "-DCANON_GCOV_EXECUTABLE=${CANON_GCOV_EXECUTABLE}")
     endif()
@@ -304,18 +289,13 @@ elseif ("${CANON_TEST_CASE}" STREQUAL "consumer")
     )
 
     set(_consumer_build_dir "${CANON_TEST_BINARY_DIR}/package-consumer")
-    set(_consumer_configure_command
-        "${CMAKE_COMMAND}"
-        -S "${CANON_SOURCE_DIR}/test/coverage-package-consumer"
-        -B "${_consumer_build_dir}"
-        -G "${CANON_GENERATOR}"
+    canon_test_make_configure_command(
+        _consumer_configure_command
+        "${CANON_SOURCE_DIR}/test/coverage-package-consumer"
+        "${_consumer_build_dir}"
         "-DCanonCoverageFixture_DIR=${_install_prefix}/artifact-lib/cmake/CanonCoverageFixture"
-        "-DCMAKE_CXX_COMPILER=${CANON_CXX_COMPILER}"
         -DCMAKE_BUILD_TYPE=Debug
     )
-    if (DEFINED CANON_TOOLCHAIN_FILE AND NOT "${CANON_TOOLCHAIN_FILE}" STREQUAL "")
-        list(APPEND _consumer_configure_command "-DCMAKE_TOOLCHAIN_FILE=${CANON_TOOLCHAIN_FILE}")
-    endif()
 
     canon_test_run(
         DESCRIPTION "coverage package consumer configure"

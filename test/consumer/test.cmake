@@ -13,18 +13,13 @@ canon_test_require_variables(
 
 file(REMOVE_RECURSE "${CANON_TEST_BINARY_DIR}")
 
-set(_configure_command
-    "${CMAKE_COMMAND}"
-    -S "${CANON_SOURCE_DIR}/test/consumer"
-    -B "${CANON_TEST_BINARY_DIR}"
-    -G "${CANON_GENERATOR}"
+canon_test_make_configure_command(
+    _configure_command
+    "${CANON_SOURCE_DIR}/test/consumer"
+    "${CANON_TEST_BINARY_DIR}"
     "-DCANON_SOURCE_DIR=${CANON_SOURCE_DIR}"
-    "-DCMAKE_CXX_COMPILER=${CANON_CXX_COMPILER}"
     "-DCMAKE_BUILD_TYPE=${CANON_BUILD_TYPE}"
 )
-if (DEFINED CANON_TOOLCHAIN_FILE AND NOT "${CANON_TOOLCHAIN_FILE}" STREQUAL "")
-    list(APPEND _configure_command "-DCMAKE_TOOLCHAIN_FILE=${CANON_TOOLCHAIN_FILE}")
-endif()
 if (DEFINED CANON_ENABLE_WARNINGS)
     list(APPEND _configure_command "-DCANON_ENABLE_WARNINGS=${CANON_ENABLE_WARNINGS}")
 endif()

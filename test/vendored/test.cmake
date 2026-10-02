@@ -14,18 +14,13 @@ file(REMOVE_RECURSE "${CANON_TEST_BINARY_DIR}")
 set(_build_dir "${CANON_TEST_BINARY_DIR}/build")
 set(_install_prefix "${CANON_TEST_BINARY_DIR}/install")
 
-set(_configure_command
-    "${CMAKE_COMMAND}"
-    -S "${CANON_SOURCE_DIR}/test/vendored"
-    -B "${_build_dir}"
-    -G "${CANON_GENERATOR}"
+canon_test_make_configure_command(
+    _configure_command
+    "${CANON_SOURCE_DIR}/test/vendored"
+    "${_build_dir}"
     "-DCANON_SOURCE_DIR=${CANON_SOURCE_DIR}"
-    "-DCMAKE_CXX_COMPILER=${CANON_CXX_COMPILER}"
     -DCMAKE_BUILD_TYPE=Debug
 )
-if (DEFINED CANON_TOOLCHAIN_FILE AND NOT "${CANON_TOOLCHAIN_FILE}" STREQUAL "")
-    list(APPEND _configure_command "-DCMAKE_TOOLCHAIN_FILE=${CANON_TOOLCHAIN_FILE}")
-endif()
 
 canon_test_run(
     DESCRIPTION "Vendored Canon consumer configure"

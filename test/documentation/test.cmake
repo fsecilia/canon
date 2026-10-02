@@ -17,19 +17,14 @@ set(_source_dir "${CANON_TEST_BINARY_DIR}/source")
 set(_binary_dir "${_source_dir}/out")
 file(COPY "${CANON_SOURCE_DIR}/test/documentation/" DESTINATION "${_source_dir}")
 
-set(_configure_command
-    "${CMAKE_COMMAND}"
-    -S "${_source_dir}"
-    -B "${_binary_dir}"
-    -G "${CANON_GENERATOR}"
+canon_test_make_configure_command(
+    _configure_command
+    "${_source_dir}"
+    "${_binary_dir}"
     "-DCANON_SOURCE_DIR=${CANON_SOURCE_DIR}"
-    "-DCMAKE_CXX_COMPILER=${CANON_CXX_COMPILER}"
     -DCMAKE_BUILD_TYPE=Debug
     "-DDOXYGEN_EXECUTABLE=${CANON_DOXYGEN_EXECUTABLE}"
 )
-if (DEFINED CANON_TOOLCHAIN_FILE AND NOT "${CANON_TOOLCHAIN_FILE}" STREQUAL "")
-    list(APPEND _configure_command "-DCMAKE_TOOLCHAIN_FILE=${CANON_TOOLCHAIN_FILE}")
-endif()
 
 if ("${CANON_TEST_CASE}" STREQUAL "install")
     set(_documentation_dir manual)

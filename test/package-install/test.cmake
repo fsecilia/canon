@@ -12,20 +12,15 @@ canon_test_require_variables(
 )
 
 function(_canon_configure_package_fixture BUILD_DIR)
-    set(_configure_command
-        "${CMAKE_COMMAND}"
-        -S "${CANON_SOURCE_DIR}/test/package-install"
-        -B "${BUILD_DIR}"
-        -G "${CANON_GENERATOR}"
+    canon_test_make_configure_command(
+        _configure_command
+        "${CANON_SOURCE_DIR}/test/package-install"
+        "${BUILD_DIR}"
         "-DCANON_SOURCE_DIR=${CANON_SOURCE_DIR}"
-        "-DCMAKE_CXX_COMPILER=${CANON_CXX_COMPILER}"
         -DCMAKE_BUILD_TYPE=Debug
         -DCMAKE_INSTALL_LIBDIR=artifact-lib
         -DCMAKE_INSTALL_DATADIR=artifact-data
     )
-    if (DEFINED CANON_TOOLCHAIN_FILE AND NOT "${CANON_TOOLCHAIN_FILE}" STREQUAL "")
-        list(APPEND _configure_command "-DCMAKE_TOOLCHAIN_FILE=${CANON_TOOLCHAIN_FILE}")
-    endif()
     list(APPEND _configure_command ${ARGN})
 
     canon_test_run(
@@ -57,27 +52,25 @@ function(
     string(MAKE_C_IDENTIFIER "${NAME}_${TARGET}" _consumer_name)
     set(_build_dir "${CANON_TEST_BINARY_DIR}/consumer-${_consumer_name}")
 
-    set(_configure_command
-        "${CMAKE_COMMAND}"
-        -S "${CANON_SOURCE_DIR}/test/package-consumer"
-        -B "${_build_dir}"
-        -G "${CANON_GENERATOR}"
+    set(_consumer_arguments
         "-DCANON_PACKAGE_NAME=${NAME}"
         "-DCANON_PACKAGE_TARGET=${TARGET}"
         "-D${NAME}_DIR=${INSTALL_PREFIX}/${PACKAGE_DIRECTORY}/${NAME}"
-        "-DCMAKE_CXX_COMPILER=${CANON_CXX_COMPILER}"
         -DCMAKE_BUILD_TYPE=Debug
     )
     if (NOT "${VERSION}" STREQUAL "")
-        list(APPEND _configure_command "-DCANON_PACKAGE_VERSION=${VERSION}")
+        list(APPEND _consumer_arguments "-DCANON_PACKAGE_VERSION=${VERSION}")
     endif()
     if (NOT "${ABSENT_TARGET}" STREQUAL "")
-        list(APPEND _configure_command "-DCANON_ABSENT_TARGET=${ABSENT_TARGET}")
+        list(APPEND _consumer_arguments "-DCANON_ABSENT_TARGET=${ABSENT_TARGET}")
     endif()
-    if (DEFINED CANON_TOOLCHAIN_FILE AND NOT "${CANON_TOOLCHAIN_FILE}" STREQUAL "")
-        list(APPEND _configure_command "-DCMAKE_TOOLCHAIN_FILE=${CANON_TOOLCHAIN_FILE}")
-    endif()
-    list(APPEND _configure_command ${ARGN})
+    list(APPEND _consumer_arguments ${ARGN})
+    canon_test_make_configure_command(
+        _configure_command
+        "${CANON_SOURCE_DIR}/test/package-consumer"
+        "${_build_dir}"
+        ${_consumer_arguments}
+    )
 
     canon_test_run(
         DESCRIPTION "Consumer for ${NAME} configure"

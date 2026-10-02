@@ -86,3 +86,20 @@ function(canon_test_run)
         endif()
     endforeach()
 endfunction()
+
+function(canon_test_make_configure_command OUT_COMMAND SOURCE_DIR BINARY_DIR)
+    set(_command
+        "${CMAKE_COMMAND}"
+        -S "${SOURCE_DIR}"
+        -B "${BINARY_DIR}"
+        -G "${CANON_GENERATOR}"
+    )
+    if (DEFINED CANON_CXX_COMPILER AND NOT "${CANON_CXX_COMPILER}" STREQUAL "")
+        list(APPEND _command "-DCMAKE_CXX_COMPILER=${CANON_CXX_COMPILER}")
+    endif()
+    if (DEFINED CANON_TOOLCHAIN_FILE AND NOT "${CANON_TOOLCHAIN_FILE}" STREQUAL "")
+        list(APPEND _command "-DCMAKE_TOOLCHAIN_FILE=${CANON_TOOLCHAIN_FILE}")
+    endif()
+    list(APPEND _command ${ARGN})
+    set(${OUT_COMMAND} "${_command}" PARENT_SCOPE)
+endfunction()

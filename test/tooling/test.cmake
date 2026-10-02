@@ -16,21 +16,16 @@ file(REMOVE_RECURSE "${CANON_TEST_BINARY_DIR}")
 if ("${CANON_TEST_CASE}" STREQUAL "consumer")
     canon_test_require_variables(CANON_CLANG_TIDY_EXECUTABLE)
 
-    set(_configure_command
-        "${CMAKE_COMMAND}"
-        -S "${CANON_SOURCE_DIR}/test/tooling"
-        -B "${CANON_TEST_BINARY_DIR}"
-        -G "${CANON_GENERATOR}"
+    canon_test_make_configure_command(
+        _configure_command
+        "${CANON_SOURCE_DIR}/test/tooling"
+        "${CANON_TEST_BINARY_DIR}"
         "-DCANON_SOURCE_DIR=${CANON_SOURCE_DIR}"
-        "-DCMAKE_CXX_COMPILER=${CANON_CXX_COMPILER}"
         -DCMAKE_BUILD_TYPE=Debug
         -DCANON_ENABLE_WARNINGS=ON
         -DCANON_ENABLE_TIDY=ON
         "-DCANON_CLANG_TIDY_EXECUTABLE=${CANON_CLANG_TIDY_EXECUTABLE}"
     )
-    if (DEFINED CANON_TOOLCHAIN_FILE AND NOT "${CANON_TOOLCHAIN_FILE}" STREQUAL "")
-        list(APPEND _configure_command "-DCMAKE_TOOLCHAIN_FILE=${CANON_TOOLCHAIN_FILE}")
-    endif()
 
     canon_test_run(
         DESCRIPTION "tidy configure"
@@ -49,21 +44,16 @@ if ("${CANON_TEST_CASE}" STREQUAL "consumer")
         COPYONLY
     )
 
-    set(_nested_configure_command
-        "${CMAKE_COMMAND}"
-        -S "${_nested_source_dir}"
-        -B "${_nested_binary_dir}"
-        -G "${CANON_GENERATOR}"
+    canon_test_make_configure_command(
+        _nested_configure_command
+        "${_nested_source_dir}"
+        "${_nested_binary_dir}"
         "-DCANON_SOURCE_DIR=${CANON_SOURCE_DIR}"
-        "-DCMAKE_CXX_COMPILER=${CANON_CXX_COMPILER}"
         -DCMAKE_BUILD_TYPE=Debug
         -DCANON_ENABLE_WARNINGS=ON
         -DCANON_ENABLE_TIDY=ON
         "-DCANON_CLANG_TIDY_EXECUTABLE=${CANON_CLANG_TIDY_EXECUTABLE}"
     )
-    if (DEFINED CANON_TOOLCHAIN_FILE AND NOT "${CANON_TOOLCHAIN_FILE}" STREQUAL "")
-        list(APPEND _nested_configure_command "-DCMAKE_TOOLCHAIN_FILE=${CANON_TOOLCHAIN_FILE}")
-    endif()
 
     canon_test_run(
         DESCRIPTION "tidy configure beneath ancestor external directory"
@@ -90,19 +80,14 @@ elseif ("${CANON_TEST_CASE}" STREQUAL "version")
     set(_unsupported_tidy "${CMAKE_COMMAND}")
 
     set(_consumer_binary_dir "${CANON_TEST_BINARY_DIR}/consumer")
-    set(_consumer_configure_command
-        "${CMAKE_COMMAND}"
-        -S "${CANON_SOURCE_DIR}/test/tooling"
-        -B "${_consumer_binary_dir}"
-        -G "${CANON_GENERATOR}"
+    canon_test_make_configure_command(
+        _consumer_configure_command
+        "${CANON_SOURCE_DIR}/test/tooling"
+        "${_consumer_binary_dir}"
         "-DCANON_SOURCE_DIR=${CANON_SOURCE_DIR}"
-        "-DCMAKE_CXX_COMPILER=${CANON_CXX_COMPILER}"
         -DCANON_ENABLE_TIDY=ON
         "-DCANON_CLANG_TIDY_EXECUTABLE=${_unsupported_tidy}"
     )
-    if (DEFINED CANON_TOOLCHAIN_FILE AND NOT "${CANON_TOOLCHAIN_FILE}" STREQUAL "")
-        list(APPEND _consumer_configure_command "-DCMAKE_TOOLCHAIN_FILE=${CANON_TOOLCHAIN_FILE}")
-    endif()
 
     canon_test_run(
         DESCRIPTION "configure with unsupported clang-tidy"

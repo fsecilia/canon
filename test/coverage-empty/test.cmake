@@ -12,20 +12,15 @@ canon_test_require_variables(
 )
 
 file(REMOVE_RECURSE "${CANON_TEST_BINARY_DIR}")
-set(_configure_command
-    "${CMAKE_COMMAND}"
-    -S "${CANON_SOURCE_DIR}/test/coverage-empty"
-    -B "${CANON_TEST_BINARY_DIR}"
-    -G "${CANON_GENERATOR}"
+canon_test_make_configure_command(
+    _configure_command
+    "${CANON_SOURCE_DIR}/test/coverage-empty"
+    "${CANON_TEST_BINARY_DIR}"
     "-DCANON_SOURCE_DIR=${CANON_SOURCE_DIR}"
-    "-DCMAKE_CXX_COMPILER=${CANON_CXX_COMPILER}"
     -DCMAKE_BUILD_TYPE=Debug
     -DCANON_ENABLE_COVERAGE=ON
     "-DCANON_GCOVR_EXECUTABLE=${CANON_GCOVR_EXECUTABLE}"
 )
-if (DEFINED CANON_TOOLCHAIN_FILE AND NOT "${CANON_TOOLCHAIN_FILE}" STREQUAL "")
-    list(APPEND _configure_command "-DCMAKE_TOOLCHAIN_FILE=${CANON_TOOLCHAIN_FILE}")
-endif()
 if (DEFINED CANON_GCOV_EXECUTABLE AND NOT "${CANON_GCOV_EXECUTABLE}" STREQUAL "")
     list(APPEND _configure_command "-DCANON_GCOV_EXECUTABLE=${CANON_GCOV_EXECUTABLE}")
 endif()
