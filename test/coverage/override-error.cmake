@@ -23,7 +23,7 @@ endif()
 file(REMOVE_RECURSE "${CANON_TEST_BINARY_DIR}")
 canon_test_make_configure_command(
     _configure_command
-    "${CANON_SOURCE_DIR}/test/coverage"
+    "${CANON_SOURCE_DIR}/test/coverage/project"
     "${CANON_TEST_BINARY_DIR}"
     "-DCANON_SOURCE_DIR=${CANON_SOURCE_DIR}"
     -DCMAKE_BUILD_TYPE=Debug

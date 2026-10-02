@@ -48,7 +48,7 @@ canon_test_run(
 set(_consumer_build_dir "${CANON_TEST_BINARY_DIR}/package-consumer")
 canon_test_make_configure_command(
     _consumer_configure_command
-    "${CANON_SOURCE_DIR}/test/asan-package-consumer"
+    "${CANON_SOURCE_DIR}/test/asan/package-consumer"
     "${_consumer_build_dir}"
     "-DCanonAsanFixture_DIR=${_install_prefix}/artifact-lib/cmake/CanonAsanFixture"
     -DCMAKE_BUILD_TYPE=Debug

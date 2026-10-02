@@ -16,7 +16,7 @@ set(_fixture_root "${CANON_TEST_BINARY_DIR}-fixture")
 set(_source_dir "${_fixture_root}/external/coverage")
 file(REMOVE_RECURSE "${CANON_TEST_BINARY_DIR}" "${_fixture_root}")
 file(MAKE_DIRECTORY "${_source_dir}")
-file(COPY "${CANON_SOURCE_DIR}/test/coverage/" DESTINATION "${_source_dir}")
+file(COPY "${CANON_SOURCE_DIR}/test/coverage/project/" DESTINATION "${_source_dir}")
 
 canon_test_make_configure_command(
     _configure_command
@@ -93,7 +93,7 @@ canon_test_run(
 set(_consumer_build_dir "${CANON_TEST_BINARY_DIR}/package-consumer")
 canon_test_make_configure_command(
     _consumer_configure_command
-    "${CANON_SOURCE_DIR}/test/coverage-package-consumer"
+    "${CANON_SOURCE_DIR}/test/coverage/package-consumer"
     "${_consumer_build_dir}"
     "-DCanonCoverageFixture_DIR=${_install_prefix}/artifact-lib/cmake/CanonCoverageFixture"
     -DCMAKE_BUILD_TYPE=Debug

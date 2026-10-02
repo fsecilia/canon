@@ -70,27 +70,27 @@ _canon_add_script_test(
 
 _canon_add_script_test(
     executable.install
-    executable-install/test.cmake
+    executable/install/test.cmake
 )
 
 _canon_add_script_test(
     library.install
-    library-install/test.cmake
+    library/install/test.cmake
 )
 
 _canon_add_script_test(
     package.config
-    package-install/config.cmake
+    package/install/config.cmake
 )
 
 _canon_add_script_test(
     package.version
-    package-install/version.cmake
+    package/install/version.cmake
 )
 
 _canon_add_script_test(
     package.dependencies
-    package-install/dependencies.cmake
+    package/install/dependencies.cmake
 )
 
 _canon_add_script_test(
@@ -102,7 +102,7 @@ _canon_add_script_test(
 
 _canon_add_script_test(
     ipo.unavailable
-    ipo-unavailable/test.cmake
+    ipo/unavailable/test.cmake
 )
 
 _canon_add_script_test(
@@ -123,7 +123,7 @@ _canon_add_script_test(
 
 _canon_add_script_test(
     asan.unsupported
-    target-errors/test.cmake
+    target/errors/test.cmake
     -DCANON_TEST_CASE=asan-unsupported
     "-DCANON_EXPECTED_ERROR=Canon ASan does not support compiler 'Clang'"
     "-DCANON_EXPECTED_DETAIL=with frontend 'MSVC'"
@@ -171,7 +171,7 @@ _canon_add_script_test(
 )
 _canon_add_script_test(
     coverage.empty-report
-    coverage-empty/test.cmake
+    coverage/empty/test.cmake
     ${_canon_coverage_test_arguments}
 )
 if (NOT _canon_coverage_tests_enabled)
@@ -217,17 +217,17 @@ _canon_add_script_test(
 )
 _canon_add_script_test(
     documentation.policy
-    documentation-policy/test.cmake
+    documentation/policy/test.cmake
     "-DCANON_DOXYGEN_EXECUTABLE=${DOXYGEN_EXECUTABLE}"
 )
 _canon_add_script_test(
     documentation.nested
-    documentation-nested/test.cmake
+    documentation/nested/test.cmake
     "-DCANON_DOXYGEN_EXECUTABLE=${DOXYGEN_EXECUTABLE}"
 )
 _canon_add_script_test(
     documentation.warning
-    documentation-warning/test.cmake
+    documentation/warning/test.cmake
     "-DCANON_DOXYGEN_EXECUTABLE=${DOXYGEN_EXECUTABLE}"
 )
 if (NOT Doxygen_FOUND)
@@ -244,7 +244,7 @@ endif()
 
 _canon_add_script_test(
     documentation.unavailable
-    documentation-unavailable/test.cmake
+    documentation/unavailable/test.cmake
 )
 
 _canon_add_script_test(
@@ -293,14 +293,14 @@ endif()
 
 _canon_add_script_test(
     targets.missing
-    target-errors/test.cmake
+    target/errors/test.cmake
     -DCANON_TEST_CASE=missing
     "-DCANON_EXPECTED_ERROR=target 'missing' does not exist"
 )
 
 _canon_add_script_test(
     targets.interface
-    target-errors/test.cmake
+    target/errors/test.cmake
     -DCANON_TEST_CASE=interface
     "-DCANON_EXPECTED_ERROR=target 'sample_interface' has type"
     "-DCANON_EXPECTED_DETAIL='INTERFACE_LIBRARY'"
@@ -308,84 +308,84 @@ _canon_add_script_test(
 
 _canon_add_script_test(
     executables.missing
-    executable-errors/test.cmake
+    executable/errors/test.cmake
     -DCANON_TEST_CASE=missing
     "-DCANON_EXPECTED_ERROR=canon_apply_executable(): target 'missing' does not exist"
 )
 
 _canon_add_script_test(
     executables.library
-    executable-errors/test.cmake
+    executable/errors/test.cmake
     -DCANON_TEST_CASE=library
     "-DCANON_EXPECTED_ERROR=canon_apply_executable(): target 'sample' must be an executable"
 )
 
 _canon_add_script_test(
     executables.bundle
-    executable-errors/test.cmake
+    executable/errors/test.cmake
     -DCANON_TEST_CASE=bundle
     "-DCANON_EXPECTED_ERROR=canon_apply_executable(): MACOSX_BUNDLE target 'sample' is not supported"
 )
 
 _canon_add_script_test(
     libraries.missing
-    library-errors/test.cmake
+    library/errors/test.cmake
     -DCANON_TEST_CASE=missing
     "-DCANON_EXPECTED_ERROR=canon_apply_library(): target 'missing' does not exist"
 )
 
 _canon_add_script_test(
     libraries.object
-    library-errors/test.cmake
+    library/errors/test.cmake
     -DCANON_TEST_CASE=object
     "-DCANON_EXPECTED_ERROR=canon_apply_library(): target 'sample' must be a STATIC, SHARED, MODULE, or INTERFACE library"
 )
 
 _canon_add_script_test(
     libraries.framework
-    library-errors/test.cmake
+    library/errors/test.cmake
     -DCANON_TEST_CASE=framework
     "-DCANON_EXPECTED_ERROR=canon_apply_library(): FRAMEWORK target 'sample' is not supported"
 )
 
 _canon_add_script_test(
     libraries.export-header-collision
-    library-errors/test.cmake
+    library/errors/test.cmake
     -DCANON_TEST_CASE=export-header-collision
     "-DCANON_EXPECTED_ERROR=generated export header 'canon_library_errors/foo_bar/export.hpp' for target 'second' conflicts with target 'first'"
 )
 
 _canon_add_script_test(
     libraries.export-macro-collision
-    library-errors/test.cmake
+    library/errors/test.cmake
     -DCANON_TEST_CASE=export-macro-collision
     "-DCANON_EXPECTED_ERROR=export macro 'AXIOM_CORE_API' for library 'AxiomCore::AxiomCore (target 'axiom_core_monolith')' conflicts with library 'Axiom::Core (target 'axiom_core')'"
 )
 
 _canon_add_script_test(
     dependencies.empty
-    dependency-errors/test.cmake
+    dependency/errors/test.cmake
     -DCANON_TEST_CASE=empty
     "-DCANON_EXPECTED_ERROR=canon_apply_dependency(): package name must not be empty"
 )
 
 _canon_add_script_test(
     dependencies.required
-    dependency-errors/test.cmake
+    dependency/errors/test.cmake
     -DCANON_TEST_CASE=required
     "-DCANON_EXPECTED_ERROR=canon_apply_dependency(): 'REQUIRED' is inherited"
 )
 
 _canon_add_script_test(
     dependencies.quiet
-    dependency-errors/test.cmake
+    dependency/errors/test.cmake
     -DCANON_TEST_CASE=quiet
     "-DCANON_EXPECTED_ERROR=canon_apply_dependency(): 'QUIET' is inherited"
 )
 
 _canon_add_script_test(
     dependencies.no-package
-    dependency-errors/test.cmake
+    dependency/errors/test.cmake
     -DCANON_TEST_CASE=no-package
     "-DCANON_EXPECTED_ERROR=package dependencies were declared, but project"
 )

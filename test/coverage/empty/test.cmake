@@ -3,9 +3,8 @@
 
 include("${CANON_SOURCE_DIR}/test/support/CanonTest.cmake")
 
-canon_test_require_variables(CANON_SOURCE_DIR)
-
 canon_test_require_variables(
+    CANON_SOURCE_DIR
     CANON_TEST_BINARY_DIR
     CANON_GENERATOR
     CANON_CXX_COMPILER
@@ -15,7 +14,7 @@ canon_test_require_variables(
 file(REMOVE_RECURSE "${CANON_TEST_BINARY_DIR}")
 canon_test_make_configure_command(
     _configure_command
-    "${CANON_SOURCE_DIR}/test/coverage/nested"
+    "${CANON_SOURCE_DIR}/test/coverage/empty"
     "${CANON_TEST_BINARY_DIR}"
     "-DCANON_SOURCE_DIR=${CANON_SOURCE_DIR}"
     -DCMAKE_BUILD_TYPE=Debug
@@ -30,32 +29,20 @@ if (DEFINED CANON_LLVM_COV_EXECUTABLE AND NOT "${CANON_LLVM_COV_EXECUTABLE}" STR
 endif()
 
 canon_test_run(
-    DESCRIPTION "nested coverage configure"
+    DESCRIPTION "empty coverage configure"
     COMMAND ${_configure_command}
 )
 canon_test_run(
-    DESCRIPTION "nested coverage build"
+    DESCRIPTION "empty coverage build"
     COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}"
 )
 canon_test_run(
-    DESCRIPTION "nested coverage tests"
-    COMMAND "${CMAKE_CTEST_COMMAND}" --test-dir "${CANON_TEST_BINARY_DIR}" --output-on-failure
+    DESCRIPTION "empty coverage fixture"
+    COMMAND "${CANON_TEST_BINARY_DIR}/covered_empty"
 )
 canon_test_run(
-    DESCRIPTION "nested coverage report"
+    DESCRIPTION "empty coverage report"
+    EXPECT_FAILURE
     COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}" --target coverage-report
+    EXPECTED_OUTPUT "Canon coverage report contains no project source files"
 )
-
-set(_index "${CANON_TEST_BINARY_DIR}/coverage/index.html")
-if (NOT EXISTS "${_index}")
-    message(FATAL_ERROR "nested coverage-report did not generate ${_index}")
-endif()
-file(READ "${_index}" _html)
-if (NOT "${_html}" MATCHES "covered\\.cpp")
-    message(FATAL_ERROR
-        "coverage report suppressed project source beneath an ancestor external directory")
-endif()
-if ("${_html}" MATCHES "excluded\\.cpp")
-    message(FATAL_ERROR
-        "coverage report unexpectedly contains the active project's external/excluded.cpp")
-endif()

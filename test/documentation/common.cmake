@@ -17,7 +17,7 @@ function(_canon_configure_documentation OUT_SOURCE_DIR OUT_BINARY_DIR DESCRIPTIO
     file(REMOVE_RECURSE "${CANON_TEST_BINARY_DIR}")
     set(_source_dir "${CANON_TEST_BINARY_DIR}/source")
     set(_binary_dir "${_source_dir}/out")
-    file(COPY "${CANON_SOURCE_DIR}/test/documentation/" DESTINATION "${_source_dir}")
+    file(COPY "${CANON_SOURCE_DIR}/test/documentation/project/" DESTINATION "${_source_dir}")
 
     canon_test_make_configure_command(
         _configure_command
