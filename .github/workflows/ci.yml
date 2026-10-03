@@ -60,6 +60,9 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v7.0.1
 
+      - name: Populate GoogleTest submodule
+        run: git submodule update --init external/googletest
+
       - name: Set up Python
         uses: actions/setup-python@v7.0.0
         with:
