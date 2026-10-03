@@ -703,7 +703,7 @@ function(_canon_finalize_package)
         )
         if (_dependency_keys)
             message(FATAL_ERROR
-                "canon_apply_dependency(): package dependencies were declared, but project "
+                "canon_propagate_dependency(): package dependencies were declared, but project "
                 "'${PROJECT_NAME}' has no installable Canon package")
         endif()
         return()
@@ -776,8 +776,8 @@ function(_canon_partition_dependency_targets OUT_PRESENT OUT_MISSING)
     set(${OUT_MISSING} "${_missing}" PARENT_SCOPE)
 endfunction()
 
-# Makes one vendored-or-installed dependency available to the active build.
-function(_canon_require_dependency)
+# Resolves one vendored-or-installed dependency for the active build.
+function(_canon_resolve_dependency)
     set(_one_value_arguments NAME PACKAGE VERSION SOURCE_DIR BINARY_DIR VENDORED_HINT)
     set(_multi_value_arguments TARGETS)
     cmake_parse_arguments(
@@ -790,7 +790,7 @@ function(_canon_require_dependency)
 
     if (_dependency_UNPARSED_ARGUMENTS)
         message(FATAL_ERROR
-            "_canon_require_dependency(): unexpected arguments: ${_dependency_UNPARSED_ARGUMENTS}")
+            "_canon_resolve_dependency(): unexpected arguments: ${_dependency_UNPARSED_ARGUMENTS}")
     endif()
 
     message(CHECK_START "finding dependency '${_dependency_PACKAGE}'")
@@ -861,10 +861,10 @@ function(_canon_require_dependency)
     message(CHECK_PASS "using installed package '${_dependency_PACKAGE}'")
 endfunction()
 
-# Makes one required project dependency available from external/ or an installed package.
-function(canon_require_dependency EXTERNAL_NAME)
+# Resolves one project dependency from external/ or an installed package.
+function(canon_resolve_dependency EXTERNAL_NAME)
     if ("${EXTERNAL_NAME}" STREQUAL "")
-        message(FATAL_ERROR "canon_require_dependency(): external name must not be empty")
+        message(FATAL_ERROR "canon_resolve_dependency(): external name must not be empty")
     endif()
 
     set(_one_value_arguments PACKAGE VERSION)
@@ -879,19 +879,19 @@ function(canon_require_dependency EXTERNAL_NAME)
 
     if (_dependency_UNPARSED_ARGUMENTS)
         message(FATAL_ERROR
-            "canon_require_dependency(): unexpected arguments: ${_dependency_UNPARSED_ARGUMENTS}")
+            "canon_resolve_dependency(): unexpected arguments: ${_dependency_UNPARSED_ARGUMENTS}")
     endif()
     if ("${_dependency_PACKAGE}" STREQUAL "")
         set(_dependency_PACKAGE "${EXTERNAL_NAME}")
     endif()
     if ("${_dependency_VERSION}" STREQUAL "")
-        message(FATAL_ERROR "canon_require_dependency(): VERSION is required")
+        message(FATAL_ERROR "canon_resolve_dependency(): VERSION is required")
     endif()
     if (NOT _dependency_TARGETS)
-        message(FATAL_ERROR "canon_require_dependency(): TARGETS is required")
+        message(FATAL_ERROR "canon_resolve_dependency(): TARGETS is required")
     endif()
 
-    _canon_require_dependency(
+    _canon_resolve_dependency(
         NAME "${EXTERNAL_NAME}"
         PACKAGE "${_dependency_PACKAGE}"
         VERSION "${_dependency_VERSION}"
@@ -910,7 +910,7 @@ function(canon_require_googletest)
     set(_source_dir "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../external/googletest")
     cmake_path(NORMAL_PATH _source_dir)
 
-    _canon_require_dependency(
+    _canon_resolve_dependency(
         NAME googletest
         PACKAGE GTest
         VERSION "1.18.0...<2.0.0"
@@ -923,10 +923,10 @@ function(canon_require_googletest)
     )
 endfunction()
 
-# Records how this project's installed package recovers one external dependency.
-function(canon_apply_dependency PACKAGE)
+# Propagates one dependency requirement to this project's installed package.
+function(canon_propagate_dependency PACKAGE)
     if ("${PACKAGE}" STREQUAL "")
-        message(FATAL_ERROR "canon_apply_dependency(): package name must not be empty")
+        message(FATAL_ERROR "canon_propagate_dependency(): package name must not be empty")
     endif()
 
     set(_dependency_call "find_dependency(")
@@ -937,7 +937,7 @@ function(canon_apply_dependency PACKAGE)
         if ("${_argument_index}" GREATER 0
             AND ("${_argument}" STREQUAL "REQUIRED" OR "${_argument}" STREQUAL "QUIET"))
             message(FATAL_ERROR
-                "canon_apply_dependency(): '${_argument}' is inherited from the outer find_package() call")
+                "canon_propagate_dependency(): '${_argument}' is inherited from the outer find_package() call")
         endif()
 
         _canon_serialize_package_argument(_serialized_argument "${_argument}")
@@ -965,7 +965,7 @@ function(canon_apply_dependency PACKAGE)
         )
         if (NOT "${_existing_call}" STREQUAL "${_dependency_call}")
             message(FATAL_ERROR
-                "canon_apply_dependency(): internal dependency-key collision for package '${PACKAGE}'")
+                "canon_propagate_dependency(): internal dependency-key collision for package '${PACKAGE}'")
         endif()
         return()
     endif()

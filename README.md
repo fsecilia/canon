@@ -100,10 +100,10 @@ A versioned project receives `<Project>Config.cmake`, `<Project>ConfigVersion.cm
 
 Executables installed with `canon_apply_executable()` are not exported as package targets and do not create a package configuration by themselves.
 
-Use `canon_require_dependency()` when a project needs the same vendored-or-installed dependency lookup in its current build:
+Use `canon_resolve_dependency()` when a project needs the same vendored-or-installed dependency lookup in its current build:
 
 ```cmake
-canon_require_dependency(
+canon_resolve_dependency(
     sdl
     PACKAGE SDL3
     VERSION "3.0...<4.0"
@@ -113,7 +113,7 @@ canon_require_dependency(
 
 Canon first reuses the dependency when every required target already exists. Otherwise, if `${PROJECT_SOURCE_DIR}/external/sdl/CMakeLists.txt` exists, Canon adds that project beneath `${PROJECT_BINARY_DIR}/external/sdl` with `EXCLUDE_FROM_ALL`. If the vendored project is absent, Canon searches for the requested package and version in Config mode. The call fails if only some required targets already exist or if the selected provider does not supply every target. `TARGETS` may list more than one required target. Canon does not download dependencies.
 
-The first argument names the directory beneath the project's `external/` tree. `PACKAGE` defaults to that name when the package name matches it. `VERSION` and `TARGETS` are required. This function only makes the dependency available to the current build; if an installed Canon-managed package must recover that dependency, record that separately with `canon_apply_dependency()`.
+The first argument names the directory beneath the project's `external/` tree. `PACKAGE` defaults to that name when the package name matches it. `VERSION` and `TARGETS` are required. This function only makes the dependency available to the current build; if an installed Canon-managed package must recover that dependency, record that separately with `canon_propagate_dependency()`.
 
 GoogleTest has a dedicated policy because it is shared by essentially every C++ project in the Canon ecosystem:
 
@@ -129,18 +129,18 @@ git submodule update --init external/googletest
 
 If Canon's vendored GoogleTest source is unavailable, including when Canon is consumed as an installed package, Canon searches for an installed GTest package in the range `1.18.0...<2.0.0`. Canon does not install GoogleTest with itself and does not search for or add GoogleTest merely because Canon was loaded. Projects that never call `canon_require_googletest()` pay no GoogleTest configuration or build cost.
 
-Use `canon_apply_dependency()` when an installed package must recover another package before importing its targets:
+Use `canon_propagate_dependency()` when an installed package must recover another package before importing its targets:
 
 ```cmake
 find_package(fmt 11 CONFIG REQUIRED)
-canon_apply_dependency(fmt 11 CONFIG)
+canon_propagate_dependency(fmt 11 CONFIG)
 
 target_link_libraries(example PUBLIC fmt::fmt)
 ```
 
-`canon_apply_dependency()` does not locate, vendor, or link the dependency. In this example, Canon records a call equivalent to `find_dependency(fmt 11 CONFIG)` in the installed package configuration. Use it also when a dependency comes from the source tree during the build but downstream consumers must find that dependency as a package. Do not pass `REQUIRED` or `QUIET`; `find_dependency()` inherits those requirements from the outer `find_package()` call.
+`canon_propagate_dependency()` does not locate, vendor, or link the dependency. In this example, Canon records a call equivalent to `find_dependency(fmt 11 CONFIG)` in the installed package configuration. Use it also when a dependency comes from the source tree during the build but downstream consumers must find that dependency as a package. Do not pass `REQUIRED` or `QUIET`; `find_dependency()` inherits those requirements from the outer `find_package()` call.
 
-Dependency arguments use normal CMake evaluation. Canon captures the values produced at the `canon_apply_dependency()` call site and serializes those values safely into the generated package configuration. When that configuration runs, normal `find_dependency()` and `find_package()` list and macro-expansion semantics apply. Do not rely on the generated source preserving the original spelling or argument boundaries from the call site.
+Dependency arguments use normal CMake evaluation. Canon captures the values produced at the `canon_propagate_dependency()` call site and serializes those values safely into the generated package configuration. When that configuration runs, normal `find_dependency()` and `find_package()` list and macro-expansion semantics apply. Do not rely on the generated source preserving the original spelling or argument boundaries from the call site.
 
 ## Developer controls
 

@@ -12,42 +12,42 @@ endif()
 include("${CMAKE_CURRENT_LIST_DIR}/../../support/CanonSourceFixture.cmake")
 
 if ("${CANON_TEST_CASE}" STREQUAL "empty")
-    canon_apply_dependency("")
+    canon_propagate_dependency("")
 elseif ("${CANON_TEST_CASE}" STREQUAL "required")
-    canon_apply_dependency(DependencyFixture REQUIRED)
+    canon_propagate_dependency(DependencyFixture REQUIRED)
 elseif ("${CANON_TEST_CASE}" STREQUAL "quiet")
-    canon_apply_dependency(DependencyFixture QUIET)
+    canon_propagate_dependency(DependencyFixture QUIET)
 elseif ("${CANON_TEST_CASE}" STREQUAL "no-package")
-    canon_apply_dependency(DependencyFixture CONFIG)
-elseif ("${CANON_TEST_CASE}" STREQUAL "require-empty")
-    canon_require_dependency(
+    canon_propagate_dependency(DependencyFixture CONFIG)
+elseif ("${CANON_TEST_CASE}" STREQUAL "resolve-empty")
+    canon_resolve_dependency(
         ""
         PACKAGE DependencyFixture
         VERSION "7.3...<8.0"
         TARGETS DependencyFixture::Core
     )
-elseif ("${CANON_TEST_CASE}" STREQUAL "require-version")
-    canon_require_dependency(
+elseif ("${CANON_TEST_CASE}" STREQUAL "resolve-version")
+    canon_resolve_dependency(
         fixture-dependency
         PACKAGE DependencyFixture
         TARGETS DependencyFixture::Core
     )
-elseif ("${CANON_TEST_CASE}" STREQUAL "require-targets")
-    canon_require_dependency(
+elseif ("${CANON_TEST_CASE}" STREQUAL "resolve-targets")
+    canon_resolve_dependency(
         fixture-dependency
         PACKAGE DependencyFixture
         VERSION "7.3...<8.0"
     )
-elseif ("${CANON_TEST_CASE}" STREQUAL "require-partial")
+elseif ("${CANON_TEST_CASE}" STREQUAL "resolve-partial")
     add_library(DependencyFixture::Core INTERFACE IMPORTED)
-    canon_require_dependency(
+    canon_resolve_dependency(
         fixture-dependency
         PACKAGE DependencyFixture
         VERSION "7.3...<8.0"
         TARGETS DependencyFixture::Core DependencyFixture::Support
     )
-elseif ("${CANON_TEST_CASE}" STREQUAL "require-missing")
-    canon_require_dependency(
+elseif ("${CANON_TEST_CASE}" STREQUAL "resolve-missing")
+    canon_resolve_dependency(
         missing-dependency
         PACKAGE CanonMissingDependencyFixture
         VERSION "7.3...<8.0"

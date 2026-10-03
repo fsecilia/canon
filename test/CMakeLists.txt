@@ -94,18 +94,18 @@ _canon_add_script_test(
 )
 
 _canon_add_script_test(
-    dependencies.require.vendored
-    dependency/require/vendored.cmake
+    dependencies.resolve.vendored
+    dependency/resolve/vendored.cmake
 )
 
 _canon_add_script_test(
-    dependencies.require.installed
-    dependency/require/installed.cmake
+    dependencies.resolve.installed
+    dependency/resolve/installed.cmake
 )
 
 _canon_add_script_test(
-    dependencies.require.provided
-    dependency/require/provided.cmake
+    dependencies.resolve.provided
+    dependency/resolve/provided.cmake
 )
 
 _canon_add_script_test(
@@ -413,21 +413,21 @@ _canon_add_script_test(
     dependencies.empty
     dependency/errors/test.cmake
     -DCANON_TEST_CASE=empty
-    "-DCANON_EXPECTED_ERROR=canon_apply_dependency(): package name must not be empty"
+    "-DCANON_EXPECTED_ERROR=canon_propagate_dependency(): package name must not be empty"
 )
 
 _canon_add_script_test(
     dependencies.required
     dependency/errors/test.cmake
     -DCANON_TEST_CASE=required
-    "-DCANON_EXPECTED_ERROR=canon_apply_dependency(): 'REQUIRED' is inherited"
+    "-DCANON_EXPECTED_ERROR=canon_propagate_dependency(): 'REQUIRED' is inherited"
 )
 
 _canon_add_script_test(
     dependencies.quiet
     dependency/errors/test.cmake
     -DCANON_TEST_CASE=quiet
-    "-DCANON_EXPECTED_ERROR=canon_apply_dependency(): 'QUIET' is inherited"
+    "-DCANON_EXPECTED_ERROR=canon_propagate_dependency(): 'QUIET' is inherited"
 )
 
 _canon_add_script_test(
@@ -438,39 +438,39 @@ _canon_add_script_test(
 )
 
 _canon_add_script_test(
-    dependencies.require.empty
+    dependencies.resolve.empty
     dependency/errors/test.cmake
-    -DCANON_TEST_CASE=require-empty
-    "-DCANON_EXPECTED_ERROR=canon_require_dependency(): external name must not be empty"
+    -DCANON_TEST_CASE=resolve-empty
+    "-DCANON_EXPECTED_ERROR=canon_resolve_dependency(): external name must not be empty"
 )
 
 _canon_add_script_test(
-    dependencies.require.version
+    dependencies.resolve.version
     dependency/errors/test.cmake
-    -DCANON_TEST_CASE=require-version
-    "-DCANON_EXPECTED_ERROR=canon_require_dependency(): VERSION is required"
+    -DCANON_TEST_CASE=resolve-version
+    "-DCANON_EXPECTED_ERROR=canon_resolve_dependency(): VERSION is required"
 )
 
 _canon_add_script_test(
-    dependencies.require.targets
+    dependencies.resolve.targets
     dependency/errors/test.cmake
-    -DCANON_TEST_CASE=require-targets
-    "-DCANON_EXPECTED_ERROR=canon_require_dependency(): TARGETS is required"
+    -DCANON_TEST_CASE=resolve-targets
+    "-DCANON_EXPECTED_ERROR=canon_resolve_dependency(): TARGETS is required"
 )
 
 _canon_add_script_test(
-    dependencies.require.partial
+    dependencies.resolve.partial
     dependency/errors/test.cmake
-    -DCANON_TEST_CASE=require-partial
+    -DCANON_TEST_CASE=resolve-partial
     "-DCANON_EXPECTED_ERROR=dependency 'DependencyFixture' is only partially available"
     "-DCANON_EXPECTED_DETAIL=present targets: DependencyFixture::Core; missing targets: DependencyFixture::Support"
     "-DCANON_EXPECTED_STATUS=finding dependency 'DependencyFixture' - partially provided"
 )
 
 _canon_add_script_test(
-    dependencies.require.missing
+    dependencies.resolve.missing
     dependency/errors/test.cmake
-    -DCANON_TEST_CASE=require-missing
+    -DCANON_TEST_CASE=resolve-missing
     "-DCANON_EXPECTED_ERROR=dependency 'CanonMissingDependencyFixture' version '7.3...<8.0' is unavailable"
     "-DCANON_EXPECTED_DETAIL=initialize vendored dependency 'external/missing-dependency', or install a compatible package"
     "-DCANON_EXPECTED_STATUS=finding dependency 'CanonMissingDependencyFixture' - unavailable"

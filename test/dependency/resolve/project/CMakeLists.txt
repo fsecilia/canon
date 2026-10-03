@@ -14,7 +14,7 @@ if (CANON_PROVIDE_SUPPORT)
     add_library(DependencyFixture::Support INTERFACE IMPORTED GLOBAL)
 endif()
 
-canon_require_dependency(
+canon_resolve_dependency(
     fixture-dependency
     PACKAGE DependencyFixture
     VERSION "7.3...<8.0"

@@ -17,7 +17,7 @@ function(_canon_prepare_required_dependency_fixture OUT_SOURCE_DIR OUT_BUILD_DIR
     set(_build_dir "${CANON_TEST_BINARY_DIR}/build")
     file(MAKE_DIRECTORY "${_source_dir}")
     file(COPY
-        "${CANON_SOURCE_DIR}/test/dependency/require/project/"
+        "${CANON_SOURCE_DIR}/test/dependency/resolve/project/"
         DESTINATION "${_source_dir}"
     )
     set(${OUT_SOURCE_DIR} "${_source_dir}" PARENT_SCOPE)

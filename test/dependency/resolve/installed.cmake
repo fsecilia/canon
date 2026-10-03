@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2026 Frank Secilia
 
-include("${CANON_SOURCE_DIR}/test/dependency/require/common.cmake")
+include("${CANON_SOURCE_DIR}/test/dependency/resolve/common.cmake")
 include(CMakePackageConfigHelpers)
 
 _canon_prepare_required_dependency_fixture(_source_dir _build_dir)
