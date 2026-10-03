@@ -614,8 +614,8 @@ function(_canon_mark_package_architecture_specific)
     )
 endfunction()
 
-# Represents one value as a literal CMake bracket argument.
-function(_canon_literal_package_argument OUT_ARGUMENT ARGUMENT)
+# Serializes one already-evaluated package argument as CMake source.
+function(_canon_serialize_package_argument OUT_ARGUMENT ARGUMENT)
     set(_equals "=")
     while (TRUE)
         set(_closing_bracket "]${_equals}]")
@@ -778,11 +778,11 @@ function(canon_apply_dependency PACKAGE)
                 "canon_apply_dependency(): '${_argument}' is inherited from the outer find_package() call")
         endif()
 
-        _canon_literal_package_argument(_literal_argument "${_argument}")
+        _canon_serialize_package_argument(_serialized_argument "${_argument}")
         if ("${_argument_index}" GREATER 0)
             string(APPEND _dependency_call " ")
         endif()
-        string(APPEND _dependency_call "${_literal_argument}")
+        string(APPEND _dependency_call "${_serialized_argument}")
     endforeach()
     string(APPEND _dependency_call ")")
 

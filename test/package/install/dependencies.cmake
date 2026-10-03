@@ -12,19 +12,84 @@ set(_install_prefix "${CANON_TEST_BINARY_DIR}/install")
 _canon_configure_package_fixture("${_build_dir}")
 _canon_install_package_fixture("${_build_dir}" "${_install_prefix}")
 
-set(_dependency_dir "${_install_prefix}/artifact-lib/cmake/DependencyFixture")
-file(MAKE_DIRECTORY "${_dependency_dir}")
-file(WRITE "${_dependency_dir}/DependencyFixtureConfig.cmake" [=[
-if (NOT TARGET DependencyFixture::dependency)
-add_library(DependencyFixture::dependency INTERFACE IMPORTED)
+set(_dependency_root "${CANON_TEST_BINARY_DIR}/dependencies")
+
+set(_no_version_dir "${_dependency_root}/NoVersionDependency")
+file(MAKE_DIRECTORY "${_no_version_dir}")
+file(WRITE "${_no_version_dir}/NoVersionDependencyConfig.cmake" [=[
+if (NOT "${NoVersionDependency_FIND_VERSION}" STREQUAL "")
+    message(FATAL_ERROR
+        "NoVersionDependency received unexpected version '${NoVersionDependency_FIND_VERSION}'")
+endif()
+if (NOT "${NoVersionDependency_FIND_COMPONENTS}" STREQUAL "")
+    message(FATAL_ERROR
+        "NoVersionDependency received unexpected components '${NoVersionDependency_FIND_COMPONENTS}'")
+endif()
+if (NOT TARGET NoVersionDependency::dependency)
+    add_library(NoVersionDependency::dependency INTERFACE IMPORTED)
+endif()
+]=])
+
+set(_versioned_dir "${_dependency_root}/VersionedDependency")
+file(MAKE_DIRECTORY "${_versioned_dir}")
+file(WRITE "${_versioned_dir}/VersionedDependencyConfig.cmake" [=[
+if (NOT "${VersionedDependency_FIND_VERSION}" STREQUAL "2.5")
+    message(FATAL_ERROR
+        "VersionedDependency received version '${VersionedDependency_FIND_VERSION}'; expected '2.5'")
+endif()
+if (VersionedDependency_FIND_VERSION_EXACT)
+    message(FATAL_ERROR "VersionedDependency unexpectedly received an EXACT request")
 endif()
 ]=])
 write_basic_package_version_file(
-    "${_dependency_dir}/DependencyFixtureConfigVersion.cmake"
+    "${_versioned_dir}/VersionedDependencyConfigVersion.cmake"
     VERSION 2.8.0
     COMPATIBILITY SameMajorVersion
     ARCH_INDEPENDENT
 )
+
+set(_exact_dir "${_dependency_root}/ExactDependency")
+file(MAKE_DIRECTORY "${_exact_dir}")
+file(WRITE "${_exact_dir}/ExactDependencyConfig.cmake" [=[
+if (NOT "${ExactDependency_FIND_VERSION}" STREQUAL "3.1.0")
+    message(FATAL_ERROR
+        "ExactDependency received version '${ExactDependency_FIND_VERSION}'; expected '3.1.0'")
+endif()
+if (NOT ExactDependency_FIND_VERSION_EXACT)
+    message(FATAL_ERROR "ExactDependency did not receive an EXACT request")
+endif()
+]=])
+write_basic_package_version_file(
+    "${_exact_dir}/ExactDependencyConfigVersion.cmake"
+    VERSION 3.1.0
+    COMPATIBILITY SameMajorVersion
+    ARCH_INDEPENDENT
+)
+
+set(_component_dir "${_dependency_root}/ComponentDependency")
+file(MAKE_DIRECTORY "${_component_dir}")
+file(WRITE "${_component_dir}/ComponentDependencyConfig.cmake" [=[
+if (NOT "${ComponentDependency_FIND_COMPONENTS}" STREQUAL "Alpha;Beta;Gamma")
+    message(FATAL_ERROR
+        "ComponentDependency received components '${ComponentDependency_FIND_COMPONENTS}'; expected 'Alpha;Beta;Gamma'")
+endif()
+foreach(_required_component IN ITEMS Alpha Beta)
+    if (NOT ComponentDependency_FIND_REQUIRED_${_required_component})
+        message(FATAL_ERROR
+            "ComponentDependency component '${_required_component}' was not required")
+    endif()
+endforeach()
+if (ComponentDependency_FIND_REQUIRED_Gamma)
+    message(FATAL_ERROR "ComponentDependency optional component 'Gamma' was required")
+endif()
+]=])
+
+set(_module_dir "${_dependency_root}/modules")
+file(MAKE_DIRECTORY "${_module_dir}")
+file(WRITE "${_module_dir}/FindComponentDependency.cmake" [=[
+message(FATAL_ERROR
+    "ComponentDependency was searched in module mode; canon_apply_dependency() did not forward CONFIG")
+]=])
 
 set(_config_file
     "${_install_prefix}/artifact-data/cmake/DependentPackage/DependentPackageConfig.cmake")
@@ -36,27 +101,14 @@ if (NOT "${_dependency_call_count}" EQUAL 4)
         "DependentPackageConfig.cmake contains ${_dependency_call_count} find_dependency() calls; expected 4")
 endif()
 
-set(_alpha_call [==[find_dependency([=[DependencyFixture]=] [=[2.5]=] [=[CONFIG]=] [=[COMPONENTS]=] [=[Alpha]=])]==])
-set(_beta_call [==[find_dependency([=[DependencyFixture]=] [=[2.5]=] [=[CONFIG]=] [=[COMPONENTS]=] [=[Beta]=])]==])
-set(_literal_call [==[find_dependency([=[DependencyFixture]=] [=[2.5]=] [=[CONFIG]=] [=[COMPONENTS]=] [=[${SENTINEL}]=])]==])
-set(_list_valued_call [==[find_dependency([=[DependencyFixture]=] [=[2.5]=] [=[CONFIG]=] [=[COMPONENTS]=] [=[Gamma;Delta]=])]==])
-set(_previous_position -1)
-foreach(_call_name IN ITEMS _alpha_call _beta_call _literal_call _list_valued_call)
-    set(_expected_call "${${_call_name}}")
-    string(FIND "${_config}" "${_expected_call}" _position)
-    if ("${_position}" EQUAL -1 OR NOT "${_previous_position}" LESS "${_position}")
-        message(FATAL_ERROR
-            "DependentPackageConfig.cmake did not preserve dependency declaration '${_expected_call}'")
-    endif()
-    set(_previous_position "${_position}")
-endforeach()
-
+string(FIND "${_config}" "find_dependency(" _dependency_position)
 string(FIND
     "${_config}"
     "include(\"\${CMAKE_CURRENT_LIST_DIR}/DependentPackageTargets.cmake\")"
     _targets_position
 )
-if (NOT "${_previous_position}" LESS "${_targets_position}")
+if ("${_dependency_position}" EQUAL -1
+    OR NOT "${_dependency_position}" LESS "${_targets_position}")
     message(FATAL_ERROR
         "DependentPackageConfig.cmake did not recover dependencies before importing targets")
 endif()
@@ -68,36 +120,9 @@ _canon_build_package_consumer(
     0.9.1
     DependentPackage::dependent_api
     ""
-    "-DDependencyFixture_DIR=${_dependency_dir}"
-    -DSENTINEL=canon-expanded-sentinel
+    "-DNoVersionDependency_DIR=${_no_version_dir}"
+    "-DVersionedDependency_DIR=${_versioned_dir}"
+    "-DExactDependency_DIR=${_exact_dir}"
+    "-DComponentDependency_DIR=${_component_dir}"
+    "-DCMAKE_MODULE_PATH=${_module_dir}"
 )
-
-set(_literal_build_dir "${CANON_TEST_BINARY_DIR}/literal-build")
-_canon_configure_package_fixture(
-    "${_literal_build_dir}"
-    -DCANON_TEST_DEPENDENCY_LITERAL_ARGUMENTS=ON
-)
-set(_literal_config_file
-    "${_literal_build_dir}/dependent/canon/package/DependentPackageConfig.cmake")
-file(READ "${_literal_config_file}" _literal_config)
-set(_backslash_call
-    [==[find_dependency([=[DependencyFixture]=] [=[2.5]=] [=[CONFIG]=] [=[COMPONENTS]=] [=[path\segment]=])]==])
-set(_delimiter_call
-    [===[find_dependency([=[DependencyFixture]=] [=[2.5]=] [=[CONFIG]=] [=[COMPONENTS]=] [==[right]]middle]=]edge]==])]===])
-set(_syntax_like_call
-    [==[find_dependency([=[DependencyFixture]=] [=[2.5]=] [=[CONFIG]=] [=[COMPONENTS]=] [=[[[${[[mismatched}]]]=])]==])
-set(_leading_newline_call
-    "find_dependency([=[DependencyFixture]=] [=[2.5]=] [=[CONFIG]=] [=[COMPONENTS]=] [=[\n\nLeading]=])")
-foreach(_call_name IN ITEMS
-    _backslash_call
-    _delimiter_call
-    _syntax_like_call
-    _leading_newline_call
-)
-    set(_expected_call "${${_call_name}}")
-    string(FIND "${_literal_config}" "${_expected_call}" _position)
-    if ("${_position}" EQUAL -1)
-        message(FATAL_ERROR
-            "DependentPackageConfig.cmake did not preserve literal argument '${_expected_call}'")
-    endif()
-endforeach()

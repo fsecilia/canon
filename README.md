@@ -109,7 +109,9 @@ canon_apply_dependency(fmt 11 CONFIG)
 target_link_libraries(example PUBLIC fmt::fmt)
 ```
 
-`canon_apply_dependency()` does not locate, vendor, or link the dependency. In this example, Canon records `find_dependency(fmt 11 CONFIG)` in the installed package configuration. Use it also when a dependency comes from the source tree during the build but downstream consumers must find that dependency as a package. Do not pass `REQUIRED` or `QUIET`; `find_dependency()` inherits those requirements from the outer `find_package()` call.
+`canon_apply_dependency()` does not locate, vendor, or link the dependency. In this example, Canon records a call equivalent to `find_dependency(fmt 11 CONFIG)` in the installed package configuration. Use it also when a dependency comes from the source tree during the build but downstream consumers must find that dependency as a package. Do not pass `REQUIRED` or `QUIET`; `find_dependency()` inherits those requirements from the outer `find_package()` call.
+
+Dependency arguments use normal CMake evaluation. Canon captures the values produced at the `canon_apply_dependency()` call site and serializes those values safely into the generated package configuration. When that configuration runs, normal `find_dependency()` and `find_package()` list and macro-expansion semantics apply. Do not rely on the generated source preserving the original spelling or argument boundaries from the call site.
 
 ## Developer controls
 
