@@ -19,16 +19,17 @@ find_package(Doxygen 1.9 QUIET OPTIONAL_COMPONENTS dot)
 find_program(CANON_CLANG_TIDY_EXECUTABLE NAMES clang-tidy)
 
 set(_canon_clang_tidy_supported FALSE)
+set(_canon_minimum_clang_tidy_version 21.1.6)
 if (CANON_CLANG_TIDY_EXECUTABLE)
     _canon_get_clang_tidy_version("${CANON_CLANG_TIDY_EXECUTABLE}" _canon_clang_tidy_version)
     if ("${_canon_clang_tidy_version}" STREQUAL "")
         message(WARNING
             "Canon clang-tidy validation unavailable: could not determine the version of "
             "'${CANON_CLANG_TIDY_EXECUTABLE}'")
-    elseif ("${_canon_clang_tidy_version}" VERSION_LESS "${_CANON_MINIMUM_CLANG_TIDY_VERSION}")
+    elseif ("${_canon_clang_tidy_version}" VERSION_LESS "${_canon_minimum_clang_tidy_version}")
         message(WARNING
             "Canon clang-tidy validation unavailable: clang-tidy ${_canon_clang_tidy_version} "
-            "is older than the required minimum ${_CANON_MINIMUM_CLANG_TIDY_VERSION}")
+            "is older than the required minimum ${_canon_minimum_clang_tidy_version}")
     else()
         set(_canon_clang_tidy_supported TRUE)
     endif()

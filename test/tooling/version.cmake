@@ -18,7 +18,7 @@ set(_unsupported_tidy "${CMAKE_COMMAND}")
 set(_consumer_binary_dir "${CANON_TEST_BINARY_DIR}/consumer")
 canon_test_make_configure_command(
     _consumer_configure_command
-    "${CANON_SOURCE_DIR}/test/tooling"
+    "${CANON_SOURCE_DIR}/test/tooling/vendored"
     "${_consumer_binary_dir}"
     "-DCANON_SOURCE_DIR=${CANON_SOURCE_DIR}"
     -DCANON_ENABLE_TIDY=ON

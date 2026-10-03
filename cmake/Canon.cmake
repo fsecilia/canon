@@ -29,8 +29,6 @@ set(
     CACHE FILEPATH "Override the llvm-cov executable used by Canon coverage."
 )
 
-set(_CANON_MINIMUM_CLANG_TIDY_VERSION 21.1.6)
-
 # Reports the semantic version printed by a candidate clang-tidy executable.
 function(_canon_get_clang_tidy_version EXECUTABLE OUT_VERSION)
     execute_process(
@@ -558,6 +556,8 @@ endfunction()
 
 # Lets CMake drive clang-tidy with the real compile command for each source file.
 function(_canon_apply_tidy TARGET)
+    set(_minimum_version 21.1.6)
+
     find_program(
         CANON_CLANG_TIDY_EXECUTABLE
         NAMES clang-tidy
@@ -575,9 +575,9 @@ function(_canon_apply_tidy TARGET)
                 "Canon could not determine the clang-tidy version from "
                 "'${CANON_CLANG_TIDY_EXECUTABLE}'")
         endif()
-        if ("${_version}" VERSION_LESS "${_CANON_MINIMUM_CLANG_TIDY_VERSION}")
+        if ("${_version}" VERSION_LESS "${_minimum_version}")
             message(FATAL_ERROR
-                "Canon requires clang-tidy ${_CANON_MINIMUM_CLANG_TIDY_VERSION} or newer; "
+                "Canon requires clang-tidy ${_minimum_version} or newer; "
                 "found ${_version} at '${CANON_CLANG_TIDY_EXECUTABLE}'")
         endif()
         set_property(GLOBAL PROPERTY "${_validation_property}" TRUE)
