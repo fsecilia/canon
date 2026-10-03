@@ -7,7 +7,7 @@
   },
   "configurePresets": [
     {
-      "name": "_canon-base",
+      "name": "canon-base",
       "hidden": true,
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/${presetName}",
@@ -16,80 +16,207 @@
       }
     },
     {
-      "name": "debug",
-      "displayName": "Debug",
-      "inherits": "_canon-base",
+      "name": "canon-gcc",
+      "hidden": true,
+      "inherits": "canon-base",
+      "environment": {
+        "CC": "gcc",
+        "CXX": "g++"
+      }
+    },
+    {
+      "name": "canon-clang",
+      "hidden": true,
+      "inherits": "canon-base",
+      "environment": {
+        "CC": "clang",
+        "CXX": "clang++"
+      }
+    },
+    {
+      "name": "canon-debug",
+      "hidden": true,
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {
-      "name": "release",
-      "displayName": "Release",
-      "inherits": "_canon-base",
+      "name": "canon-release",
+      "hidden": true,
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
       }
     },
     {
-      "name": "asan",
-      "displayName": "AddressSanitizer",
-      "inherits": "_canon-base",
+      "name": "canon-asan",
+      "hidden": true,
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "CANON_ENABLE_ASAN": true
       }
     },
     {
-      "name": "tidy",
-      "displayName": "clang-tidy",
-      "inherits": "_canon-base",
+      "name": "canon-tidy",
+      "hidden": true,
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "CANON_ENABLE_TIDY": true
       }
     },
     {
-      "name": "coverage",
-      "displayName": "Coverage",
-      "inherits": "_canon-base",
+      "name": "canon-coverage",
+      "hidden": true,
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "CANON_ENABLE_COVERAGE": true
       }
+    },
+    {
+      "name": "gcc-debug",
+      "displayName": "GCC Debug",
+      "inherits": [
+        "canon-gcc",
+        "canon-debug"
+      ]
+    },
+    {
+      "name": "gcc-release",
+      "displayName": "GCC Release",
+      "inherits": [
+        "canon-gcc",
+        "canon-release"
+      ]
+    },
+    {
+      "name": "gcc-asan",
+      "displayName": "GCC AddressSanitizer",
+      "inherits": [
+        "canon-gcc",
+        "canon-asan"
+      ]
+    },
+    {
+      "name": "gcc-tidy",
+      "displayName": "GCC clang-tidy",
+      "inherits": [
+        "canon-gcc",
+        "canon-tidy"
+      ]
+    },
+    {
+      "name": "gcc-coverage",
+      "displayName": "GCC Coverage",
+      "inherits": [
+        "canon-gcc",
+        "canon-coverage"
+      ]
+    },
+    {
+      "name": "clang-debug",
+      "displayName": "Clang Debug",
+      "inherits": [
+        "canon-clang",
+        "canon-debug"
+      ]
+    },
+    {
+      "name": "clang-release",
+      "displayName": "Clang Release",
+      "inherits": [
+        "canon-clang",
+        "canon-release"
+      ]
+    },
+    {
+      "name": "clang-asan",
+      "displayName": "Clang AddressSanitizer",
+      "inherits": [
+        "canon-clang",
+        "canon-asan"
+      ]
+    },
+    {
+      "name": "clang-tidy",
+      "displayName": "Clang clang-tidy",
+      "inherits": [
+        "canon-clang",
+        "canon-tidy"
+      ]
+    },
+    {
+      "name": "clang-coverage",
+      "displayName": "Clang Coverage",
+      "inherits": [
+        "canon-clang",
+        "canon-coverage"
+      ]
     }
   ],
   "buildPresets": [
     {
-      "name": "debug",
-      "configurePreset": "debug"
+      "name": "gcc-debug",
+      "configurePreset": "gcc-debug"
     },
     {
-      "name": "release",
-      "configurePreset": "release"
+      "name": "gcc-release",
+      "configurePreset": "gcc-release"
     },
     {
-      "name": "asan",
-      "configurePreset": "asan"
+      "name": "gcc-asan",
+      "configurePreset": "gcc-asan"
     },
     {
-      "name": "tidy",
-      "configurePreset": "tidy"
+      "name": "gcc-tidy",
+      "configurePreset": "gcc-tidy"
     },
     {
-      "name": "coverage-clean",
-      "configurePreset": "coverage",
+      "name": "gcc-coverage-clean",
+      "configurePreset": "gcc-coverage",
       "targets": [
         "coverage-clean"
       ]
     },
     {
-      "name": "coverage",
-      "configurePreset": "coverage"
+      "name": "gcc-coverage",
+      "configurePreset": "gcc-coverage"
     },
     {
-      "name": "coverage-report",
-      "configurePreset": "coverage",
+      "name": "gcc-coverage-report",
+      "configurePreset": "gcc-coverage",
+      "targets": [
+        "coverage-report"
+      ]
+    },
+    {
+      "name": "clang-debug",
+      "configurePreset": "clang-debug"
+    },
+    {
+      "name": "clang-release",
+      "configurePreset": "clang-release"
+    },
+    {
+      "name": "clang-asan",
+      "configurePreset": "clang-asan"
+    },
+    {
+      "name": "clang-tidy",
+      "configurePreset": "clang-tidy"
+    },
+    {
+      "name": "clang-coverage-clean",
+      "configurePreset": "clang-coverage",
+      "targets": [
+        "coverage-clean"
+      ]
+    },
+    {
+      "name": "clang-coverage",
+      "configurePreset": "clang-coverage"
+    },
+    {
+      "name": "clang-coverage-report",
+      "configurePreset": "clang-coverage",
       "targets": [
         "coverage-report"
       ]
@@ -97,8 +224,8 @@
   ],
   "testPresets": [
     {
-      "name": "debug",
-      "configurePreset": "debug",
+      "name": "_canon-test",
+      "hidden": true,
       "output": {
         "outputOnFailure": true
       },
@@ -107,137 +234,240 @@
       }
     },
     {
-      "name": "release",
-      "configurePreset": "release",
-      "output": {
-        "outputOnFailure": true
-      },
-      "execution": {
-        "noTestsAction": "error"
-      }
+      "name": "gcc-debug",
+      "inherits": "_canon-test",
+      "configurePreset": "gcc-debug"
     },
     {
-      "name": "asan",
-      "configurePreset": "asan",
-      "output": {
-        "outputOnFailure": true
-      },
-      "execution": {
-        "noTestsAction": "error"
-      }
+      "name": "gcc-release",
+      "inherits": "_canon-test",
+      "configurePreset": "gcc-release"
     },
     {
-      "name": "tidy",
-      "configurePreset": "tidy",
-      "output": {
-        "outputOnFailure": true
-      },
-      "execution": {
-        "noTestsAction": "error"
-      }
+      "name": "gcc-asan",
+      "inherits": "_canon-test",
+      "configurePreset": "gcc-asan"
     },
     {
-      "name": "coverage",
-      "configurePreset": "coverage",
-      "output": {
-        "outputOnFailure": true
-      },
-      "execution": {
-        "noTestsAction": "error"
-      }
+      "name": "gcc-tidy",
+      "inherits": "_canon-test",
+      "configurePreset": "gcc-tidy"
+    },
+    {
+      "name": "gcc-coverage",
+      "inherits": "_canon-test",
+      "configurePreset": "gcc-coverage"
+    },
+    {
+      "name": "clang-debug",
+      "inherits": "_canon-test",
+      "configurePreset": "clang-debug"
+    },
+    {
+      "name": "clang-release",
+      "inherits": "_canon-test",
+      "configurePreset": "clang-release"
+    },
+    {
+      "name": "clang-asan",
+      "inherits": "_canon-test",
+      "configurePreset": "clang-asan"
+    },
+    {
+      "name": "clang-tidy",
+      "inherits": "_canon-test",
+      "configurePreset": "clang-tidy"
+    },
+    {
+      "name": "clang-coverage",
+      "inherits": "_canon-test",
+      "configurePreset": "clang-coverage"
     }
   ],
   "workflowPresets": [
     {
-      "name": "debug",
+      "name": "gcc-debug",
       "steps": [
         {
           "type": "configure",
-          "name": "debug"
+          "name": "gcc-debug"
         },
         {
           "type": "build",
-          "name": "debug"
+          "name": "gcc-debug"
         },
         {
           "type": "test",
-          "name": "debug"
+          "name": "gcc-debug"
         }
       ]
     },
     {
-      "name": "release",
+      "name": "gcc-release",
       "steps": [
         {
           "type": "configure",
-          "name": "release"
+          "name": "gcc-release"
         },
         {
           "type": "build",
-          "name": "release"
+          "name": "gcc-release"
         },
         {
           "type": "test",
-          "name": "release"
+          "name": "gcc-release"
         }
       ]
     },
     {
-      "name": "asan",
+      "name": "gcc-asan",
       "steps": [
         {
           "type": "configure",
-          "name": "asan"
+          "name": "gcc-asan"
         },
         {
           "type": "build",
-          "name": "asan"
+          "name": "gcc-asan"
         },
         {
           "type": "test",
-          "name": "asan"
+          "name": "gcc-asan"
         }
       ]
     },
     {
-      "name": "tidy",
+      "name": "gcc-tidy",
       "steps": [
         {
           "type": "configure",
-          "name": "tidy"
+          "name": "gcc-tidy"
         },
         {
           "type": "build",
-          "name": "tidy"
+          "name": "gcc-tidy"
         },
         {
           "type": "test",
-          "name": "tidy"
+          "name": "gcc-tidy"
         }
       ]
     },
     {
-      "name": "coverage",
+      "name": "gcc-coverage",
       "steps": [
         {
           "type": "configure",
-          "name": "coverage"
+          "name": "gcc-coverage"
         },
         {
           "type": "build",
-          "name": "coverage-clean"
+          "name": "gcc-coverage-clean"
         },
         {
           "type": "build",
-          "name": "coverage"
+          "name": "gcc-coverage"
         },
         {
           "type": "test",
-          "name": "coverage"
+          "name": "gcc-coverage"
         },
         {
           "type": "build",
-          "name": "coverage-report"
+          "name": "gcc-coverage-report"
+        }
+      ]
+    },
+    {
+      "name": "clang-debug",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "clang-debug"
+        },
+        {
+          "type": "build",
+          "name": "clang-debug"
+        },
+        {
+          "type": "test",
+          "name": "clang-debug"
+        }
+      ]
+    },
+    {
+      "name": "clang-release",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "clang-release"
+        },
+        {
+          "type": "build",
+          "name": "clang-release"
+        },
+        {
+          "type": "test",
+          "name": "clang-release"
+        }
+      ]
+    },
+    {
+      "name": "clang-asan",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "clang-asan"
+        },
+        {
+          "type": "build",
+          "name": "clang-asan"
+        },
+        {
+          "type": "test",
+          "name": "clang-asan"
+        }
+      ]
+    },
+    {
+      "name": "clang-tidy",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "clang-tidy"
+        },
+        {
+          "type": "build",
+          "name": "clang-tidy"
+        },
+        {
+          "type": "test",
+          "name": "clang-tidy"
+        }
+      ]
+    },
+    {
+      "name": "clang-coverage",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "clang-coverage"
+        },
+        {
+          "type": "build",
+          "name": "clang-coverage-clean"
+        },
+        {
+          "type": "build",
+          "name": "clang-coverage"
+        },
+        {
+          "type": "test",
+          "name": "clang-coverage"
+        },
+        {
+          "type": "build",
+          "name": "clang-coverage-report"
         }
       ]
     }

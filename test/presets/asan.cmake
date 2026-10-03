@@ -3,11 +3,12 @@
 
 include("${CANON_SOURCE_DIR}/test/presets/common.cmake")
 
-_run_workflow(asan Debug)
+set(_preset "${CANON_PRESET_PROFILE}-asan")
+_run_workflow("${_preset}" Debug)
 _expect_cache_value(
-    asan
+    "${_preset}"
     CANON_ENABLE_ASAN
     BOOL
     TRUE
-    "asan workflow"
+    "${_preset} workflow"
 )

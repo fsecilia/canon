@@ -8,7 +8,7 @@ include("${CANON_SOURCE_DIR}/test/support/CanonTest.cmake")
 canon_test_require_variables(
     CANON_SOURCE_DIR
     CANON_TEST_BINARY_DIR
-    CANON_CXX_COMPILER
+    CANON_PRESET_PROFILE
 )
 
 # Recreate the consumer with Canon vendored at the same path used by the preset include.
@@ -25,11 +25,6 @@ file(WRITE "${_source_dir}/CMakePresets.json"
     "  \"include\": [\"external/canon/cmake/CanonPresets.json\"]\n"
     "}\n")
 
-set(_environment_command "${CMAKE_COMMAND}" -E env "CXX=${CANON_CXX_COMPILER}")
-if (DEFINED CANON_TOOLCHAIN_FILE AND NOT "${CANON_TOOLCHAIN_FILE}" STREQUAL "")
-    list(APPEND _environment_command "CMAKE_TOOLCHAIN_FILE=${CANON_TOOLCHAIN_FILE}")
-endif()
-
 function(_run DESCRIPTION)
     canon_test_run(
         DESCRIPTION "${DESCRIPTION}"
@@ -37,7 +32,6 @@ function(_run DESCRIPTION)
             "${CMAKE_COMMAND}"
             -E chdir
             "${_source_dir}"
-            ${_environment_command}
             ${ARGN}
     )
 endfunction()

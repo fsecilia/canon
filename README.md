@@ -144,7 +144,7 @@ Dependency arguments use normal CMake evaluation. Canon captures the values prod
 
 ## Developer controls
 
-Canon's shared development presets are the normal entry points for developer policy. Every shared development preset enables strict warnings. The `asan`, `tidy`, and `coverage` presets also enable their matching features. Projects that do not use Canon's presets, or that need a different combination, may set the same options directly or from their own presets:
+Canon's shared development presets are the normal entry points for developer policy. Every shared development preset enables strict warnings. Presets with the `asan`, `tidy`, and `coverage` intents also enable their matching features. Projects that do not use Canon's presets, or that need a different combination, may set the same options directly or from their own presets:
 
 * `CANON_ENABLE_WARNINGS` enables Canon's strict compiler warning policy;
 * `CANON_ENABLE_ASAN` enables AddressSanitizer instrumentation;
@@ -163,7 +163,7 @@ With warnings enabled, GCC uses Canon's warning set and treats warnings as error
 
 ## AddressSanitizer
 
-AddressSanitizer instrumentation is controlled by `CANON_ENABLE_ASAN`. It is off by default. Canon's shared `asan` development preset enables it in a dedicated Debug build tree.
+AddressSanitizer instrumentation is controlled by `CANON_ENABLE_ASAN`. It is off by default. Canon's shared `gcc-asan` and `clang-asan` development presets enable it in dedicated Debug build trees.
 
 When enabled, Canon adds AddressSanitizer compile instrumentation to managed targets and preserves frame pointers for useful diagnostics. Compile instrumentation remains private to each managed target. Static and object libraries publish the sanitizer runtime link requirement to consumers, while shared libraries both use and publish it. This allows an unmanaged executable to consume an instrumented library without instrumenting the executable's own translation units.
 
@@ -181,17 +181,18 @@ If automatic discovery fails validation, Canon warns and leaves coverage reporti
 
 `coverage-report` runs gcovr from the project source root and writes detailed HTML beneath `coverage/`. It excludes the active project's `external/` directory and `*_test.cpp`, prints a summary, and removes generated `.gcda` data after reporting. The report fails if filtering leaves no project source files.
 
-Canon's shared `coverage` workflow uses a dedicated Debug build tree and sequences configure, cleanup, build, CTest, and report generation. Run the complete workflow with:
+Canon's shared coverage workflows use dedicated Debug build trees and sequence configure, cleanup, build, CTest, and report generation. Select the native compiler profile in the preset name, for example:
 
 ```text
-cmake --workflow --preset coverage
+cmake --workflow --preset gcc-coverage
+cmake --workflow --preset clang-coverage
 ```
 
 The shared workflow is not required. A project may enable coverage in another build tree and invoke the helper targets around its own build and test steps.
 
 ## clang-tidy
 
-Running clang-tidy is enabled by `CANON_ENABLE_TIDY`. It is off by default. Canon's shared development presets turn it on.
+Running clang-tidy is enabled by `CANON_ENABLE_TIDY`. It is off by default. Canon's shared `gcc-tidy` and `clang-tidy` development presets turn it on.
 
 Canon requires clang-tidy 21.1.6 or newer. When enabled, Canon locates clang-tidy, verifies its version, and attaches it to managed targets through CMake's native `CXX_CLANG_TIDY` target property. CMake then supplies the real compiler invocation for each translation unit.
 
@@ -231,7 +232,7 @@ Requesting the `Documentation` component before the generated HTML exists fails 
 
 ## Shared presets
 
-Canon ships `cmake/CanonPresets.json` for projects that want to share its ordinary development configurations. A project can include the fragment from its checked-in `CMakePresets.json`:
+Canon ships `cmake/CanonPresets.json` for projects that want to share its ordinary native development configurations. A project can include the fragment from its checked-in `CMakePresets.json`:
 
 ```json
 {
@@ -247,11 +248,23 @@ Canon ships `cmake/CanonPresets.json` for projects that want to share its ordina
 }
 ```
 
-The shared fragment provides separate `debug`, `release`, `asan`, `tidy`, and `coverage` configure trees beneath `build/`. These development configurations enable Canon's strict warnings. The specialized configurations use Debug: `asan` enables AddressSanitizer, `tidy` enables clang-tidy, and `coverage` enables gcov-compatible instrumentation.
+The shared fragment combines a native compiler profile with a build intent. GCC profiles use `gcc` and `g++`; Clang profiles use `clang` and `clang++`. These executable names are resolved through the normal process `PATH`.
 
-Debug, Release, ASan, and tidy workflows perform configure, build, and CTest in sequence. The coverage workflow adds cleanup before the build and report generation after CTest while keeping those stages as separate native preset steps.
+| Compiler profile | Build intents |
+| --- | --- |
+| `gcc` | `debug`, `release`, `asan`, `tidy`, `coverage` |
+| `clang` | `debug`, `release`, `asan`, `tidy`, `coverage` |
 
-Machine-specific compiler, toolchain, SDK, and local path choices belong in ignored `CMakeUserPresets.json` files. Local presets can inherit the checked-in shared presets normally.
+Preset names use `<compiler>-<intent>`, such as `gcc-debug`, `clang-release`, or `clang-asan`. The same logical name is available as a configure, build, test, and workflow preset, so ordinary use does not require learning separate names for each preset kind:
+
+```text
+cmake --workflow --preset gcc-debug
+cmake --workflow --preset clang-asan
+```
+
+All shared development configurations enable Canon's strict warnings. The specialized intents use Debug: `asan` enables AddressSanitizer, `tidy` enables clang-tidy, and `coverage` enables gcov-compatible instrumentation. Debug, Release, ASan, and tidy workflows perform configure, build, and CTest in sequence. Coverage workflows add cleanup before the build and report generation after CTest while keeping those stages as separate native preset steps.
+
+The compiler profiles deliberately name ordinary compiler executables rather than machine-specific paths. Selecting another native installation is therefore a machine environment concern, normally handled by `PATH`. Canon also exposes hidden `canon-base` and `canon-<intent>` configure presets as composition points. Projects that need a fundamentally different toolchain or execution environment can inherit those fragments instead of duplicating Canon's build-intent policy.
 
 The shared build-tree layout is a development convenience, not a requirement imposed by Canon. Projects may configure Canon-managed targets manually or use their own preset layout.
 

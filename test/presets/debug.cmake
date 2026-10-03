@@ -3,4 +3,5 @@
 
 include("${CANON_SOURCE_DIR}/test/presets/common.cmake")
 
-_run_workflow(debug Debug)
+set(_preset "${CANON_PRESET_PROFILE}-debug")
+_run_workflow("${_preset}" Debug)

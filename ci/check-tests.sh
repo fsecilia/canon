@@ -15,6 +15,26 @@ clang-tidy --version
 gcovr --version
 doxygen --version
 
+compiler_alias_directory=$(mktemp -d)
+trap 'rm -rf -- "$compiler_alias_directory"' EXIT
+case "$(basename -- "$CXX")" in
+    g++*)
+        cc_alias=gcc
+        cxx_alias=g++
+        ;;
+    clang++*)
+        cc_alias=clang
+        cxx_alias=clang++
+        ;;
+    *)
+        echo "unsupported CI compiler name: $CXX" >&2
+        exit 1
+        ;;
+esac
+ln -s "$(command -v -- "$CC")" "$compiler_alias_directory/$cc_alias"
+ln -s "$(command -v -- "$CXX")" "$compiler_alias_directory/$cxx_alias"
+export PATH="$compiler_alias_directory:$PATH"
+
 configure_args=(--preset debug)
 if [[ -n ${CANON_CI_GCOV_EXECUTABLE:-} ]]; then
     gcov_executable=$(command -v -- "$CANON_CI_GCOV_EXECUTABLE") || {

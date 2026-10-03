@@ -3,6 +3,18 @@
 
 enable_language(CXX)
 
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    set(_canon_preset_profile gcc)
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang"
+    AND "${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}" STREQUAL "GNU")
+    set(_canon_preset_profile clang)
+else()
+    message(FATAL_ERROR
+        "Canon shared-preset integration tests require GCC or Clang with the GNU frontend; "
+        "got '${CMAKE_CXX_COMPILER_ID}' with frontend "
+        "'${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}'")
+endif()
+
 find_package(Doxygen 1.9 QUIET OPTIONAL_COMPONENTS dot)
 find_program(CANON_CLANG_TIDY_EXECUTABLE NAMES clang-tidy)
 
@@ -201,7 +213,7 @@ if (NOT _canon_coverage_tests_enabled)
         "  canon.integration.coverage\n"
         "  canon.integration.coverage.nested\n"
         "  canon.integration.coverage.empty-report\n"
-        "  canon.integration.presets.coverage")
+        "  canon.integration.presets.${_canon_preset_profile}.coverage")
 endif()
 
 _canon_add_script_test(
@@ -302,37 +314,51 @@ _canon_add_script_test(
     googletest/provided.cmake
 )
 
+set(_canon_preset_test_arguments
+    "-DCANON_PRESET_PROFILE=${_canon_preset_profile}")
+
 _canon_add_script_test(
-    presets.debug
+    "presets.${_canon_preset_profile}.debug"
     presets/debug.cmake
+    ${_canon_preset_test_arguments}
 )
 
 _canon_add_script_test(
-    presets.release
+    "presets.${_canon_preset_profile}.release"
     presets/release.cmake
+    ${_canon_preset_test_arguments}
 )
 
 _canon_add_script_test(
-    presets.asan
+    "presets.${_canon_preset_profile}.asan"
     presets/asan.cmake
+    ${_canon_preset_test_arguments}
 )
 
 _canon_add_script_test(
-    presets.coverage
+    "presets.${_canon_preset_profile}.coverage"
     presets/coverage.cmake
+    ${_canon_preset_test_arguments}
     ${_canon_coverage_test_arguments}
 )
 if (NOT _canon_coverage_tests_enabled)
-    set_tests_properties(canon.integration.presets.coverage PROPERTIES DISABLED TRUE)
+    set_tests_properties(
+        "canon.integration.presets.${_canon_preset_profile}.coverage"
+        PROPERTIES DISABLED TRUE
+    )
 endif()
 
 _canon_add_script_test(
-    presets.tidy
+    "presets.${_canon_preset_profile}.tidy"
     presets/tidy.cmake
+    ${_canon_preset_test_arguments}
     "-DCANON_CLANG_TIDY_EXECUTABLE=${CANON_CLANG_TIDY_EXECUTABLE}"
 )
 if (NOT _canon_clang_tidy_supported)
-    set_tests_properties(canon.integration.presets.tidy PROPERTIES DISABLED TRUE)
+    set_tests_properties(
+        "canon.integration.presets.${_canon_preset_profile}.tidy"
+        PROPERTIES DISABLED TRUE
+    )
 endif()
 
 _canon_add_script_test(

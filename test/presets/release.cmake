@@ -3,4 +3,5 @@
 
 include("${CANON_SOURCE_DIR}/test/presets/common.cmake")
 
-_run_workflow(release Release)
+set(_preset "${CANON_PRESET_PROFILE}-release")
+_run_workflow("${_preset}" Release)
