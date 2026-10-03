@@ -388,6 +388,97 @@ function(_canon_find_coverage_backend OUT_COMMAND)
     set(${OUT_COMMAND} "${_coverage_executable}${_command_suffix}" PARENT_SCOPE)
 endfunction()
 
+# Rebuilds report exclusions from every Canon project with coverage-enabled targets.
+function(_canon_update_coverage_exclusions)
+    if (NOT TARGET coverage-report)
+        return()
+    endif()
+
+    get_property(_project_source_dirs GLOBAL PROPERTY _CANON_COVERAGE_PROJECT_SOURCE_DIRS)
+    list(SORT _project_source_dirs)
+
+    set(_exclude_arguments)
+    foreach(_project_source_dir IN LISTS _project_source_dirs)
+        cmake_path(
+            CONVERT "${_project_source_dir}/external"
+            TO_CMAKE_PATH_LIST _external_directory
+            NORMALIZE
+        )
+
+        set(_exclude_external TRUE)
+        set(_protected_patterns)
+        foreach(_candidate_source_dir IN LISTS _project_source_dirs)
+            if ("${_candidate_source_dir}" STREQUAL "${_project_source_dir}")
+                continue()
+            endif()
+
+            cmake_path(
+                IS_PREFIX _external_directory "${_candidate_source_dir}"
+                NORMALIZE _inside_external
+            )
+            if (NOT _inside_external)
+                continue()
+            endif()
+
+            # A managed project that owns this external directory must remain reportable.
+            if ("${_candidate_source_dir}" STREQUAL "${_external_directory}")
+                set(_exclude_external FALSE)
+                break()
+            endif()
+
+            # Preserve managed project subtrees while excluding their unmanaged siblings.
+            cmake_path(
+                RELATIVE_PATH _candidate_source_dir
+                BASE_DIRECTORY "${_external_directory}"
+                OUTPUT_VARIABLE _relative_source_dir
+            )
+            _canon_regex_escape_literal("${_relative_source_dir}" _relative_source_regex)
+            list(APPEND _protected_patterns "${_relative_source_regex}(?:/|$)")
+        endforeach()
+
+        if (NOT _exclude_external)
+            continue()
+        endif()
+
+        _canon_regex_escape_literal("${_external_directory}" _external_regex)
+        if (_protected_patterns)
+            list(JOIN _protected_patterns "|" _protected_regex)
+            set(_external_regex "${_external_regex}/(?!${_protected_regex})")
+        else()
+            set(_external_regex "${_external_regex}/")
+        endif()
+
+        list(APPEND _exclude_arguments --exclude "${_external_regex}")
+    endforeach()
+
+    set_property(
+        TARGET coverage-report
+        PROPERTY _CANON_COVERAGE_EXCLUDE_ARGUMENTS "${_exclude_arguments}"
+    )
+endfunction()
+
+# Registers the active project as a coverage-report source boundary.
+function(_canon_register_coverage_project)
+    file(REAL_PATH "${PROJECT_SOURCE_DIR}" _project_source_dir)
+    cmake_path(
+        CONVERT "${_project_source_dir}"
+        TO_CMAKE_PATH_LIST _project_source_dir
+        NORMALIZE
+    )
+
+    get_property(_project_source_dirs GLOBAL PROPERTY _CANON_COVERAGE_PROJECT_SOURCE_DIRS)
+    if ("${_project_source_dir}" IN_LIST _project_source_dirs)
+        return()
+    endif()
+
+    list(APPEND _project_source_dirs "${_project_source_dir}")
+    set_property(
+        GLOBAL
+        PROPERTY _CANON_COVERAGE_PROJECT_SOURCE_DIRS "${_project_source_dirs}"
+    )
+    _canon_update_coverage_exclusions()
+endfunction()
+
 # Creates build-wide cleanup and report targets for coverage-enabled Canon targets.
 function(_canon_add_coverage_targets)
     _canon_find_coverage_backend(_gcov_command)
@@ -415,13 +506,6 @@ function(_canon_add_coverage_targets)
 
     set(_output_dir "${CMAKE_BINARY_DIR}/coverage")
     set(_summary_file "${_output_dir}/summary.json")
-    file(REAL_PATH "${PROJECT_SOURCE_DIR}" _project_source_dir)
-    cmake_path(
-        CONVERT "${_project_source_dir}/external"
-        TO_CMAKE_PATH_LIST _external_directory
-        NORMALIZE
-    )
-    _canon_regex_escape_literal("${_external_directory}" _external_regex)
     add_custom_target(
         coverage-report
         COMMAND "${CMAKE_COMMAND}" -E make_directory "${_output_dir}"
@@ -431,7 +515,7 @@ function(_canon_add_coverage_targets)
             "${CMAKE_BINARY_DIR}"
             --gcov-executable "${_gcov_command}"
             --exclude ".*_test\\.cpp$"
-            --exclude "${_external_regex}/"
+            "$<TARGET_PROPERTY:coverage-report,_CANON_COVERAGE_EXCLUDE_ARGUMENTS>"
             --html-details "${_output_dir}/index.html"
             --json-summary "${_summary_file}"
             --delete
@@ -443,12 +527,16 @@ function(_canon_add_coverage_targets)
         WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
         COMMENT "Generating coverage report"
         USES_TERMINAL
+        COMMAND_EXPAND_LISTS
         VERBATIM
     )
+    _canon_update_coverage_exclusions()
 endfunction()
 
 # Adds gcov-compatible instrumentation and build-wide reporting helpers.
 function(_canon_apply_coverage TARGET)
+    _canon_register_coverage_project()
+
     _canon_apply_cxx_option("${TARGET}" "--coverage")
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
         _canon_apply_cxx_option("${TARGET}" "-fprofile-abs-path")
