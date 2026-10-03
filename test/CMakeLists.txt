@@ -273,10 +273,23 @@ _canon_add_script_test(
     "-DCANON_EXPECTED_VERSION=${PROJECT_VERSION}"
 )
 
-_canon_add_script_test(
-    googletest.vendored
-    googletest/vendored.cmake
-)
+if (EXISTS "${PROJECT_SOURCE_DIR}/external/googletest/CMakeLists.txt")
+    _canon_add_script_test(
+        googletest.vendored
+        googletest/vendored.cmake
+    )
+
+    _canon_add_script_test(
+        googletest.nested
+        googletest/nested.cmake
+    )
+else()
+    message(WARNING
+        "Canon vendored GoogleTest validation unavailable: initialize submodule "
+        "'external/googletest'. The following tests will not be registered:\n"
+        "  canon.integration.googletest.vendored\n"
+        "  canon.integration.googletest.nested")
+endif()
 
 _canon_add_script_test(
     googletest.installed
@@ -288,22 +301,6 @@ _canon_add_script_test(
     googletest.provided
     googletest/provided.cmake
 )
-
-_canon_add_script_test(
-    googletest.nested
-    googletest/nested.cmake
-)
-
-if (NOT EXISTS "${PROJECT_SOURCE_DIR}/external/googletest/CMakeLists.txt")
-    set_tests_properties(
-        canon.integration.googletest.vendored
-        canon.integration.googletest.nested
-        PROPERTIES DISABLED TRUE
-    )
-    message(WARNING
-        "Canon vendored GoogleTest validation unavailable: initialize submodule "
-        "'external/googletest'")
-endif()
 
 _canon_add_script_test(
     presets.debug
