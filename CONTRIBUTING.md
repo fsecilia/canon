@@ -1,5 +1,11 @@
 # Contributing
 
+## Pull Requests
+
+Pull requests should target dev. The main branch is updated periodically from dev with fast-forward-only merges and is not used as the normal pull-request target.
+
+## Standards
+
 This project follows the shared engineering standards in [`standards/`](standards/).
 
 The applicable standards are:
