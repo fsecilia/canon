@@ -253,6 +253,11 @@ _canon_add_script_test(
     "-DCANON_DOXYGEN_EXECUTABLE=${DOXYGEN_EXECUTABLE}"
 )
 _canon_add_script_test(
+    documentation.no-main-page
+    documentation/no-main-page/test.cmake
+    "-DCANON_DOXYGEN_EXECUTABLE=${DOXYGEN_EXECUTABLE}"
+)
+_canon_add_script_test(
     documentation.nested
     documentation/nested/test.cmake
     "-DCANON_DOXYGEN_EXECUTABLE=${DOXYGEN_EXECUTABLE}"
@@ -267,6 +272,7 @@ if (NOT Doxygen_FOUND)
         canon.integration.documentation
         canon.integration.documentation.install
         canon.integration.documentation.policy
+        canon.integration.documentation.no-main-page
         canon.integration.documentation.nested
         canon.integration.documentation.warning
         PROPERTIES DISABLED TRUE
