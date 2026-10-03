@@ -10,6 +10,9 @@ endif()
 
 include_guard(GLOBAL)
 
+cmake_policy(PUSH)
+cmake_policy(VERSION ${_CANON_MINIMUM_CMAKE_VERSION})
+
 option(CANON_ENABLE_ASAN "Enable AddressSanitizer on Canon-managed targets." OFF)
 option(CANON_ENABLE_COVERAGE "Enable coverage instrumentation on Canon-managed targets." OFF)
 option(CANON_ENABLE_TIDY "Run clang-tidy as part of compiling Canon-managed targets." OFF)
@@ -1345,3 +1348,5 @@ function(canon_add_documentation)
         add_dependencies(doc "${_doc_target}")
     endif()
 endfunction()
+
+cmake_policy(POP)

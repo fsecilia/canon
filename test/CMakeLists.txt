@@ -75,6 +75,11 @@ _canon_add_script_test(
 )
 
 _canon_add_script_test(
+    cmake.policy
+    policy/test.cmake
+)
+
+_canon_add_script_test(
     targets.release
     consumer/test.cmake
     -DCANON_BUILD_TYPE=Release
