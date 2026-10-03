@@ -902,6 +902,27 @@ function(canon_require_dependency EXTERNAL_NAME)
     )
 endfunction()
 
+# Makes Canon's GoogleTest policy available lazily to projects that need tests.
+function(canon_require_googletest)
+    set(BUILD_GMOCK ON)
+    set(INSTALL_GTEST OFF)
+
+    set(_source_dir "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../external/googletest")
+    cmake_path(NORMAL_PATH _source_dir)
+
+    _canon_require_dependency(
+        NAME googletest
+        PACKAGE GTest
+        VERSION "1.18.0...<2.0.0"
+        SOURCE_DIR "${_source_dir}"
+        BINARY_DIR "${CMAKE_BINARY_DIR}/canon/external/googletest"
+        VENDORED_HINT "initialize Canon submodule 'external/googletest'"
+        TARGETS
+            GTest::gmock_main
+            GTest::gtest_main
+    )
+endfunction()
+
 # Records how this project's installed package recovers one external dependency.
 function(canon_apply_dependency PACKAGE)
     if ("${PACKAGE}" STREQUAL "")

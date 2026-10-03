@@ -294,6 +294,17 @@ _canon_add_script_test(
     googletest/nested.cmake
 )
 
+if (NOT EXISTS "${PROJECT_SOURCE_DIR}/external/googletest/CMakeLists.txt")
+    set_tests_properties(
+        canon.integration.googletest.vendored
+        canon.integration.googletest.nested
+        PROPERTIES DISABLED TRUE
+    )
+    message(WARNING
+        "Canon vendored GoogleTest validation unavailable: initialize submodule "
+        "'external/googletest'")
+endif()
+
 _canon_add_script_test(
     presets.debug
     presets/debug.cmake

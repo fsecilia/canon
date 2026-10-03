@@ -24,6 +24,9 @@ if (NOT "${Canon_VERSION}" STREQUAL "${CANON_EXPECTED_VERSION}")
     message(FATAL_ERROR
         "Installed Canon reported version '${Canon_VERSION}', expected '${CANON_EXPECTED_VERSION}'")
 endif()
+if (TARGET GTest::gmock_main OR TARGET GTest::gtest_main)
+    message(FATAL_ERROR "Loading Canon eagerly provided GoogleTest targets")
+endif()
 
 add_library(installed_sample STATIC sample.cpp)
 canon_apply_target(installed_sample)

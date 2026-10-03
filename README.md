@@ -115,6 +115,20 @@ Canon first reuses the dependency when every required target already exists. Oth
 
 The first argument names the directory beneath the project's `external/` tree. `PACKAGE` defaults to that name when the package name matches it. `VERSION` and `TARGETS` are required. This function only makes the dependency available to the current build; if an installed Canon-managed package must recover that dependency, record that separately with `canon_apply_dependency()`.
 
+GoogleTest has a dedicated policy because it is shared by essentially every C++ project in the Canon ecosystem:
+
+```cmake
+canon_require_googletest()
+```
+
+The call requires both `GTest::gmock_main` and `GTest::gtest_main`. If those targets already exist, Canon reuses them. Otherwise a source checkout of Canon uses its pinned `external/googletest` submodule when populated. Populate only that submodule with:
+
+```sh
+git submodule update --init external/googletest
+```
+
+If Canon's vendored GoogleTest source is unavailable, including when Canon is consumed as an installed package, Canon searches for an installed GTest package in the range `1.18.0...<2.0.0`. Canon does not install GoogleTest with itself and does not search for or add GoogleTest merely because Canon was loaded. Projects that never call `canon_require_googletest()` pay no GoogleTest configuration or build cost.
+
 Use `canon_apply_dependency()` when an installed package must recover another package before importing its targets:
 
 ```cmake
