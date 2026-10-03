@@ -761,6 +761,147 @@ function(_canon_register_package)
     _canon_schedule_package_finalization()
 endfunction()
 
+# Splits required dependency targets into those already present and those still missing.
+function(_canon_partition_dependency_targets OUT_PRESENT OUT_MISSING)
+    set(_present)
+    set(_missing)
+    foreach(_target IN LISTS ARGN)
+        if (TARGET "${_target}")
+            list(APPEND _present "${_target}")
+        else()
+            list(APPEND _missing "${_target}")
+        endif()
+    endforeach()
+    set(${OUT_PRESENT} "${_present}" PARENT_SCOPE)
+    set(${OUT_MISSING} "${_missing}" PARENT_SCOPE)
+endfunction()
+
+# Makes one vendored-or-installed dependency available to the active build.
+function(_canon_require_dependency)
+    set(_one_value_arguments NAME PACKAGE VERSION SOURCE_DIR BINARY_DIR VENDORED_HINT)
+    set(_multi_value_arguments TARGETS)
+    cmake_parse_arguments(
+        PARSE_ARGV 0
+        _dependency
+        ""
+        "${_one_value_arguments}"
+        "${_multi_value_arguments}"
+    )
+
+    if (_dependency_UNPARSED_ARGUMENTS)
+        message(FATAL_ERROR
+            "_canon_require_dependency(): unexpected arguments: ${_dependency_UNPARSED_ARGUMENTS}")
+    endif()
+
+    message(CHECK_START "finding dependency '${_dependency_PACKAGE}'")
+
+    _canon_partition_dependency_targets(
+        _present_targets
+        _missing_targets
+        ${_dependency_TARGETS}
+    )
+    if (NOT _missing_targets)
+        message(CHECK_PASS "already provided")
+        return()
+    endif()
+    if (_present_targets)
+        string(JOIN ", " _present_text ${_present_targets})
+        string(JOIN ", " _missing_text ${_missing_targets})
+        message(CHECK_FAIL "partially provided")
+        message(FATAL_ERROR
+            "dependency '${_dependency_PACKAGE}' is only partially available; "
+            "present targets: ${_present_text}; missing targets: ${_missing_text}")
+    endif()
+
+    if (EXISTS "${_dependency_SOURCE_DIR}/CMakeLists.txt")
+        add_subdirectory(
+            "${_dependency_SOURCE_DIR}"
+            "${_dependency_BINARY_DIR}"
+            EXCLUDE_FROM_ALL
+        )
+
+        _canon_partition_dependency_targets(
+            _present_targets
+            _missing_targets
+            ${_dependency_TARGETS}
+        )
+        if (_missing_targets)
+            string(JOIN ", " _missing_text ${_missing_targets})
+            message(CHECK_FAIL "vendored dependency is incomplete")
+            message(FATAL_ERROR
+                "vendored dependency '${_dependency_NAME}' did not provide required targets: "
+                "${_missing_text}")
+        endif()
+
+        message(CHECK_PASS "using vendored '${_dependency_NAME}'")
+        return()
+    endif()
+
+    find_package(
+        "${_dependency_PACKAGE}"
+        "${_dependency_VERSION}"
+        CONFIG
+        QUIET
+    )
+
+    _canon_partition_dependency_targets(
+        _present_targets
+        _missing_targets
+        ${_dependency_TARGETS}
+    )
+    if (_missing_targets)
+        string(JOIN ", " _missing_text ${_missing_targets})
+        message(CHECK_FAIL "unavailable")
+        message(FATAL_ERROR
+            "dependency '${_dependency_PACKAGE}' version '${_dependency_VERSION}' is unavailable; "
+            "${_dependency_VENDORED_HINT}, or install a compatible package providing: "
+            "${_missing_text}")
+    endif()
+
+    message(CHECK_PASS "using installed package '${_dependency_PACKAGE}'")
+endfunction()
+
+# Makes one required project dependency available from external/ or an installed package.
+function(canon_require_dependency EXTERNAL_NAME)
+    if ("${EXTERNAL_NAME}" STREQUAL "")
+        message(FATAL_ERROR "canon_require_dependency(): external name must not be empty")
+    endif()
+
+    set(_one_value_arguments PACKAGE VERSION)
+    set(_multi_value_arguments TARGETS)
+    cmake_parse_arguments(
+        PARSE_ARGV 1
+        _dependency
+        ""
+        "${_one_value_arguments}"
+        "${_multi_value_arguments}"
+    )
+
+    if (_dependency_UNPARSED_ARGUMENTS)
+        message(FATAL_ERROR
+            "canon_require_dependency(): unexpected arguments: ${_dependency_UNPARSED_ARGUMENTS}")
+    endif()
+    if ("${_dependency_PACKAGE}" STREQUAL "")
+        set(_dependency_PACKAGE "${EXTERNAL_NAME}")
+    endif()
+    if ("${_dependency_VERSION}" STREQUAL "")
+        message(FATAL_ERROR "canon_require_dependency(): VERSION is required")
+    endif()
+    if (NOT _dependency_TARGETS)
+        message(FATAL_ERROR "canon_require_dependency(): TARGETS is required")
+    endif()
+
+    _canon_require_dependency(
+        NAME "${EXTERNAL_NAME}"
+        PACKAGE "${_dependency_PACKAGE}"
+        VERSION "${_dependency_VERSION}"
+        SOURCE_DIR "${PROJECT_SOURCE_DIR}/external/${EXTERNAL_NAME}"
+        BINARY_DIR "${PROJECT_BINARY_DIR}/external/${EXTERNAL_NAME}"
+        VENDORED_HINT "initialize vendored dependency 'external/${EXTERNAL_NAME}'"
+        TARGETS ${_dependency_TARGETS}
+    )
+endfunction()
+
 # Records how this project's installed package recovers one external dependency.
 function(canon_apply_dependency PACKAGE)
     if ("${PACKAGE}" STREQUAL "")

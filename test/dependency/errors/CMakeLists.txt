@@ -19,6 +19,40 @@ elseif ("${CANON_TEST_CASE}" STREQUAL "quiet")
     canon_apply_dependency(DependencyFixture QUIET)
 elseif ("${CANON_TEST_CASE}" STREQUAL "no-package")
     canon_apply_dependency(DependencyFixture CONFIG)
+elseif ("${CANON_TEST_CASE}" STREQUAL "require-empty")
+    canon_require_dependency(
+        ""
+        PACKAGE DependencyFixture
+        VERSION "7.3...<8.0"
+        TARGETS DependencyFixture::Core
+    )
+elseif ("${CANON_TEST_CASE}" STREQUAL "require-version")
+    canon_require_dependency(
+        fixture-dependency
+        PACKAGE DependencyFixture
+        TARGETS DependencyFixture::Core
+    )
+elseif ("${CANON_TEST_CASE}" STREQUAL "require-targets")
+    canon_require_dependency(
+        fixture-dependency
+        PACKAGE DependencyFixture
+        VERSION "7.3...<8.0"
+    )
+elseif ("${CANON_TEST_CASE}" STREQUAL "require-partial")
+    add_library(DependencyFixture::Core INTERFACE IMPORTED)
+    canon_require_dependency(
+        fixture-dependency
+        PACKAGE DependencyFixture
+        VERSION "7.3...<8.0"
+        TARGETS DependencyFixture::Core DependencyFixture::Support
+    )
+elseif ("${CANON_TEST_CASE}" STREQUAL "require-missing")
+    canon_require_dependency(
+        missing-dependency
+        PACKAGE CanonMissingDependencyFixture
+        VERSION "7.3...<8.0"
+        TARGETS CanonMissingDependencyFixture::Core
+    )
 else()
     message(FATAL_ERROR "Unknown CANON_TEST_CASE '${CANON_TEST_CASE}'")
 endif()

@@ -100,6 +100,21 @@ A versioned project receives `<Project>Config.cmake`, `<Project>ConfigVersion.cm
 
 Executables installed with `canon_apply_executable()` are not exported as package targets and do not create a package configuration by themselves.
 
+Use `canon_require_dependency()` when a project needs the same vendored-or-installed dependency lookup in its current build:
+
+```cmake
+canon_require_dependency(
+    sdl
+    PACKAGE SDL3
+    VERSION "3.0...<4.0"
+    TARGETS SDL3::SDL3
+)
+```
+
+Canon first reuses the dependency when every required target already exists. Otherwise, if `${PROJECT_SOURCE_DIR}/external/sdl/CMakeLists.txt` exists, Canon adds that project beneath `${PROJECT_BINARY_DIR}/external/sdl` with `EXCLUDE_FROM_ALL`. If the vendored project is absent, Canon searches for the requested package and version in Config mode. The call fails if only some required targets already exist or if the selected provider does not supply every target. `TARGETS` may list more than one required target. Canon does not download dependencies.
+
+The first argument names the directory beneath the project's `external/` tree. `PACKAGE` defaults to that name when the package name matches it. `VERSION` and `TARGETS` are required. This function only makes the dependency available to the current build; if an installed Canon-managed package must recover that dependency, record that separately with `canon_apply_dependency()`.
+
 Use `canon_apply_dependency()` when an installed package must recover another package before importing its targets:
 
 ```cmake

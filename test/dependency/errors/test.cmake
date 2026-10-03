@@ -22,9 +22,16 @@ canon_test_make_configure_command(
     "-DCANON_TEST_CASE=${CANON_TEST_CASE}"
 )
 
+set(_expected_output "${CANON_EXPECTED_ERROR}")
+foreach(_optional_variable IN ITEMS CANON_EXPECTED_DETAIL CANON_EXPECTED_STATUS)
+    if (DEFINED ${_optional_variable} AND NOT "${${_optional_variable}}" STREQUAL "")
+        list(APPEND _expected_output "${${_optional_variable}}")
+    endif()
+endforeach()
+
 canon_test_run(
     DESCRIPTION "Canon dependency error case '${CANON_TEST_CASE}'"
     EXPECT_FAILURE
-    EXPECTED_OUTPUT "${CANON_EXPECTED_ERROR}"
+    EXPECTED_OUTPUT ${_expected_output}
     COMMAND ${_configure_command}
 )

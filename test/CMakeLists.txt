@@ -94,6 +94,21 @@ _canon_add_script_test(
 )
 
 _canon_add_script_test(
+    dependencies.require.vendored
+    dependency/require/vendored.cmake
+)
+
+_canon_add_script_test(
+    dependencies.require.installed
+    dependency/require/installed.cmake
+)
+
+_canon_add_script_test(
+    dependencies.require.provided
+    dependency/require/provided.cmake
+)
+
+_canon_add_script_test(
     targets.warnings
     consumer/test.cmake
     -DCANON_BUILD_TYPE=Debug
@@ -259,6 +274,27 @@ _canon_add_script_test(
 )
 
 _canon_add_script_test(
+    googletest.vendored
+    googletest/vendored.cmake
+)
+
+_canon_add_script_test(
+    googletest.installed
+    googletest/installed.cmake
+    "-DCANON_EXPECTED_VERSION=${PROJECT_VERSION}"
+)
+
+_canon_add_script_test(
+    googletest.provided
+    googletest/provided.cmake
+)
+
+_canon_add_script_test(
+    googletest.nested
+    googletest/nested.cmake
+)
+
+_canon_add_script_test(
     presets.debug
     presets/debug.cmake
 )
@@ -388,4 +424,43 @@ _canon_add_script_test(
     dependency/errors/test.cmake
     -DCANON_TEST_CASE=no-package
     "-DCANON_EXPECTED_ERROR=package dependencies were declared, but project"
+)
+
+_canon_add_script_test(
+    dependencies.require.empty
+    dependency/errors/test.cmake
+    -DCANON_TEST_CASE=require-empty
+    "-DCANON_EXPECTED_ERROR=canon_require_dependency(): external name must not be empty"
+)
+
+_canon_add_script_test(
+    dependencies.require.version
+    dependency/errors/test.cmake
+    -DCANON_TEST_CASE=require-version
+    "-DCANON_EXPECTED_ERROR=canon_require_dependency(): VERSION is required"
+)
+
+_canon_add_script_test(
+    dependencies.require.targets
+    dependency/errors/test.cmake
+    -DCANON_TEST_CASE=require-targets
+    "-DCANON_EXPECTED_ERROR=canon_require_dependency(): TARGETS is required"
+)
+
+_canon_add_script_test(
+    dependencies.require.partial
+    dependency/errors/test.cmake
+    -DCANON_TEST_CASE=require-partial
+    "-DCANON_EXPECTED_ERROR=dependency 'DependencyFixture' is only partially available"
+    "-DCANON_EXPECTED_DETAIL=present targets: DependencyFixture::Core; missing targets: DependencyFixture::Support"
+    "-DCANON_EXPECTED_STATUS=finding dependency 'DependencyFixture' - partially provided"
+)
+
+_canon_add_script_test(
+    dependencies.require.missing
+    dependency/errors/test.cmake
+    -DCANON_TEST_CASE=require-missing
+    "-DCANON_EXPECTED_ERROR=dependency 'CanonMissingDependencyFixture' version '7.3...<8.0' is unavailable"
+    "-DCANON_EXPECTED_DETAIL=initialize vendored dependency 'external/missing-dependency', or install a compatible package"
+    "-DCANON_EXPECTED_STATUS=finding dependency 'CanonMissingDependencyFixture' - unavailable"
 )
