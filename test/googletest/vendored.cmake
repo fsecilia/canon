@@ -27,7 +27,7 @@ canon_test_run(
 )
 canon_test_run(
     DESCRIPTION "Vendored Canon GoogleTest install"
-    COMMAND "${CMAKE_COMMAND}" --install "${_build_dir}" --prefix "${_install_prefix}"
+    COMMAND "${CMAKE_COMMAND}" --install "${_build_dir}" --config "${CANON_TEST_CONFIG}" --prefix "${_install_prefix}"
 )
 
 set(_marker "${_install_prefix}/share/canon-gtest-fixture/installed-marker.txt")

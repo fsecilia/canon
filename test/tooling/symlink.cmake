@@ -47,5 +47,5 @@ canon_test_run(
 )
 canon_test_run(
     DESCRIPTION "tidy build through symlinked source tree"
-    COMMAND "${CMAKE_COMMAND}" --build "${_binary_dir}"
+    COMMAND "${CMAKE_COMMAND}" --build "${_binary_dir}" --config "${CANON_TEST_CONFIG}"
 )

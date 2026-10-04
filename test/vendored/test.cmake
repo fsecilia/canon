@@ -28,11 +28,11 @@ canon_test_run(
 )
 canon_test_run(
     DESCRIPTION "Vendored Canon consumer build"
-    COMMAND "${CMAKE_COMMAND}" --build "${_build_dir}"
+    COMMAND "${CMAKE_COMMAND}" --build "${_build_dir}" --config "${CANON_TEST_CONFIG}"
 )
 canon_test_run(
     DESCRIPTION "Vendored Canon consumer install"
-    COMMAND "${CMAKE_COMMAND}" --install "${_build_dir}" --prefix "${_install_prefix}"
+    COMMAND "${CMAKE_COMMAND}" --install "${_build_dir}" --config "${CANON_TEST_CONFIG}" --prefix "${_install_prefix}"
 )
 
 set(_consumer_install "${_install_prefix}/share/canon-vendored-consumer/sample.cpp")

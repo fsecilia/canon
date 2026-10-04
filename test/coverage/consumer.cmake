@@ -44,7 +44,7 @@ file(MAKE_DIRECTORY "${CANON_TEST_BINARY_DIR}/stale")
 file(WRITE "${CANON_TEST_BINARY_DIR}/stale/stale.gcda" "deliberately invalid stale data")
 canon_test_run(
     DESCRIPTION "coverage clean"
-    COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}" --target coverage-clean
+    COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}" --config "${CANON_TEST_CONFIG}" --target coverage-clean
 )
 if (EXISTS "${CANON_TEST_BINARY_DIR}/stale/stale.gcda")
     message(FATAL_ERROR "coverage-clean left stale profile data behind")
@@ -52,16 +52,16 @@ endif()
 
 canon_test_run(
     DESCRIPTION "coverage build"
-    COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}"
+    COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}" --config "${CANON_TEST_CONFIG}"
 )
 canon_test_run(
     DESCRIPTION "coverage tests"
-    COMMAND "${CMAKE_CTEST_COMMAND}" --test-dir "${CANON_TEST_BINARY_DIR}" --output-on-failure
+    COMMAND "${CMAKE_CTEST_COMMAND}" --test-dir "${CANON_TEST_BINARY_DIR}" --build-config "${CANON_TEST_CONFIG}" --output-on-failure
 )
 
 canon_test_run(
     DESCRIPTION "coverage report"
-    COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}" --target coverage-report
+    COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}" --config "${CANON_TEST_CONFIG}" --target coverage-report
 )
 
 set(_index "${CANON_TEST_BINARY_DIR}/coverage/index.html")
@@ -87,7 +87,7 @@ endif()
 set(_install_prefix "${CANON_TEST_BINARY_DIR}/install")
 canon_test_run(
     DESCRIPTION "coverage install"
-    COMMAND "${CMAKE_COMMAND}" --install "${CANON_TEST_BINARY_DIR}" --prefix "${_install_prefix}"
+    COMMAND "${CMAKE_COMMAND}" --install "${CANON_TEST_BINARY_DIR}" --config "${CANON_TEST_CONFIG}" --prefix "${_install_prefix}"
 )
 
 set(_consumer_build_dir "${CANON_TEST_BINARY_DIR}/package-consumer")
@@ -105,9 +105,10 @@ canon_test_run(
 )
 canon_test_run(
     DESCRIPTION "coverage package consumer build"
-    COMMAND "${CMAKE_COMMAND}" --build "${_consumer_build_dir}"
+    COMMAND "${CMAKE_COMMAND}" --build "${_consumer_build_dir}" --config "${CANON_TEST_CONFIG}"
 )
+canon_test_executable_path(_coverage_consumer "${_consumer_build_dir}" coverage_consumer)
 canon_test_run(
     DESCRIPTION "coverage package consumer"
-    COMMAND "${_consumer_build_dir}/coverage_consumer"
+    COMMAND "${_coverage_consumer}"
 )

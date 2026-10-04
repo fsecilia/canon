@@ -30,16 +30,16 @@ canon_test_run(
 )
 canon_test_run(
     DESCRIPTION "Canon consumer build (${CANON_BUILD_TYPE})"
-    COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}"
+    COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}" --config "${CANON_TEST_CONFIG}"
 )
 canon_test_run(
     DESCRIPTION "exported visibility probe"
-    COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}" --target visibility_exported
+    COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}" --config "${CANON_TEST_CONFIG}" --target visibility_exported
 )
 canon_test_run(
     DESCRIPTION "unexported visibility probe"
     EXPECT_FAILURE
-    COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}" --target visibility_hidden
+    COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}" --config "${CANON_TEST_CONFIG}" --target visibility_hidden
     EXPECTED_OUTPUT sampleHiddenAnswer
     EXPECTED_REGEX "undefined reference|undefined symbol|Undefined symbols|unresolved external symbol"
 )
@@ -48,15 +48,15 @@ if (CANON_ENABLE_WARNINGS)
     canon_test_run(
         DESCRIPTION "Canon warning probe with warnings enabled"
         EXPECT_FAILURE
-        COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}" --target warning_probe
+        COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}" --config "${CANON_TEST_CONFIG}" --target warning_probe
     )
     canon_test_run(
         DESCRIPTION "Canon warning probe with unused-parameter demoted"
-        COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}" --target warning_probe_demoted
+        COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}" --config "${CANON_TEST_CONFIG}" --target warning_probe_demoted
     )
 else()
     canon_test_run(
         DESCRIPTION "Canon warning probe with warnings disabled"
-        COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}" --target warning_probe
+        COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}" --config "${CANON_TEST_CONFIG}" --target warning_probe
     )
 endif()

@@ -51,7 +51,7 @@ _canon_expect_doxygen_setting(WARN_LOGFILE "${_binary_dir}/doxygen-warnings.log"
 canon_test_run(
     DESCRIPTION "documentation target with Doxygen warning"
     EXPECT_FAILURE
-    COMMAND "${CMAKE_COMMAND}" --build "${_binary_dir}" --target doc
+    COMMAND "${CMAKE_COMMAND}" --build "${_binary_dir}" --config "${CANON_TEST_CONFIG}" --target doc
 )
 
 set(_warning_log "${_binary_dir}/doxygen-warnings.log")

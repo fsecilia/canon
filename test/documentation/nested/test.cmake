@@ -32,7 +32,7 @@ canon_test_run(
 
 canon_test_run(
     DESCRIPTION "root qualified documentation target"
-    COMMAND "${CMAKE_COMMAND}" --build "${_binary_dir}" --target CanonDocumentationRootFixture-doc
+    COMMAND "${CMAKE_COMMAND}" --build "${_binary_dir}" --config "${CANON_TEST_CONFIG}" --target CanonDocumentationRootFixture-doc
 )
 if (NOT EXISTS "${_root_output}/html/index.html")
     message(FATAL_ERROR "Root qualified documentation target did not generate documentation")
@@ -50,7 +50,7 @@ endforeach()
 
 canon_test_run(
     DESCRIPTION "nested qualified documentation target"
-    COMMAND "${CMAKE_COMMAND}" --build "${_binary_dir}" --target CanonDocumentationNestedFixture-doc
+    COMMAND "${CMAKE_COMMAND}" --build "${_binary_dir}" --config "${CANON_TEST_CONFIG}" --target CanonDocumentationNestedFixture-doc
 )
 if (NOT EXISTS "${_nested_output}/html/index.html")
     message(FATAL_ERROR "Nested qualified documentation target did not generate documentation")
@@ -59,7 +59,7 @@ file(WRITE "${_nested_output}/html/NESTED_DOCUMENTATION_SENTINEL" "nested\n")
 
 canon_test_run(
     DESCRIPTION "top-level documentation clean"
-    COMMAND "${CMAKE_COMMAND}" --build "${_binary_dir}" --target doc-clean
+    COMMAND "${CMAKE_COMMAND}" --build "${_binary_dir}" --config "${CANON_TEST_CONFIG}" --target doc-clean
 )
 if (EXISTS "${_root_output}")
     message(FATAL_ERROR "Top-level doc-clean did not clean the root documentation")
@@ -70,7 +70,7 @@ endif()
 
 canon_test_run(
     DESCRIPTION "top-level documentation target"
-    COMMAND "${CMAKE_COMMAND}" --build "${_binary_dir}" --target doc
+    COMMAND "${CMAKE_COMMAND}" --build "${_binary_dir}" --config "${CANON_TEST_CONFIG}" --target doc
 )
 if (NOT EXISTS "${_root_output}/html/index.html")
     message(FATAL_ERROR "Top-level doc target did not regenerate root documentation")
@@ -84,6 +84,7 @@ canon_test_run(
     COMMAND
         "${CMAKE_COMMAND}"
         --install "${_binary_dir}"
+        --config "${CANON_TEST_CONFIG}"
         --prefix "${_prefix}"
         --component Documentation
 )
@@ -96,7 +97,7 @@ endif()
 
 canon_test_run(
     DESCRIPTION "nested qualified documentation cleanup"
-    COMMAND "${CMAKE_COMMAND}" --build "${_binary_dir}" --target CanonDocumentationNestedFixture-doc-clean
+    COMMAND "${CMAKE_COMMAND}" --build "${_binary_dir}" --config "${CANON_TEST_CONFIG}" --target CanonDocumentationNestedFixture-doc-clean
 )
 if (EXISTS "${_nested_output}")
     message(FATAL_ERROR "Nested qualified cleanup target did not remove nested documentation")

@@ -31,7 +31,7 @@ canon_test_run(
 )
 canon_test_run(
     DESCRIPTION "Installed GoogleTest policy Canon install"
-    COMMAND "${CMAKE_COMMAND}" --install "${_canon_build_dir}" --prefix "${_install_prefix}"
+    COMMAND "${CMAKE_COMMAND}" --install "${_canon_build_dir}" --config "${CANON_TEST_CONFIG}" --prefix "${_install_prefix}"
 )
 
 foreach(_unexpected_path IN ITEMS

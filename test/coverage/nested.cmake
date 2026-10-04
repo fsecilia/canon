@@ -38,15 +38,15 @@ function(_canon_test_nested_coverage ORDER CHILD_FIRST)
     )
     canon_test_run(
         DESCRIPTION "nested coverage ${ORDER} build"
-        COMMAND "${CMAKE_COMMAND}" --build "${_binary_dir}"
+        COMMAND "${CMAKE_COMMAND}" --build "${_binary_dir}" --config "${CANON_TEST_CONFIG}"
     )
     canon_test_run(
         DESCRIPTION "nested coverage ${ORDER} tests"
-        COMMAND "${CMAKE_CTEST_COMMAND}" --test-dir "${_binary_dir}" --output-on-failure
+        COMMAND "${CMAKE_CTEST_COMMAND}" --test-dir "${_binary_dir}" --build-config "${CANON_TEST_CONFIG}" --output-on-failure
     )
     canon_test_run(
         DESCRIPTION "nested coverage ${ORDER} report"
-        COMMAND "${CMAKE_COMMAND}" --build "${_binary_dir}" --target coverage-report
+        COMMAND "${CMAKE_COMMAND}" --build "${_binary_dir}" --config "${CANON_TEST_CONFIG}" --target coverage-report
     )
 
     set(_index "${_binary_dir}/coverage/index.html")

@@ -28,11 +28,11 @@ canon_test_run(
 )
 canon_test_run(
     DESCRIPTION "Canon executable-install build"
-    COMMAND "${CMAKE_COMMAND}" --build "${_build_dir}"
+    COMMAND "${CMAKE_COMMAND}" --build "${_build_dir}" --config "${CANON_TEST_CONFIG}"
 )
 canon_test_run(
     DESCRIPTION "Canon executable-install install"
-    COMMAND "${CMAKE_COMMAND}" --install "${_build_dir}" --prefix "${_install_prefix}"
+    COMMAND "${CMAKE_COMMAND}" --install "${_build_dir}" --config "${CANON_TEST_CONFIG}" --prefix "${_install_prefix}"
 )
 
 file(READ "${_build_dir}/installed-executable-name.txt" _executable_name)

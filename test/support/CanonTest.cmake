@@ -86,6 +86,21 @@ function(canon_test_run)
     endforeach()
 endfunction()
 
+function(canon_test_executable_path OUT_PATH BINARY_DIR TARGET)
+    file(STRINGS
+        "${BINARY_DIR}/CMakeCache.txt"
+        _configuration_types
+        REGEX "^CMAKE_CONFIGURATION_TYPES:"
+        LIMIT_COUNT 1
+    )
+    if (_configuration_types)
+        set(_path "${BINARY_DIR}/${CANON_TEST_CONFIG}/${TARGET}${CANON_EXECUTABLE_SUFFIX}")
+    else()
+        set(_path "${BINARY_DIR}/${TARGET}${CANON_EXECUTABLE_SUFFIX}")
+    endif()
+    set(${OUT_PATH} "${_path}" PARENT_SCOPE)
+endfunction()
+
 function(canon_test_make_configure_command OUT_COMMAND SOURCE_DIR BINARY_DIR)
     set(_command
         "${CMAKE_COMMAND}"

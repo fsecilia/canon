@@ -34,15 +34,16 @@ canon_test_run(
 )
 canon_test_run(
     DESCRIPTION "empty coverage build"
-    COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}"
+    COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}" --config "${CANON_TEST_CONFIG}"
 )
+canon_test_executable_path(_covered_empty "${CANON_TEST_BINARY_DIR}" covered_empty)
 canon_test_run(
     DESCRIPTION "empty coverage fixture"
-    COMMAND "${CANON_TEST_BINARY_DIR}/covered_empty"
+    COMMAND "${_covered_empty}"
 )
 canon_test_run(
     DESCRIPTION "empty coverage report"
     EXPECT_FAILURE
-    COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}" --target coverage-report
+    COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}" --config "${CANON_TEST_CONFIG}" --target coverage-report
     EXPECTED_OUTPUT "Canon coverage report contains no project source files"
 )

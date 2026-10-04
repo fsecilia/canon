@@ -27,5 +27,5 @@ canon_test_run(
 )
 canon_test_run(
     DESCRIPTION "IPO-unavailable build"
-    COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}"
+    COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}" --config "${CANON_TEST_CONFIG}"
 )

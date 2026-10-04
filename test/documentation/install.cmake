@@ -16,11 +16,11 @@ set(_generated_prefix "${CANON_TEST_BINARY_DIR}/generated-prefix")
 
 canon_test_run(
     DESCRIPTION "documentation-install fixture build"
-    COMMAND "${CMAKE_COMMAND}" --build "${_binary_dir}"
+    COMMAND "${CMAKE_COMMAND}" --build "${_binary_dir}" --config "${CANON_TEST_CONFIG}"
 )
 canon_test_run(
     DESCRIPTION "ordinary install before documentation generation"
-    COMMAND "${CMAKE_COMMAND}" --install "${_binary_dir}" --prefix "${_ordinary_prefix}"
+    COMMAND "${CMAKE_COMMAND}" --install "${_binary_dir}" --config "${CANON_TEST_CONFIG}" --prefix "${_ordinary_prefix}"
 )
 if (EXISTS "${_ordinary_prefix}/${_documentation_dir}")
     message(FATAL_ERROR "Ordinary install unexpectedly installed documentation")
@@ -32,19 +32,20 @@ canon_test_run(
     COMMAND
         "${CMAKE_COMMAND}"
         --install "${_binary_dir}"
+        --config "${CANON_TEST_CONFIG}"
         --prefix "${_generated_prefix}"
         --component Documentation
     EXPECTED_OUTPUT doxygen/html
 )
 canon_test_run(
     DESCRIPTION "documentation build"
-    COMMAND "${CMAKE_COMMAND}" --build "${_binary_dir}" --target doc
+    COMMAND "${CMAKE_COMMAND}" --build "${_binary_dir}" --config "${CANON_TEST_CONFIG}" --target doc
 )
 
 file(REMOVE_RECURSE "${_ordinary_prefix}")
 canon_test_run(
     DESCRIPTION "ordinary install after documentation generation"
-    COMMAND "${CMAKE_COMMAND}" --install "${_binary_dir}" --prefix "${_ordinary_prefix}"
+    COMMAND "${CMAKE_COMMAND}" --install "${_binary_dir}" --config "${CANON_TEST_CONFIG}" --prefix "${_ordinary_prefix}"
 )
 if (EXISTS "${_ordinary_prefix}/${_documentation_dir}")
     message(FATAL_ERROR "Ordinary install unexpectedly installed generated documentation")
@@ -55,6 +56,7 @@ canon_test_run(
     COMMAND
         "${CMAKE_COMMAND}"
         --install "${_binary_dir}"
+        --config "${CANON_TEST_CONFIG}"
         --prefix "${_generated_prefix}"
         --component Documentation
 )

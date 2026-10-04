@@ -33,11 +33,11 @@ endfunction()
 function(_canon_install_package_fixture BUILD_DIR INSTALL_PREFIX)
     canon_test_run(
         DESCRIPTION "Canon package fixture build"
-        COMMAND "${CMAKE_COMMAND}" --build "${BUILD_DIR}"
+        COMMAND "${CMAKE_COMMAND}" --build "${BUILD_DIR}" --config "${CANON_TEST_CONFIG}"
     )
     canon_test_run(
         DESCRIPTION "Canon package fixture install"
-        COMMAND "${CMAKE_COMMAND}" --install "${BUILD_DIR}" --prefix "${INSTALL_PREFIX}"
+        COMMAND "${CMAKE_COMMAND}" --install "${BUILD_DIR}" --config "${CANON_TEST_CONFIG}" --prefix "${INSTALL_PREFIX}"
     )
 endfunction()
 
@@ -79,7 +79,7 @@ function(
     )
     canon_test_run(
         DESCRIPTION "Consumer for ${NAME} build"
-        COMMAND "${CMAKE_COMMAND}" --build "${_build_dir}"
+        COMMAND "${CMAKE_COMMAND}" --build "${_build_dir}" --config "${CANON_TEST_CONFIG}"
     )
 endfunction()
 

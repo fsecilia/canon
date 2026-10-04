@@ -88,7 +88,7 @@ endforeach()
 
 canon_test_run(
     DESCRIPTION "documentation caller-policy build"
-    COMMAND "${CMAKE_COMMAND}" --build "${_binary_dir}" --target doc
+    COMMAND "${CMAKE_COMMAND}" --build "${_binary_dir}" --config "${CANON_TEST_CONFIG}" --target doc
 )
 
 set(_html_dir "${_binary_dir}/doxygen/html")

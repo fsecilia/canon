@@ -49,7 +49,7 @@ canon_test_run(
 )
 canon_test_run(
     DESCRIPTION "narrow in-source documentation build"
-    COMMAND "${CMAKE_COMMAND}" --build "${_narrow_source_dir}" --target doc
+    COMMAND "${CMAKE_COMMAND}" --build "${_narrow_source_dir}" --config "${CANON_TEST_CONFIG}" --target doc
 )
 
 set(_index "${_narrow_source_dir}/doxygen/html/index.html")

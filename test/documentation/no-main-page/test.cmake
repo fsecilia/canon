@@ -51,7 +51,7 @@ endif()
 
 canon_test_run(
     DESCRIPTION "documentation no-main-page build"
-    COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}" --target doc
+    COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}" --config "${CANON_TEST_CONFIG}" --target doc
 )
 
 file(GLOB_RECURSE _html_files "${CANON_TEST_BINARY_DIR}/doxygen/html/*.html")

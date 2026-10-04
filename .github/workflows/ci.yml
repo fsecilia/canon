@@ -47,18 +47,21 @@ jobs:
             packages: gcc-14 g++-14
             gcov: gcov-14
             llvm_cov: ""
+            multi_config: "1"
           - name: Clang 19
             cc: clang-19
             cxx: clang++-19
             packages: clang-19 llvm-19
             gcov: ""
             llvm_cov: llvm-cov-19
+            multi_config: ""
 
     env:
       CC: ${{ matrix.compiler.cc }}
       CXX: ${{ matrix.compiler.cxx }}
       CANON_CI_GCOV_EXECUTABLE: ${{ matrix.compiler.gcov }}
       CANON_CI_LLVM_COV_EXECUTABLE: ${{ matrix.compiler.llvm_cov }}
+      CANON_CI_RUN_MULTI_CONFIG: ${{ matrix.compiler.multi_config }}
 
     steps:
       - name: Check out source

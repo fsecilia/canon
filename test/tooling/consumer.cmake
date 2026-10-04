@@ -59,20 +59,20 @@ canon_test_run(
 canon_test_run(
     DESCRIPTION "project header beneath ancestor external directory"
     EXPECT_FAILURE
-    COMMAND "${CMAKE_COMMAND}" --build "${_nested_binary_dir}" --target tidy_header_probe
+    COMMAND "${CMAKE_COMMAND}" --build "${_nested_binary_dir}" --config "${CANON_TEST_CONFIG}" --target tidy_header_probe
     EXPECTED_OUTPUT readability-identifier-naming
 )
 canon_test_run(
     DESCRIPTION "tidy build with managed external header"
-    COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}"
+    COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}" --config "${CANON_TEST_CONFIG}"
 )
 canon_test_run(
     DESCRIPTION "tidy build with Canon warning policy"
-    COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}" --target tidy_warning_policy
+    COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}" --config "${CANON_TEST_CONFIG}" --target tidy_warning_policy
 )
 canon_test_run(
     DESCRIPTION "deliberately invalid managed tidy target"
     EXPECT_FAILURE
-    COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}" --target tidy_probe
+    COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}" --config "${CANON_TEST_CONFIG}" --target tidy_probe
     EXPECTED_OUTPUT readability-identifier-naming
 )

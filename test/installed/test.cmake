@@ -31,7 +31,7 @@ canon_test_run(
 )
 canon_test_run(
     DESCRIPTION "Canon staging install"
-    COMMAND "${CMAKE_COMMAND}" --install "${_canon_build_dir}" --prefix "${_install_prefix}"
+    COMMAND "${CMAKE_COMMAND}" --install "${_canon_build_dir}" --config "${CANON_TEST_CONFIG}" --prefix "${_install_prefix}"
 )
 
 set(_coverage_clean_script "${_canon_package_dir}/CanonCoverageClean.cmake")
@@ -71,5 +71,5 @@ canon_test_run(
 )
 canon_test_run(
     DESCRIPTION "Installed Canon consumer build"
-    COMMAND "${CMAKE_COMMAND}" --build "${_consumer_build_dir}"
+    COMMAND "${CMAKE_COMMAND}" --build "${_consumer_build_dir}" --config "${CANON_TEST_CONFIG}"
 )

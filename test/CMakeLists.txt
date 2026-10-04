@@ -54,6 +54,13 @@ else()
 endif()
 
 function(_canon_add_script_test NAME SCRIPT)
+    set(_one_value_arguments CONFIG)
+    cmake_parse_arguments(PARSE_ARGV 2 _test "" "${_one_value_arguments}" "")
+
+    if ("${_test_CONFIG}" STREQUAL "")
+        set(_test_CONFIG Debug)
+    endif()
+
     add_test(
         NAME "canon.integration.${NAME}"
         COMMAND
@@ -63,7 +70,9 @@ function(_canon_add_script_test NAME SCRIPT)
             "-DCANON_GENERATOR=${CMAKE_GENERATOR}"
             "-DCANON_CXX_COMPILER=${CMAKE_CXX_COMPILER}"
             "-DCANON_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}"
-            ${ARGN}
+            "-DCANON_TEST_CONFIG=${_test_CONFIG}"
+            "-DCANON_EXECUTABLE_SUFFIX=${CMAKE_EXECUTABLE_SUFFIX}"
+            ${_test_UNPARSED_ARGUMENTS}
             -P "${CMAKE_CURRENT_SOURCE_DIR}/${SCRIPT}"
     )
     set_tests_properties("canon.integration.${NAME}" PROPERTIES LABELS integration TIMEOUT 120)
@@ -83,6 +92,7 @@ _canon_add_script_test(
 _canon_add_script_test(
     targets.release
     consumer/test.cmake
+    CONFIG Release
     -DCANON_BUILD_TYPE=Release
 )
 
@@ -156,6 +166,7 @@ _canon_add_script_test(
 _canon_add_script_test(
     ipo.unavailable
     ipo/unavailable/test.cmake
+    CONFIG Release
 )
 
 _canon_add_script_test(

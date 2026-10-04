@@ -7,7 +7,7 @@ _canon_configure_documentation(_source_dir _binary_dir "documentation consumer c
 
 canon_test_run(
     DESCRIPTION "documentation build"
-    COMMAND "${CMAKE_COMMAND}" --build "${_binary_dir}" --target doc
+    COMMAND "${CMAKE_COMMAND}" --build "${_binary_dir}" --config "${CANON_TEST_CONFIG}" --target doc
 )
 
 set(_html_dir "${_binary_dir}/doxygen/html")
@@ -69,7 +69,7 @@ endforeach()
 
 canon_test_run(
     DESCRIPTION "documentation clean"
-    COMMAND "${CMAKE_COMMAND}" --build "${_binary_dir}" --target doc-clean
+    COMMAND "${CMAKE_COMMAND}" --build "${_binary_dir}" --config "${CANON_TEST_CONFIG}" --target doc-clean
 )
 if (EXISTS "${_binary_dir}/doxygen" OR EXISTS "${_binary_dir}/doxygen-warnings.log")
     message(FATAL_ERROR "doc-clean did not remove generated documentation state")
