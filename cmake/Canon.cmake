@@ -602,16 +602,29 @@ function(_canon_apply_tidy TARGET)
         set_property(GLOBAL PROPERTY "${_validation_property}" TRUE)
     endif()
 
-    file(REAL_PATH "${PROJECT_SOURCE_DIR}" _project_source_dir)
     cmake_path(
-        CONVERT "${_project_source_dir}/external"
+        CONVERT "${PROJECT_SOURCE_DIR}/external"
         TO_CMAKE_PATH_LIST _external_directory
         NORMALIZE
     )
+    file(REAL_PATH "${PROJECT_SOURCE_DIR}" _project_source_dir)
+    cmake_path(
+        CONVERT "${_project_source_dir}/external"
+        TO_CMAKE_PATH_LIST _real_external_directory
+        NORMALIZE
+    )
+
     _canon_regex_escape_literal("${_external_directory}" _external_regex)
+    if ("${_external_directory}" STREQUAL "${_real_external_directory}")
+        set(_external_filter "^${_external_regex}/")
+    else()
+        _canon_regex_escape_literal("${_real_external_directory}" _real_external_regex)
+        set(_external_filter "^(${_external_regex}|${_real_external_regex})/")
+    endif()
+
     set(_tidy_command
         "${CANON_CLANG_TIDY_EXECUTABLE}"
-        "--exclude-header-filter=^${_external_regex}/"
+        "--exclude-header-filter=${_external_filter}"
     )
     if (CANON_ENABLE_WARNINGS)
         # clang-tidy uses a Clang frontend even when the configured compiler is GCC.

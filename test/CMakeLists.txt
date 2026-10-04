@@ -150,6 +150,12 @@ _canon_add_script_test(
 )
 
 _canon_add_script_test(
+    tidy.symlink
+    tooling/symlink.cmake
+    "-DCANON_CLANG_TIDY_EXECUTABLE=${CANON_CLANG_TIDY_EXECUTABLE}"
+)
+
+_canon_add_script_test(
     asan
     asan/test.cmake
 )
@@ -231,6 +237,7 @@ if (NOT _canon_clang_tidy_supported)
     set_tests_properties(
         canon.integration.tidy
         canon.integration.tidy.validation-cache
+        canon.integration.tidy.symlink
         PROPERTIES DISABLED TRUE
     )
     if (NOT CANON_CLANG_TIDY_EXECUTABLE)
