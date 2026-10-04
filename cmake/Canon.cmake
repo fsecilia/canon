@@ -1356,6 +1356,10 @@ function(canon_add_documentation)
     endif()
 
     set(_inputs)
+    set(_exclude_binary_tree FALSE)
+    set(_binary_dir "${PROJECT_BINARY_DIR}")
+    cmake_path(NORMAL_PATH _binary_dir)
+
     foreach(_input IN LISTS ARGN)
         if (IS_ABSOLUTE "${_input}")
             set(_absolute_input "${_input}")
@@ -1367,10 +1371,28 @@ function(canon_add_documentation)
                 BASE_DIR "${PROJECT_SOURCE_DIR}"
             )
         endif()
+        cmake_path(NORMAL_PATH _absolute_input)
         if (NOT EXISTS "${_absolute_input}")
             message(FATAL_ERROR
                 "canon_add_documentation(): input '${_input}' does not exist")
         endif()
+
+        if (IS_DIRECTORY "${_absolute_input}")
+            if ("${_absolute_input}" STREQUAL "${_binary_dir}")
+                message(FATAL_ERROR
+                    "canon_add_documentation(): documentation input '${_input}' is the active "
+                    "binary directory '${PROJECT_BINARY_DIR}'. Canon cannot exclude an in-source "
+                    "build tree without also excluding that input. Use an out-of-source build or "
+                    "pass narrower documentation inputs.")
+            endif()
+
+            set(_input_path "${_absolute_input}")
+            cmake_path(IS_PREFIX _input_path "${_binary_dir}" NORMALIZE _contains_binary_tree)
+            if (_contains_binary_tree)
+                set(_exclude_binary_tree TRUE)
+            endif()
+        endif()
+
         list(APPEND _inputs "${_absolute_input}")
     endforeach()
 
@@ -1452,8 +1474,10 @@ function(canon_add_documentation)
     set(DOXYGEN_WARN_AS_ERROR FAIL_ON_WARNINGS)
     set(DOXYGEN_WARN_LOGFILE "${_warning_log}")
 
+    if (_exclude_binary_tree)
+        list(APPEND DOXYGEN_EXCLUDE "${PROJECT_BINARY_DIR}")
+    endif()
     list(APPEND DOXYGEN_EXCLUDE
-        "${PROJECT_BINARY_DIR}"
         "${PROJECT_SOURCE_DIR}/external"
         "${PROJECT_SOURCE_DIR}/standards"
         "${PROJECT_SOURCE_DIR}/test"

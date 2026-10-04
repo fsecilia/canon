@@ -262,6 +262,11 @@ _canon_add_script_test(
     "-DCANON_DOXYGEN_EXECUTABLE=${DOXYGEN_EXECUTABLE}"
 )
 _canon_add_script_test(
+    documentation.in-source
+    documentation/in-source.cmake
+    "-DCANON_DOXYGEN_EXECUTABLE=${DOXYGEN_EXECUTABLE}"
+)
+_canon_add_script_test(
     documentation.policy
     documentation/policy/test.cmake
     "-DCANON_DOXYGEN_EXECUTABLE=${DOXYGEN_EXECUTABLE}"
@@ -285,6 +290,7 @@ if (NOT Doxygen_FOUND)
     set_tests_properties(
         canon.integration.documentation
         canon.integration.documentation.install
+        canon.integration.documentation.in-source
         canon.integration.documentation.policy
         canon.integration.documentation.no-main-page
         canon.integration.documentation.nested
