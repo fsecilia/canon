@@ -324,7 +324,7 @@ function(_canon_resolve_reported_coverage_tool CANDIDATE OUT_EXECUTABLE)
 endfunction()
 
 # Selects and validates the compiler-matched gcov backend used by gcovr.
-function(_canon_find_coverage_backend OUT_COMMAND)
+function(_canon_find_coverage_backend OUT_COMMAND OUT_REASON)
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
         set(_program_name gcov)
         set(_family GNU)
@@ -363,20 +363,22 @@ function(_canon_find_coverage_backend OUT_COMMAND)
             OUTPUT_STRIP_TRAILING_WHITESPACE
         )
         if (NOT "${_driver_result}" STREQUAL "0" OR "${_reported_program}" STREQUAL "")
-            message(WARNING
-                "Canon coverage reporting is disabled: compiler '${CMAKE_CXX_COMPILER}' "
-                "did not report a usable ${_program_name} companion")
             set(${OUT_COMMAND} "" PARENT_SCOPE)
+            string(CONCAT _failure_reason
+                "compiler '${CMAKE_CXX_COMPILER}' did not report a usable ${_program_name} companion; "
+                "set ${_override_variable} to the compiler-matched executable")
+            set(${OUT_REASON} "${_failure_reason}" PARENT_SCOPE)
             return()
         endif()
 
         _canon_resolve_reported_coverage_tool("${_reported_program}" _coverage_executable)
         if ("${_coverage_executable}" STREQUAL "")
-            message(WARNING
-                "Canon coverage reporting is disabled: compiler '${CMAKE_CXX_COMPILER}' "
-                "reported '${_reported_program}' for ${_program_name}, but that exact program "
-                "could not be resolved")
             set(${OUT_COMMAND} "" PARENT_SCOPE)
+            string(CONCAT _failure_reason
+                "compiler '${CMAKE_CXX_COMPILER}' reported '${_reported_program}' for ${_program_name}, "
+                "but that exact program could not be resolved; set ${_override_variable} to the "
+                "compiler-matched executable")
+            set(${OUT_REASON} "${_failure_reason}" PARENT_SCOPE)
             return()
         endif()
     endif()
@@ -389,20 +391,25 @@ function(_canon_find_coverage_backend OUT_COMMAND)
         _reason
     )
     if (NOT _valid)
-        if (_explicit_override)
-            message(FATAL_ERROR
-                "Canon coverage override ${_override_variable}='${_coverage_executable}' is invalid: "
-                "${_reason}")
-        endif()
-
-        message(WARNING
-            "Canon coverage reporting is disabled: compiler '${CMAKE_CXX_COMPILER}' reported "
-            "'${_reported_program}' for ${_program_name}; '${_coverage_executable}' ${_reason}")
         set(${OUT_COMMAND} "" PARENT_SCOPE)
+        if (_explicit_override)
+            set(
+                ${OUT_REASON}
+                "coverage override ${_override_variable}='${_coverage_executable}' is invalid: ${_reason}"
+                PARENT_SCOPE
+            )
+        else()
+            string(CONCAT _failure_reason
+                "compiler '${CMAKE_CXX_COMPILER}' reported '${_reported_program}' for ${_program_name}; "
+                "'${_coverage_executable}' ${_reason}; set ${_override_variable} to the compiler-matched "
+                "executable")
+            set(${OUT_REASON} "${_failure_reason}" PARENT_SCOPE)
+        endif()
         return()
     endif()
 
     set(${OUT_COMMAND} "${_coverage_executable}${_command_suffix}" PARENT_SCOPE)
+    set(${OUT_REASON} "" PARENT_SCOPE)
 endfunction()
 
 # Rebuilds report exclusions from every Canon project with coverage-enabled targets.
@@ -498,7 +505,10 @@ endfunction()
 
 # Creates build-wide cleanup and report targets for coverage-enabled Canon targets.
 function(_canon_add_coverage_targets)
-    _canon_find_coverage_backend(_gcov_command)
+    _canon_find_coverage_backend(_gcov_command _coverage_reason)
+    if ("${_gcov_command}" STREQUAL "")
+        message(FATAL_ERROR "Canon coverage reporting is unavailable: ${_coverage_reason}")
+    endif()
 
     add_custom_target(
         coverage-clean
@@ -509,10 +519,6 @@ function(_canon_add_coverage_targets)
         COMMENT "Cleaning coverage data"
         VERBATIM
     )
-
-    if ("${_gcov_command}" STREQUAL "")
-        return()
-    endif()
 
     find_program(
         CANON_GCOVR_EXECUTABLE

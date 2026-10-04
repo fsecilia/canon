@@ -177,7 +177,7 @@ Coverage instrumentation is controlled by `CANON_ENABLE_COVERAGE`. It is off by 
 
 Canon adds build-wide coverage helpers when the first managed target receives coverage, even when that target belongs to a nested project. `coverage-clean` removes stale `.gcda` files from the build tree. Canon asks the active compiler driver for its coverage companion. It checks the reported tool's compiler family and major version before adding `coverage-report`. GCC uses the compiler-reported `gcov`; Clang uses the compiler-reported `llvm-cov gcov`.
 
-If automatic discovery fails validation, Canon warns and leaves coverage reporting disabled. It does not search for alternate tool names. `CANON_GCOV_EXECUTABLE` and `CANON_LLVM_COV_EXECUTABLE` are explicit overrides for unusual installations. Automatic discovery never populates them, and an invalid override is a configuration error.
+When coverage is enabled, a usable compiler-matched reporting backend is required. If automatic discovery fails validation, configuration fails with a diagnostic naming the applicable override. Canon does not search for alternate tool names. `CANON_GCOV_EXECUTABLE` and `CANON_LLVM_COV_EXECUTABLE` are explicit overrides for unusual installations. Automatic discovery never populates them, and an invalid override is a configuration error.
 
 `coverage-report` runs gcovr from the project source root and writes detailed HTML beneath `coverage/`. It excludes the active project's `external/` directory and `*_test.cpp`, prints a summary, and removes generated `.gcda` data after reporting. The report fails if filtering leaves no project source files.
 

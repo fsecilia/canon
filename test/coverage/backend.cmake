@@ -77,5 +77,4 @@ canon_test_run(
         "-DCANON_CXX_COMPILER_FRONTEND_VARIANT=${CANON_CXX_COMPILER_FRONTEND_VARIANT}"
         "-DCANON_CXX_COMPILER_VERSION=${CANON_CXX_COMPILER_VERSION}"
         -P "${CANON_SOURCE_DIR}/test/coverage/backend-unavailable.cmake"
-    EXPECTED_OUTPUT "did not report a usable"
 )

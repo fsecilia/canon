@@ -36,6 +36,6 @@ canon_test_run(
     EXPECT_FAILURE
     COMMAND ${_configure_command}
     EXPECTED_OUTPUT
-        "Canon coverage override ${_override_variable}="
+        "Canon coverage reporting is unavailable: coverage override ${_override_variable}="
         "invalid:"
 )

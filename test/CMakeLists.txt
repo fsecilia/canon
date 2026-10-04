@@ -43,9 +43,9 @@ if (NOT CANON_GCOVR_EXECUTABLE)
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"
     OR ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang"
         AND "${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}" STREQUAL "GNU"))
-    _canon_find_coverage_backend(_canon_coverage_backend)
+    _canon_find_coverage_backend(_canon_coverage_backend _canon_coverage_backend_reason)
     if ("${_canon_coverage_backend}" STREQUAL "")
-        set(_canon_coverage_disabled_reason "no usable compiler-matched coverage backend was found")
+        set(_canon_coverage_disabled_reason "${_canon_coverage_backend_reason}")
     endif()
 else()
     string(CONCAT _canon_coverage_disabled_reason
@@ -179,6 +179,12 @@ _canon_add_script_test(
 _canon_add_script_test(
     coverage.override-error
     coverage/override-error.cmake
+    "-DCANON_CXX_COMPILER_ID=${CMAKE_CXX_COMPILER_ID}"
+)
+
+_canon_add_script_test(
+    coverage.backend-required
+    coverage/backend-required.cmake
     "-DCANON_CXX_COMPILER_ID=${CMAKE_CXX_COMPILER_ID}"
 )
 
