@@ -26,7 +26,7 @@ mkdir -p "$tool_directory/bin" "$tool_directory/doxygen"
 
 curl --fail --location --silent --show-error \
     --output "$doxygen_archive" \
-    https://www.doxygen.nl/files/doxygen-1.18.0.linux.bin.tar.gz
+    https://github.com/doxygen/doxygen/releases/download/Release_1_18_0/doxygen-1.18.0.linux.bin.tar.gz
 printf '%s  %s\n' \
     '14fa81bdc34171edb5f1f02b1d60e74802f0439b77fa44e592565d517d72df90' \
     "$doxygen_archive" \
