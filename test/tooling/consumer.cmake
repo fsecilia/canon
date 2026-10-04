@@ -67,6 +67,10 @@ canon_test_run(
     COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}"
 )
 canon_test_run(
+    DESCRIPTION "tidy build with Canon warning policy"
+    COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}" --target tidy_warning_policy
+)
+canon_test_run(
     DESCRIPTION "deliberately invalid managed tidy target"
     EXPECT_FAILURE
     COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}" --target tidy_probe

@@ -114,6 +114,44 @@ function(_canon_apply_ipo_if_supported TARGET)
     endif()
 endfunction()
 
+# Reports Canon's Clang warning exceptions, including options absent from older frontends.
+function(_canon_get_clang_warning_policy
+    OUT_SUPPRESSIONS
+    OUT_OPTIONAL_SUPPRESSIONS
+    OUT_REENABLES
+)
+    set(_suppressions
+        -Wno-c++98-compat
+        -Wno-c++98-compat-pedantic
+        -Wno-c++20-compat
+        -Wno-ctad-maybe-unsupported
+        -Wno-documentation
+        -Wno-documentation-unknown-command
+        -Wno-exit-time-destructors
+        -Wno-global-constructors
+        -Wno-missing-prototypes
+        -Wno-padded
+        -Wno-shadow-field-in-constructor
+        -Wno-switch-default
+        -Wno-switch-enum
+        -Wno-unused-function
+        -Wno-unused-member-function
+        -Wno-unused-template
+    )
+    set(_optional_suppressions
+        -Wno-c++23-compat
+        -Wno-unsafe-buffer-usage-in-libc-call
+    )
+    # Re-enable child groups that broader cemetery entries would otherwise disable.
+    set(_reenables
+        -Wshadow-field-in-constructor-modified
+    )
+
+    set(${OUT_SUPPRESSIONS} "${_suppressions}" PARENT_SCOPE)
+    set(${OUT_OPTIONAL_SUPPRESSIONS} "${_optional_suppressions}" PARENT_SCOPE)
+    set(${OUT_REENABLES} "${_reenables}" PARENT_SCOPE)
+endfunction()
+
 # Applies Canon's strict compiler-specific warning policy.
 function(_canon_apply_warnings TARGET)
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
@@ -135,37 +173,18 @@ function(_canon_apply_warnings TARGET)
             -Weverything
             -Werror
         )
-        set(_warning_suppressions
-            -Wno-c++98-compat
-            -Wno-c++98-compat-pedantic
-            -Wno-c++20-compat
-            -Wno-ctad-maybe-unsupported
-            -Wno-documentation
-            -Wno-documentation-unknown-command
-            -Wno-exit-time-destructors
-            -Wno-global-constructors
-            -Wno-missing-prototypes
-            -Wno-padded
-            -Wno-shadow-field-in-constructor
-            -Wno-switch-default
-            -Wno-switch-enum
-            -Wno-unused-function
-            -Wno-unused-member-function
-            -Wno-unused-template
+        _canon_get_clang_warning_policy(
+            _warning_suppressions
+            _optional_warning_suppressions
+            _warning_reenables
         )
-        foreach(_optional_warning IN ITEMS
-            c++23-compat
-            unsafe-buffer-usage-in-libc-call
-        )
-            _canon_cxx_warning_option_supported("-W${_optional_warning}" _supported)
+        foreach(_optional_suppression IN LISTS _optional_warning_suppressions)
+            string(REGEX REPLACE "^-Wno-" "-W" _optional_warning "${_optional_suppression}")
+            _canon_cxx_warning_option_supported("${_optional_warning}" _supported)
             if (_supported)
-                list(APPEND _warning_suppressions "-Wno-${_optional_warning}")
+                list(APPEND _warning_suppressions "${_optional_suppression}")
             endif()
         endforeach()
-        # Re-enable child groups that broader cemetery entries would otherwise disable.
-        set(_warning_reenables
-            -Wshadow-field-in-constructor-modified
-        )
     else()
         message(FATAL_ERROR
             "Canon warnings do not support compiler '${CMAKE_CXX_COMPILER_ID}' "
@@ -594,6 +613,23 @@ function(_canon_apply_tidy TARGET)
         "${CANON_CLANG_TIDY_EXECUTABLE}"
         "--exclude-header-filter=^${_external_regex}/"
     )
+    if (CANON_ENABLE_WARNINGS)
+        # clang-tidy uses a Clang frontend even when the configured compiler is GCC.
+        # Pass only options guaranteed by Canon's minimum clang-tidy version rather
+        # than masking unsupported options with -Wno-unknown-warning-option.
+        _canon_get_clang_warning_policy(
+            _warning_suppressions
+            _optional_warning_suppressions
+            _warning_reenables
+        )
+        foreach(_option IN LISTS
+            _warning_suppressions
+            _optional_warning_suppressions
+            _warning_reenables
+        )
+            list(APPEND _tidy_command "--extra-arg=${_option}")
+        endforeach()
+    endif()
     set_property(TARGET "${TARGET}" PROPERTY CXX_CLANG_TIDY "${_tidy_command}")
 endfunction()
 
