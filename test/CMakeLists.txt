@@ -92,6 +92,26 @@ _canon_add_script_test(
 )
 
 _canon_add_script_test(
+    target.idempotent
+    target/idempotence/test.cmake
+)
+
+_canon_add_script_test(
+    executable.idempotent
+    executable/idempotence/test.cmake
+)
+
+_canon_add_script_test(
+    library.idempotent
+    library/idempotence/test.cmake
+)
+
+_canon_add_script_test(
+    library.interface.idempotent
+    library/interface-idempotence/test.cmake
+)
+
+_canon_add_script_test(
     library.install
     library/install/test.cmake
 )

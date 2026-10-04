@@ -668,6 +668,11 @@ function(canon_apply_target TARGET)
             "canon_apply_target(): target '${TARGET}' has type '${_type}', which has no compiled-target Canon policy")
     endif()
 
+    get_property(_applied TARGET "${TARGET}" PROPERTY _CANON_TARGET_POLICY_APPLIED)
+    if (_applied)
+        return()
+    endif()
+
     set_target_properties("${TARGET}" PROPERTIES
         CXX_SCAN_FOR_MODULES FALSE
         CXX_STANDARD 26
@@ -691,6 +696,8 @@ function(canon_apply_target TARGET)
     if (CANON_ENABLE_TIDY)
         _canon_apply_tidy("${TARGET}")
     endif()
+
+    set_property(TARGET "${TARGET}" PROPERTY _CANON_TARGET_POLICY_APPLIED TRUE)
 endfunction()
 
 # Returns the install directory for this project's finalized package architecture.
@@ -1146,6 +1153,11 @@ function(canon_apply_executable TARGET)
             "canon_apply_executable(): MACOSX_BUNDLE target '${TARGET}' is not supported")
     endif()
 
+    get_property(_applied TARGET "${TARGET}" PROPERTY _CANON_EXECUTABLE_POLICY_APPLIED)
+    if (_applied)
+        return()
+    endif()
+
     canon_apply_target("${TARGET}")
 
     include(GNUInstallDirs)
@@ -1154,6 +1166,7 @@ function(canon_apply_executable TARGET)
         RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
     )
     _canon_mark_package_architecture_specific()
+    set_property(TARGET "${TARGET}" PROPERTY _CANON_EXECUTABLE_POLICY_APPLIED TRUE)
 endfunction()
 
 # Installs a managed library and each of its public HEADERS file sets.
@@ -1292,12 +1305,18 @@ function(canon_apply_library TARGET)
             "canon_apply_library(): FRAMEWORK target '${TARGET}' is not supported")
     endif()
 
+    get_property(_applied TARGET "${TARGET}" PROPERTY _CANON_LIBRARY_POLICY_APPLIED)
+    if (_applied)
+        return()
+    endif()
+
     _canon_add_build_tree_alias("${TARGET}")
 
     if ("${_type}" STREQUAL "INTERFACE_LIBRARY")
         target_compile_features("${TARGET}" INTERFACE cxx_std_26)
         _canon_install_library("${TARGET}")
         _canon_register_package()
+        set_property(TARGET "${TARGET}" PROPERTY _CANON_LIBRARY_POLICY_APPLIED TRUE)
         return()
     endif()
 
@@ -1346,6 +1365,7 @@ function(canon_apply_library TARGET)
 
     _canon_install_library("${TARGET}")
     _canon_register_package()
+    set_property(TARGET "${TARGET}" PROPERTY _CANON_LIBRARY_POLICY_APPLIED TRUE)
 endfunction()
 
 # Adds conventional documentation targets using CMake's native FindDoxygen integration.

@@ -100,6 +100,8 @@ A versioned project receives `<Project>Config.cmake`, `<Project>ConfigVersion.cm
 
 Executables installed with `canon_apply_executable()` are not exported as package targets and do not create a package configuration by themselves.
 
+Each `canon_apply_*()` function is idempotent for a target. Reapplying the same function does not duplicate build policy or install rules. Applying `canon_apply_target()` first and later applying the matching executable or library function adds the higher-level policy without reapplying the compiled-target policy.
+
 Use `canon_resolve_dependency()` when a project needs the same vendored-or-installed dependency lookup in its current build:
 
 ```cmake
