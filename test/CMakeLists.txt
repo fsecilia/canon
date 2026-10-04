@@ -336,20 +336,25 @@ _canon_add_script_test(
     "-DCANON_EXPECTED_VERSION=${PROJECT_VERSION}"
 )
 
-if (EXISTS "${PROJECT_SOURCE_DIR}/external/googletest/CMakeLists.txt")
-    _canon_add_script_test(
-        googletest.vendored
-        googletest/vendored.cmake
-    )
+_canon_add_script_test(
+    googletest.vendored
+    googletest/vendored.cmake
+)
 
-    _canon_add_script_test(
-        googletest.nested
-        googletest/nested.cmake
+_canon_add_script_test(
+    googletest.nested
+    googletest/nested.cmake
+)
+
+if (NOT EXISTS "${PROJECT_SOURCE_DIR}/external/googletest/CMakeLists.txt")
+    set_tests_properties(
+        canon.integration.googletest.vendored
+        canon.integration.googletest.nested
+        PROPERTIES DISABLED TRUE
     )
-else()
     message(WARNING
         "Canon vendored GoogleTest validation unavailable: initialize submodule "
-        "'external/googletest'. The following tests will not be registered:\n"
+        "'external/googletest'. The following tests are disabled:\n"
         "  canon.integration.googletest.vendored\n"
         "  canon.integration.googletest.nested")
 endif()
