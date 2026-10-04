@@ -77,6 +77,15 @@ function(_canon_add_script_test NAME SCRIPT)
     )
     set_tests_properties("canon.integration.${NAME}" PROPERTIES LABELS integration TIMEOUT 120)
 endfunction()
+function(_canon_add_configure_failure_test NAME FIXTURE_SOURCE_DIR)
+    _canon_add_script_test(
+        "${NAME}"
+        support/configure-failure.cmake
+        "-DCANON_FIXTURE_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/${FIXTURE_SOURCE_DIR}"
+        ${ARGN}
+    )
+endfunction()
+
 
 _canon_add_script_test(
     targets
@@ -191,10 +200,9 @@ _canon_add_script_test(
     asan/test.cmake
 )
 
-_canon_add_script_test(
+_canon_add_configure_failure_test(
     asan.unsupported
-    target/errors/test.cmake
-    -DCANON_TEST_CASE=asan-unsupported
+    asan/unsupported
     "-DCANON_EXPECTED_ERROR=Canon ASan does not support compiler 'Clang'"
     "-DCANON_EXPECTED_DETAIL=with frontend 'MSVC'"
 )
@@ -428,139 +436,120 @@ if (NOT _canon_clang_tidy_supported)
     )
 endif()
 
-_canon_add_script_test(
+_canon_add_configure_failure_test(
     targets.missing
-    target/errors/test.cmake
-    -DCANON_TEST_CASE=missing
+    target/errors/missing
     "-DCANON_EXPECTED_ERROR=target 'missing' does not exist"
 )
 
-_canon_add_script_test(
+_canon_add_configure_failure_test(
     targets.interface
-    target/errors/test.cmake
-    -DCANON_TEST_CASE=interface
+    target/errors/interface
     "-DCANON_EXPECTED_ERROR=target 'sample_interface' has type"
     "-DCANON_EXPECTED_DETAIL='INTERFACE_LIBRARY'"
 )
 
-_canon_add_script_test(
+_canon_add_configure_failure_test(
     executables.missing
-    executable/errors/test.cmake
-    -DCANON_TEST_CASE=missing
+    executable/errors/missing
     "-DCANON_EXPECTED_ERROR=canon_apply_executable(): target 'missing' does not exist"
 )
 
-_canon_add_script_test(
+_canon_add_configure_failure_test(
     executables.library
-    executable/errors/test.cmake
-    -DCANON_TEST_CASE=library
+    executable/errors/library
     "-DCANON_EXPECTED_ERROR=canon_apply_executable(): target 'sample' must be an executable"
 )
 
-_canon_add_script_test(
+_canon_add_configure_failure_test(
     executables.bundle
-    executable/errors/test.cmake
-    -DCANON_TEST_CASE=bundle
+    executable/errors/bundle
     "-DCANON_EXPECTED_ERROR=canon_apply_executable(): MACOSX_BUNDLE target 'sample' is not supported"
 )
 
-_canon_add_script_test(
+_canon_add_configure_failure_test(
     libraries.missing
-    library/errors/test.cmake
-    -DCANON_TEST_CASE=missing
+    library/errors/missing
     "-DCANON_EXPECTED_ERROR=canon_apply_library(): target 'missing' does not exist"
 )
 
-_canon_add_script_test(
+_canon_add_configure_failure_test(
     libraries.object
-    library/errors/test.cmake
-    -DCANON_TEST_CASE=object
+    library/errors/object
     "-DCANON_EXPECTED_ERROR=canon_apply_library(): target 'sample' must be a STATIC, SHARED, MODULE, or INTERFACE library"
 )
 
-_canon_add_script_test(
+_canon_add_configure_failure_test(
     libraries.framework
-    library/errors/test.cmake
-    -DCANON_TEST_CASE=framework
+    library/errors/framework
     "-DCANON_EXPECTED_ERROR=canon_apply_library(): FRAMEWORK target 'sample' is not supported"
 )
 
-_canon_add_script_test(
+_canon_add_configure_failure_test(
     libraries.export-header-collision
-    library/errors/test.cmake
-    -DCANON_TEST_CASE=export-header-collision
+    library/errors/export-header-collision
     "-DCANON_EXPECTED_ERROR=generated export header 'canon_library_errors/foo_bar/export.hpp' for target 'second' conflicts with target 'first'"
 )
 
-_canon_add_script_test(
+_canon_add_configure_failure_test(
     libraries.export-macro-collision
-    library/errors/test.cmake
-    -DCANON_TEST_CASE=export-macro-collision
+    library/errors/export-macro-collision
     "-DCANON_EXPECTED_ERROR=export macro 'AXIOM_CORE_API' for library 'AxiomCore::AxiomCore (target 'axiom_core_monolith')' conflicts with library 'Axiom::Core (target 'axiom_core')'"
 )
 
-_canon_add_script_test(
+_canon_add_configure_failure_test(
     dependencies.empty
-    dependency/errors/test.cmake
-    -DCANON_TEST_CASE=empty
+    dependency/errors/empty
     "-DCANON_EXPECTED_ERROR=canon_propagate_dependency(): package name must not be empty"
 )
 
-_canon_add_script_test(
+_canon_add_configure_failure_test(
     dependencies.required
-    dependency/errors/test.cmake
-    -DCANON_TEST_CASE=required
+    dependency/errors/required
     "-DCANON_EXPECTED_ERROR=canon_propagate_dependency(): 'REQUIRED' is inherited"
 )
 
-_canon_add_script_test(
+_canon_add_configure_failure_test(
     dependencies.quiet
-    dependency/errors/test.cmake
-    -DCANON_TEST_CASE=quiet
+    dependency/errors/quiet
     "-DCANON_EXPECTED_ERROR=canon_propagate_dependency(): 'QUIET' is inherited"
 )
 
-_canon_add_script_test(
+_canon_add_configure_failure_test(
     dependencies.no-package
-    dependency/errors/test.cmake
-    -DCANON_TEST_CASE=no-package
+    dependency/errors/no-package
     "-DCANON_EXPECTED_ERROR=package dependencies were declared, but project"
 )
 
-_canon_add_script_test(
+_canon_add_configure_failure_test(
     dependencies.resolve.empty
-    dependency/errors/test.cmake
-    -DCANON_TEST_CASE=resolve-empty
+    dependency/errors/resolve-empty
     "-DCANON_EXPECTED_ERROR=canon_resolve_dependency(): external name must not be empty"
 )
 
-_canon_add_script_test(
+_canon_add_configure_failure_test(
     dependencies.resolve.version
-    dependency/errors/test.cmake
-    -DCANON_TEST_CASE=resolve-version
+    dependency/errors/resolve-version
     "-DCANON_EXPECTED_ERROR=canon_resolve_dependency(): VERSION is required"
 )
 
-_canon_add_script_test(
+_canon_add_configure_failure_test(
     dependencies.resolve.targets
-    dependency/errors/test.cmake
-    -DCANON_TEST_CASE=resolve-targets
+    dependency/errors/resolve-targets
     "-DCANON_EXPECTED_ERROR=canon_resolve_dependency(): TARGETS is required"
 )
 
-_canon_add_script_test(
+_canon_add_configure_failure_test(
     dependencies.resolve.partial
-    dependency/errors/test.cmake
-    -DCANON_TEST_CASE=resolve-partial
+    dependency/errors/resolve-partial
     "-DCANON_EXPECTED_ERROR=dependency 'DependencyFixture' is only partially available"
     "-DCANON_EXPECTED_DETAIL=present targets: DependencyFixture::Core; missing targets: DependencyFixture::Support"
     "-DCANON_EXPECTED_STATUS=finding dependency 'DependencyFixture' - partially provided"
 )
 
-_canon_add_script_test(
+_canon_add_configure_failure_test(
     dependencies.resolve.missing
-    dependency/errors/test.cmake
-    -DCANON_TEST_CASE=resolve-missing
+    dependency/errors/resolve-missing
     "-DCANON_EXPECTED_ERROR=dependency 'CanonMissingDependencyFixture' version '7.3...<8.0' is unavailable"
     "-DCANON_EXPECTED_DETAIL=initialize vendored dependency 'external/missing-dependency', or install a compatible package"
     "-DCANON_EXPECTED_STATUS=finding dependency 'CanonMissingDependencyFixture' - unavailable"

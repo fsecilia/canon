@@ -3,7 +3,7 @@
 
 project(AxiomCore LANGUAGES CXX)
 
-include("${CMAKE_CURRENT_LIST_DIR}/../../../support/CanonSourceFixture.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/../../../../support/CanonSourceFixture.cmake")
 
 add_library(axiom_core_monolith STATIC)
 set_target_properties(axiom_core_monolith PROPERTIES EXPORT_NAME AxiomCore)
