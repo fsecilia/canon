@@ -115,7 +115,9 @@ canon_resolve_dependency(
 
 Canon first reuses the dependency when every required target already exists. Otherwise, if `${PROJECT_SOURCE_DIR}/external/sdl/CMakeLists.txt` exists, Canon adds that project beneath `${PROJECT_BINARY_DIR}/external/sdl` with `EXCLUDE_FROM_ALL`. If the vendored project is absent, Canon searches for the requested package and version in Config mode. The call fails if only some required targets already exist or if the selected provider does not supply every target. `TARGETS` may list more than one required target. Canon does not download dependencies.
 
-The first argument names the directory beneath the project's `external/` tree. `PACKAGE` defaults to that name when the package name matches it. `VERSION` and `TARGETS` are required. This function only makes the dependency available to the current build; if an installed Canon-managed package must recover that dependency, record that separately with `canon_propagate_dependency()`.
+The first argument names the directory beneath the project's `external/` tree. `PACKAGE` defaults to that name when the package name matches it. `VERSION` and `TARGETS` are required. `VERSION` constrains only the installed-package search performed when the required targets are absent and no vendored project is available. Existing targets are authoritative, and Canon does not infer or validate their version. A later call with a different `VERSION` therefore does not renegotiate a dependency whose required targets already exist. Vendored dependency versions are likewise controlled by the selected source checkout rather than by `VERSION`.
+
+This function only makes the dependency available to the current build; if an installed Canon-managed package must recover that dependency, record that separately with `canon_propagate_dependency()`.
 
 GoogleTest has a dedicated policy because it is shared by essentially every C++ project in the Canon ecosystem:
 
