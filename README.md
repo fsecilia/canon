@@ -82,7 +82,7 @@ The header path and `_API` macro follow the package's public target identity. Ca
 
 The mechanical rule is deterministic rather than semantic. Canon inserts an underscore only when an uppercase letter follows a lowercase letter or digit, then uppercases the result. For example, `IPv6Address` derives `IPV6_ADDRESS`, which produces `ipv6_address/export.hpp` and `IPV6_ADDRESS_API`. Set the `CANON_EXPORT_IDENTITY` target property before `canon_apply_library()` when a public name needs a different identity. The value must be an uppercase C identifier.
 
-Canon claims each generated `_API` macro across every Canon-managed library in the build tree. If two libraries derive the same macro, configuration fails and identifies both libraries. Set a distinct `CANON_EXPORT_IDENTITY` on one of them to resolve the collision.
+Canon claims each generated `_API` macro across every Canon-managed library in the build tree. If two libraries derive the same macro, configuration fails and identifies both libraries. Set a distinct `CANON_EXPORT_IDENTITY` on one of them to resolve the collision. The check is limited to libraries visible in the same configure tree; Canon cannot detect collisions between packages configured separately. Use distinct export identities when separately built packages may be consumed together.
 
 ```cpp
 #include <example/export.hpp>
@@ -95,6 +95,8 @@ INTERFACE libraries publish the same C++26 usage requirement but have no compile
 ## Package installation
 
 The first managed library registers an installable CMake package for the current project. Architecture-independent packages install their CMake metadata beneath `${CMAKE_INSTALL_DATADIR}/cmake/${PROJECT_NAME}`. A package containing an installed compiled library or executable is architecture-specific and installs its metadata beneath `${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}`. Imported targets use the `${PROJECT_NAME}::` namespace. `canon_apply_library()` creates the matching namespaced alias in the build tree. If a project sets CMake's native `EXPORT_NAME` target property, Canon uses that public name for the alias too. Project code and installed consumers can therefore use the same public target name.
+
+`EXPORT_NAME` and `CANON_EXPORT_IDENTITY` are inputs to `canon_apply_library()` and must be finalized before the call. Canon derives the build-tree alias, export-header path, and export macro identity when it applies the library policy. Changing either property afterward is unsupported and can make the build-tree and installed identities disagree even when CMake accepts the change.
 
 A versioned project receives `<Project>Config.cmake`, `<Project>ConfigVersion.cmake`, and `<Project>Targets.cmake`. Before 1.0, compatible package versions must share the same minor version. Starting with 1.0, compatible versions must share the same major version. Header-only packages are architecture-independent. Package architecture only becomes more specific as managed targets are applied, so a later compiled library or executable moves the final package metadata to the architecture-specific location. Versionless projects omit `ConfigVersion.cmake`.
 
@@ -144,7 +146,7 @@ target_link_libraries(example PUBLIC fmt::fmt)
 
 `canon_propagate_dependency()` does not locate, vendor, or link the dependency. In this example, Canon records a call equivalent to `find_dependency(fmt 11 CONFIG)` in the installed package configuration. Use it also when a dependency comes from the source tree during the build but downstream consumers must find that dependency as a package. Do not pass `REQUIRED` or `QUIET`; `find_dependency()` inherits those requirements from the outer `find_package()` call.
 
-Dependency arguments use normal CMake evaluation. Canon captures the values produced at the `canon_propagate_dependency()` call site and serializes those values safely into the generated package configuration. When that configuration runs, normal `find_dependency()` and `find_package()` list and macro-expansion semantics apply. Do not rely on the generated source preserving the original spelling or argument boundaries from the call site.
+Dependency arguments use normal CMake evaluation. Canon captures the values produced at the `canon_propagate_dependency()` call site and serializes those values safely into the generated package configuration. The generated package then forwards those values through CMake's `find_dependency()` macro. Values containing CMake variable, escape, or list syntax may therefore be interpreted again when the installed package is loaded. Normal `find_dependency()` and `find_package()` parsing, expansion, and list semantics apply; do not rely on the generated source preserving the original spelling or argument boundaries from the call site.
 
 ## Developer controls
 
