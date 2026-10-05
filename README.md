@@ -75,7 +75,7 @@ Export-header generation is explicit. Pass the library target, the include-relat
 canon_generate_export_header(example example/export.hpp EXAMPLE_API)
 ```
 
-`canon_generate_export_header()` supports STATIC, SHARED, and MODULE libraries. It uses CMake's `GenerateExportHeader` module, writes the header below the target's `generated/` build directory, and publishes it through a public `HEADERS` file set named `canon_export_header`. The header path must be relative, and the macro must be an uppercase C identifier.
+`canon_generate_export_header()` supports STATIC, SHARED, and MODULE libraries. It uses CMake's `GenerateExportHeader` module, writes the header below the target's `generated/` build directory, and publishes it through a public `HEADERS` file set named `canon_export_header`. The header path must be relative, and the macro must be an uppercase C identifier. Each public export macro may belong to only one target in a build, and two targets may not generate the same output header. Canon rejects either collision during configuration.
 
 ```cpp
 #include <example/export.hpp>
