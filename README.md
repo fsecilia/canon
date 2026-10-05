@@ -59,30 +59,22 @@ canon_apply_executable(example)
 
 ## Libraries and export headers
 
-Use `canon_apply_library()` for a STATIC, SHARED, MODULE, or INTERFACE library that should be installed and exported as part of the project's CMake package:
+Use `canon_apply_library()` for a STATIC, SHARED, MODULE, or INTERFACE library that should receive Canon's library policy:
 
 ```cmake
 add_library(example SHARED example.cpp)
-target_sources(
-    example
-    PUBLIC
-        FILE_SET public_headers
-        TYPE HEADERS
-        BASE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/src"
-        FILES src/example/example.hpp
-)
 canon_apply_library(example)
 ```
 
-Declare the library's public `HEADERS` file sets before calling `canon_apply_library()`. Canon discovers their names, installs them beneath CMake's conventional include directory, and preserves each file's path relative to its file-set base directory.
+Compiled libraries receive the common compiled-target policy and publish C++26 as a usage requirement. INTERFACE libraries publish the same C++26 usage requirement without compiled-target policy. Canon's current package-install integration still installs and exports managed libraries; package ownership is being simplified separately.
 
-Compiled libraries receive the common compiled-target policy and publish C++26 as a usage requirement. Canon also uses CMake's `GenerateExportHeader` module to publish an export header through a public `HEADERS` file set named `canon_export_header`. Generated headers live below `generated/` in the build tree and install below the matching public include path.
+Export-header generation is explicit. Pass the library target, the include-relative header path, and the public export macro:
 
-The header path and `_API` macro follow the package's public target identity. Canon derives each identity component mechanically from common PascalCase boundaries. It lowercases the result for header paths and uppercases it for preprocessor macros. If the public library name matches the project name, Canon uses the shorter primary-library form. For example, `Example::Example` uses `example/export.hpp` and `EXAMPLE_API`. A secondary target such as `Example::Core` uses `example/core/export.hpp` and `EXAMPLE_CORE_API`.
+```cmake
+canon_generate_export_header(example example/export.hpp EXAMPLE_API)
+```
 
-The mechanical rule is deterministic rather than semantic. Canon inserts an underscore only when an uppercase letter follows a lowercase letter or digit, then uppercases the result. For example, `IPv6Address` derives `IPV6_ADDRESS`, which produces `ipv6_address/export.hpp` and `IPV6_ADDRESS_API`. Set the `CANON_EXPORT_IDENTITY` target property before `canon_apply_library()` when a public name needs a different identity. The value must be an uppercase C identifier.
-
-Canon claims each generated `_API` macro across every Canon-managed library in the build tree. If two libraries derive the same macro, configuration fails and identifies both libraries. Set a distinct `CANON_EXPORT_IDENTITY` on one of them to resolve the collision. The check is limited to libraries visible in the same configure tree; Canon cannot detect collisions between packages configured separately. Use distinct export identities when separately built packages may be consumed together.
+`canon_generate_export_header()` supports STATIC, SHARED, and MODULE libraries. It uses CMake's `GenerateExportHeader` module, writes the header below the target's `generated/` build directory, and publishes it through a public `HEADERS` file set named `canon_export_header`. The header path must be relative, and the macro must be an uppercase C identifier.
 
 ```cpp
 #include <example/export.hpp>
@@ -90,13 +82,13 @@ Canon claims each generated `_API` macro across every Canon-managed library in t
 EXAMPLE_API auto exampleAnswer() -> int;
 ```
 
-INTERFACE libraries publish the same C++26 usage requirement but have no compiled-target policy or generated export header. Canon installs and exports them together with their public header file sets. `FRAMEWORK` libraries are not supported.
+The export-header path and macro are deliberately not inferred from `PROJECT_NAME`, the target name, or `EXPORT_NAME`. Public source layout and preprocessor identity belong to the project, and spelling them explicitly keeps Canon from maintaining a second naming policy.
 
 ## Package installation
 
 The first managed library registers an installable CMake package for the current project. Architecture-independent packages install their CMake metadata beneath `${CMAKE_INSTALL_DATADIR}/cmake/${PROJECT_NAME}`. A package containing an installed compiled library or executable is architecture-specific and installs its metadata beneath `${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}`. Imported targets use the `${PROJECT_NAME}::` namespace. `canon_apply_library()` creates the matching namespaced alias in the build tree. If a project sets CMake's native `EXPORT_NAME` target property, Canon uses that public name for the alias too. Project code and installed consumers can therefore use the same public target name.
 
-`EXPORT_NAME` and `CANON_EXPORT_IDENTITY` are inputs to `canon_apply_library()` and must be finalized before the call. Canon derives the build-tree alias, export-header path, and export macro identity when it applies the library policy. Changing either property afterward is unsupported and can make the build-tree and installed identities disagree even when CMake accepts the change.
+`EXPORT_NAME` is an input to the current `canon_apply_library()` package integration and must be finalized before the call. Canon derives the build-tree alias when it applies the library policy. Changing `EXPORT_NAME` afterward is unsupported and can make the build-tree and installed identities disagree even when CMake accepts the change. Export-header identity is independent and comes only from `canon_generate_export_header()`.
 
 A versioned project receives `<Project>Config.cmake`, `<Project>ConfigVersion.cmake`, and `<Project>Targets.cmake`. Before 1.0, compatible package versions must share the same minor version. Starting with 1.0, compatible versions must share the same major version. Header-only packages are architecture-independent. Package architecture only becomes more specific as managed targets are applied, so a later compiled library or executable moves the final package metadata to the architecture-specific location. Versionless projects omit `ConfigVersion.cmake`.
 

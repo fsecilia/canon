@@ -516,18 +516,6 @@ _canon_add_configure_failure_test(
 )
 
 _canon_add_configure_failure_test(
-    libraries.export-header-collision
-    library/errors/export-header-collision
-    "-DCANON_EXPECTED_ERROR=generated export header 'canon_library_errors/foo_bar/export.hpp' for target 'second' conflicts with target 'first'"
-)
-
-_canon_add_configure_failure_test(
-    libraries.export-macro-collision
-    library/errors/export-macro-collision
-    "-DCANON_EXPECTED_ERROR=export macro 'AXIOM_CORE_API' for library 'AxiomCore::AxiomCore (target 'axiom_core_monolith')' conflicts with library 'Axiom::Core (target 'axiom_core')'"
-)
-
-_canon_add_configure_failure_test(
     dependencies.empty
     dependency/errors/empty
     "-DCANON_EXPECTED_ERROR=canon_package_dependency(): package name must not be empty"

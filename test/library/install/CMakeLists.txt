@@ -18,13 +18,28 @@ target_sources(
         BASE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/include"
         FILES "${CMAKE_CURRENT_SOURCE_DIR}/include/arbitrary/sample.hpp"
 )
+canon_generate_export_header(
+    sample_static
+    canon_library_install/export.hpp
+    CANON_LIBRARY_INSTALL_API
+)
 canon_apply_library(sample_static)
 
 add_library(sample_shared SHARED sample_shared.cpp)
 set_target_properties(sample_shared PROPERTIES EXPORT_NAME IPv6Address)
+canon_generate_export_header(
+    sample_shared
+    canon_library_install/ipv6_address/export.hpp
+    CANON_LIBRARY_INSTALL_IPV6_ADDRESS_API
+)
 canon_apply_library(sample_shared)
 
 add_library(sample_module MODULE sample.cpp)
+canon_generate_export_header(
+    sample_module
+    canon_library_install/sample_module/export.hpp
+    CANON_LIBRARY_INSTALL_SAMPLE_MODULE_API
+)
 canon_apply_library(sample_module)
 
 add_library(sample_interface INTERFACE)

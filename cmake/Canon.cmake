@@ -1424,58 +1424,56 @@ function(_canon_library_public_name TARGET OUT_NAME)
     set("${OUT_NAME}" "${_public_name}" PARENT_SCOPE)
 endfunction()
 
-# Returns a deterministic export-identity component for a name.
-function(_canon_default_export_identity NAME OUT_NAME)
-    string(MAKE_C_IDENTIFIER "${NAME}" _identity)
-    string(REGEX REPLACE "([a-z0-9])([A-Z])" "\\1_\\2" _identity "${_identity}")
-    string(TOUPPER "${_identity}" _identity)
-    set("${OUT_NAME}" "${_identity}" PARENT_SCOPE)
-endfunction()
-
-# Returns the configured or derived public export identity for a library.
-function(_canon_export_identity TARGET OUT_NAME)
-    get_target_property(_identity "${TARGET}" CANON_EXPORT_IDENTITY)
-    if ("${_identity}" STREQUAL "_identity-NOTFOUND")
-        _canon_library_public_name("${TARGET}" _public_name)
-        _canon_default_export_identity("${_public_name}" _identity)
-    elseif (NOT "${_identity}" MATCHES "^[A-Z_][A-Z0-9_]*$")
+# Generates and publishes one explicit export header for a compiled library.
+function(canon_generate_export_header TARGET HEADER MACRO)
+    if (NOT "${ARGC}" EQUAL 3)
         message(FATAL_ERROR
-            "canon_apply_library(): CANON_EXPORT_IDENTITY for '${TARGET}' must be an uppercase C identifier")
+            "canon_generate_export_header(): expected TARGET, HEADER, and MACRO")
+    endif()
+    if (NOT TARGET "${TARGET}")
+        message(FATAL_ERROR
+            "canon_generate_export_header(): target '${TARGET}' does not exist")
     endif()
 
-    set("${OUT_NAME}" "${_identity}" PARENT_SCOPE)
-endfunction()
-
-# Claims one generated export macro across all Canon-managed libraries in this build tree.
-function(_canon_claim_export_macro TARGET MACRO)
-    string(HEX "${MACRO}" _macro_key)
-    set(_property "_CANON_EXPORT_MACRO_${_macro_key}")
-    get_property(_owner GLOBAL PROPERTY "${_property}")
-
-    _canon_library_public_name("${TARGET}" _public_name)
-    set(_claim "${PROJECT_NAME}::${_public_name} (target '${TARGET}')")
-    if (NOT "${_owner}" STREQUAL "" AND NOT "${_owner}" STREQUAL "${_claim}")
+    get_target_property(_type "${TARGET}" TYPE)
+    if (NOT "${_type}" STREQUAL "STATIC_LIBRARY"
+        AND NOT "${_type}" STREQUAL "SHARED_LIBRARY"
+        AND NOT "${_type}" STREQUAL "MODULE_LIBRARY")
         message(FATAL_ERROR
-            "canon_apply_library(): export macro '${MACRO}' for library '${_claim}' "
-            "conflicts with library '${_owner}'; set a distinct CANON_EXPORT_IDENTITY")
+            "canon_generate_export_header(): target '${TARGET}' must be a STATIC, SHARED, or MODULE library")
+    endif()
+    if ("${HEADER}" STREQUAL "" OR IS_ABSOLUTE "${HEADER}")
+        message(FATAL_ERROR
+            "canon_generate_export_header(): HEADER must be a non-empty relative path")
+    endif()
+    if (NOT "${MACRO}" MATCHES "^[A-Z_][A-Z0-9_]*$")
+        message(FATAL_ERROR
+            "canon_generate_export_header(): MACRO '${MACRO}' must be an uppercase C identifier")
     endif()
 
-    set_property(GLOBAL PROPERTY "${_property}" "${_claim}")
-endfunction()
-
-# Claims a generated export-header path for one library in the current project.
-function(_canon_claim_export_header TARGET HEADER)
-    string(HEX "${HEADER}" _header_key)
-    set(_property "_CANON_EXPORT_HEADER_${_header_key}")
-    get_property(_owner DIRECTORY "${PROJECT_SOURCE_DIR}" PROPERTY "${_property}")
-
-    if (NOT "${_owner}" STREQUAL "" AND NOT "${_owner}" STREQUAL "${TARGET}")
-        message(FATAL_ERROR
-            "canon_apply_library(): generated export header '${HEADER}' for target '${TARGET}' "
-            "conflicts with target '${_owner}'; set a distinct CANON_EXPORT_IDENTITY")
+    include(GenerateExportHeader)
+    get_target_property(_target_binary_dir "${TARGET}" BINARY_DIR)
+    set(_include_dir "${_target_binary_dir}/generated")
+    set(_generated_header "${_include_dir}/${HEADER}")
+    cmake_path(GET HEADER PARENT_PATH _header_directory)
+    if (NOT "${_header_directory}" STREQUAL "")
+        file(MAKE_DIRECTORY "${_include_dir}/${_header_directory}")
     endif()
 
-    set_property(DIRECTORY "${PROJECT_SOURCE_DIR}" PROPERTY "${_property}" "${TARGET}")
+    generate_export_header(
+        "${TARGET}"
+        BASE_NAME "${MACRO}"
+        EXPORT_FILE_NAME "${_generated_header}"
+        EXPORT_MACRO_NAME "${MACRO}"
+    )
+    target_sources(
+        "${TARGET}"
+        PUBLIC
+            FILE_SET canon_export_header
+            TYPE HEADERS
+            BASE_DIRS "${_include_dir}"
+            FILES "${_generated_header}"
+    )
 endfunction()
 
 # Adds the build-tree alias that matches the installed package target name.
@@ -1533,45 +1531,6 @@ function(canon_apply_library TARGET)
     _canon_mark_package_architecture_specific()
     canon_apply_target("${TARGET}")
     target_compile_features("${TARGET}" PUBLIC cxx_std_26)
-
-    _canon_library_public_name("${TARGET}" _public_name)
-    _canon_default_export_identity("${PROJECT_NAME}" _package_identity)
-    _canon_export_identity("${TARGET}" _public_identity)
-    string(TOLOWER "${_package_identity}" _package_path)
-    string(TOLOWER "${_public_identity}" _public_path)
-
-    if ("${_public_name}" STREQUAL "${PROJECT_NAME}")
-        set(_header_directory "${_public_path}")
-        set(_api_name "${_public_identity}")
-    else()
-        set(_header_directory "${_package_path}/${_public_path}")
-        set(_api_name "${_package_identity}_${_public_identity}")
-    endif()
-
-    set(_header_path "${_header_directory}/export.hpp")
-    _canon_claim_export_header("${TARGET}" "${_header_path}")
-    _canon_claim_export_macro("${TARGET}" "${_api_name}_API")
-
-    include(GenerateExportHeader)
-    get_target_property(_target_binary_dir "${TARGET}" BINARY_DIR)
-    set(_include_dir "${_target_binary_dir}/generated")
-    set(_header "${_include_dir}/${_header_path}")
-    file(MAKE_DIRECTORY "${_include_dir}/${_header_directory}")
-
-    generate_export_header(
-        "${TARGET}"
-        BASE_NAME "${_api_name}"
-        EXPORT_FILE_NAME "${_header}"
-        EXPORT_MACRO_NAME "${_api_name}_API"
-    )
-    target_sources(
-        "${TARGET}"
-        PUBLIC
-            FILE_SET canon_export_header
-            TYPE HEADERS
-            BASE_DIRS "${_include_dir}"
-            FILES "${_header}"
-    )
 
     _canon_install_library("${TARGET}")
     _canon_register_package()

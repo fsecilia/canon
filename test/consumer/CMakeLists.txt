@@ -45,7 +45,18 @@ target_compile_features(sample_interface INTERFACE cxx_std_17)
 set_target_properties(sample_static PROPERTIES CXX_EXTENSIONS TRUE)
 set_target_properties(sample_shared PROPERTIES CXX_EXTENSIONS FALSE)
 
-# Apply library policy where export headers are part of the contract.
+canon_generate_export_header(sample_static canon_consumer/export.hpp CANON_CONSUMER_API)
+canon_generate_export_header(
+    sample_shared
+    canon_consumer/shared_public/export.hpp
+    CANON_CONSUMER_SHARED_PUBLIC_API
+)
+canon_generate_export_header(
+    sample_module
+    canon_consumer/sample_module/export.hpp
+    CANON_CONSUMER_SAMPLE_MODULE_API
+)
+
 foreach(_library IN ITEMS sample_static sample_shared sample_module)
     canon_apply_library("${_library}")
 endforeach()

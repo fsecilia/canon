@@ -19,6 +19,11 @@ add_library(asan_shared SHARED asan_shared.cpp)
 add_library(asan_object OBJECT asan_static.cpp)
 add_library(unmanaged STATIC unmanaged.cpp)
 canon_apply_library(asan_static)
+canon_generate_export_header(
+    asan_shared
+    canon_asan_fixture/asan_shared/export.hpp
+    CANON_ASAN_FIXTURE_ASAN_SHARED_API
+)
 canon_apply_library(asan_shared)
 canon_apply_target(asan_object)
 
