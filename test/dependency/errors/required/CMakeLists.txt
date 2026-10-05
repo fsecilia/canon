@@ -7,4 +7,4 @@ project(CanonDependencyErrors LANGUAGES NONE)
 
 include("${CMAKE_CURRENT_LIST_DIR}/../../../support/CanonSourceFixture.cmake")
 
-canon_propagate_dependency(DependencyFixture REQUIRED)
+canon_package_dependency(DependencyFixture REQUIRED)

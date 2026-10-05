@@ -856,7 +856,7 @@ function(_canon_finalize_package)
         )
         if (_dependency_keys)
             message(FATAL_ERROR
-                "canon_propagate_dependency(): package dependencies were declared, but project "
+                "canon_package_dependency(): package dependencies were declared, but project "
                 "'${PROJECT_NAME}' has no installable Canon package")
         endif()
         return()
@@ -1077,9 +1077,9 @@ function(canon_require_googletest)
 endfunction()
 
 # Propagates one dependency requirement to this project's installed package.
-function(canon_propagate_dependency PACKAGE)
+function(canon_package_dependency PACKAGE)
     if ("${PACKAGE}" STREQUAL "")
-        message(FATAL_ERROR "canon_propagate_dependency(): package name must not be empty")
+        message(FATAL_ERROR "canon_package_dependency(): package name must not be empty")
     endif()
 
     set(_dependency_call "find_dependency(")
@@ -1090,7 +1090,7 @@ function(canon_propagate_dependency PACKAGE)
         if ("${_argument_index}" GREATER 0
             AND ("${_argument}" STREQUAL "REQUIRED" OR "${_argument}" STREQUAL "QUIET"))
             message(FATAL_ERROR
-                "canon_propagate_dependency(): '${_argument}' is inherited from the outer find_package() call")
+                "canon_package_dependency(): '${_argument}' is inherited from the outer find_package() call")
         endif()
 
         _canon_serialize_package_argument(_serialized_argument "${_argument}")
@@ -1118,7 +1118,7 @@ function(canon_propagate_dependency PACKAGE)
         )
         if (NOT "${_existing_call}" STREQUAL "${_dependency_call}")
             message(FATAL_ERROR
-                "canon_propagate_dependency(): internal dependency-key collision for package '${PACKAGE}'")
+                "canon_package_dependency(): internal dependency-key collision for package '${PACKAGE}'")
         endif()
         return()
     endif()

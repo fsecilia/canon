@@ -119,7 +119,7 @@ Canon first reuses the dependency when every required target already exists. Oth
 
 The first argument names the directory beneath the project's `external/` tree. `PACKAGE` defaults to that name when the package name matches it. `VERSION` and `TARGETS` are required. `VERSION` constrains only the installed-package search performed when the required targets are absent and no vendored project is available. Existing targets are authoritative, and Canon does not infer or validate their version. A later call with a different `VERSION` therefore does not renegotiate a dependency whose required targets already exist. Vendored dependency versions are likewise controlled by the selected source checkout rather than by `VERSION`.
 
-This function only makes the dependency available to the current build; if an installed Canon-managed package must recover that dependency, record that separately with `canon_propagate_dependency()`.
+This function only makes the dependency available to the current build; if an installed Canon-managed package must recover that dependency, record that separately with `canon_package_dependency()`.
 
 GoogleTest has a dedicated policy because it is shared by essentially every C++ project in the Canon ecosystem:
 
@@ -135,18 +135,18 @@ git submodule update --init external/googletest
 
 If Canon's vendored GoogleTest source is unavailable, including when Canon is consumed as an installed package, Canon searches for an installed GTest package in the range `1.18.0...<2.0.0`. Canon does not install GoogleTest with itself and does not search for or add GoogleTest merely because Canon was loaded. Projects that never call `canon_require_googletest()` pay no GoogleTest configuration or build cost.
 
-Use `canon_propagate_dependency()` when an installed package must recover another package before importing its targets:
+Use `canon_package_dependency()` when an installed package must recover another package before importing its targets:
 
 ```cmake
 find_package(fmt 11 CONFIG REQUIRED)
-canon_propagate_dependency(fmt 11 CONFIG)
+canon_package_dependency(fmt 11 CONFIG)
 
 target_link_libraries(example PUBLIC fmt::fmt)
 ```
 
-`canon_propagate_dependency()` does not locate, vendor, or link the dependency. In this example, Canon records a call equivalent to `find_dependency(fmt 11 CONFIG)` in the installed package configuration. Use it also when a dependency comes from the source tree during the build but downstream consumers must find that dependency as a package. Do not pass `REQUIRED` or `QUIET`; `find_dependency()` inherits those requirements from the outer `find_package()` call.
+`canon_package_dependency()` does not locate, vendor, or link the dependency. In this example, Canon records a call equivalent to `find_dependency(fmt 11 CONFIG)` in the installed package configuration. Use it also when a dependency comes from the source tree during the build but downstream consumers must find that dependency as a package. Do not pass `REQUIRED` or `QUIET`; `find_dependency()` inherits those requirements from the outer `find_package()` call.
 
-Dependency arguments use normal CMake evaluation. Canon captures the values produced at the `canon_propagate_dependency()` call site and serializes those values safely into the generated package configuration. The generated package then forwards those values through CMake's `find_dependency()` macro. Values containing CMake variable, escape, or list syntax may therefore be interpreted again when the installed package is loaded. Normal `find_dependency()` and `find_package()` parsing, expansion, and list semantics apply; do not rely on the generated source preserving the original spelling or argument boundaries from the call site.
+Dependency arguments use normal CMake evaluation. Canon captures the values produced at the `canon_package_dependency()` call site and serializes those values safely into the generated package configuration. The generated package then forwards those values through CMake's `find_dependency()` macro. Values containing CMake variable, escape, or list syntax may therefore be interpreted again when the installed package is loaded. Normal `find_dependency()` and `find_package()` parsing, expansion, and list semantics apply; do not rely on the generated source preserving the original spelling or argument boundaries from the call site.
 
 ## Developer controls
 

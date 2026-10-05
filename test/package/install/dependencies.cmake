@@ -88,7 +88,7 @@ set(_module_dir "${_dependency_root}/modules")
 file(MAKE_DIRECTORY "${_module_dir}")
 file(WRITE "${_module_dir}/FindComponentDependency.cmake" [=[
 message(FATAL_ERROR
-    "ComponentDependency was searched in module mode; canon_propagate_dependency() did not forward CONFIG")
+    "ComponentDependency was searched in module mode; canon_package_dependency() did not forward CONFIG")
 ]=])
 
 set(_config_file

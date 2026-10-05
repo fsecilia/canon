@@ -500,19 +500,19 @@ _canon_add_configure_failure_test(
 _canon_add_configure_failure_test(
     dependencies.empty
     dependency/errors/empty
-    "-DCANON_EXPECTED_ERROR=canon_propagate_dependency(): package name must not be empty"
+    "-DCANON_EXPECTED_ERROR=canon_package_dependency(): package name must not be empty"
 )
 
 _canon_add_configure_failure_test(
     dependencies.required
     dependency/errors/required
-    "-DCANON_EXPECTED_ERROR=canon_propagate_dependency(): 'REQUIRED' is inherited"
+    "-DCANON_EXPECTED_ERROR=canon_package_dependency(): 'REQUIRED' is inherited"
 )
 
 _canon_add_configure_failure_test(
     dependencies.quiet
     dependency/errors/quiet
-    "-DCANON_EXPECTED_ERROR=canon_propagate_dependency(): 'QUIET' is inherited"
+    "-DCANON_EXPECTED_ERROR=canon_package_dependency(): 'QUIET' is inherited"
 )
 
 _canon_add_configure_failure_test(

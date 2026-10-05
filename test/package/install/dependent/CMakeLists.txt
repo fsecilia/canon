@@ -5,12 +5,12 @@ project(DependentPackage VERSION 0.9.4 LANGUAGES CXX)
 
 add_library(NoVersionDependency::dependency INTERFACE IMPORTED)
 
-canon_propagate_dependency(NoVersionDependency)
-canon_propagate_dependency(VersionedDependency 2.5)
-canon_propagate_dependency(ExactDependency 3.1.0 EXACT)
+canon_package_dependency(NoVersionDependency)
+canon_package_dependency(VersionedDependency 2.5)
+canon_package_dependency(ExactDependency 3.1.0 EXACT)
 
 set(_required_components "Alpha;Beta")
-canon_propagate_dependency(
+canon_package_dependency(
     ComponentDependency
     CONFIG
     COMPONENTS "${_required_components}"
@@ -22,4 +22,4 @@ _canon_package_fixture_add_headers(dependent_api INTERFACE dependent_package/sam
 target_link_libraries(dependent_api INTERFACE NoVersionDependency::dependency)
 canon_apply_library(dependent_api)
 
-canon_propagate_dependency(NoVersionDependency)
+canon_package_dependency(NoVersionDependency)
