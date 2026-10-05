@@ -1180,6 +1180,8 @@ function(_canon_install_vendored_dependency_target DEPENDENCY TARGET VENDORED_TA
             "canon_install_dependency(): FRAMEWORK target '${TARGET}' is not supported")
     endif()
 
+    _canon_mark_package_architecture_specific()
+
     string(HEX "${_target}" _target_key)
     set(_installed_property "_CANON_DEPENDENCY_INSTALL_${_target_key}")
     get_property(
