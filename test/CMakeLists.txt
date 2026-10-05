@@ -176,6 +176,11 @@ _canon_add_script_test(
 )
 
 _canon_add_script_test(
+    application
+    application/test.cmake
+)
+
+_canon_add_script_test(
     targets.warnings
     consumer/test.cmake
     -DCANON_BUILD_TYPE=Debug

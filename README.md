@@ -139,6 +139,8 @@ The first argument names a dependency previously passed to `canon_resolve_depend
 
 `TARGETS` is explicit because CMake 3.31 does not expose a portable target-graph operation that identifies the transitive shared-library runtime closure on every target platform. List every vendored shared-library target that the installation requires, including private runtime support libraries. Canon accepts aliases to targets created by the winning vendored project. Imported targets, frameworks, and target kinds other than `SHARED_LIBRARY` are rejected rather than staged heuristically. The vendored project's own install rules remain excluded.
 
+Internal libraries may link vendored dependencies normally. An installed and exported library has a different package boundary: CMake may require even a private compiled dependency to participate in the library's export graph. The project owns that dependency model. `canon_install_dependency()` only stages selected runtime artifacts; it does not export third-party targets or install their headers, package configs, or development files. If an exported library requires a third-party package downstream, declare that relationship in the project's `Config.cmake.in` or use the dependency's own supported install/package model.
+
 GoogleTest has a dedicated policy because it is shared by essentially every C++ project in the Canon ecosystem:
 
 ```cmake
