@@ -1,1 +1,3 @@
-int dependencyFixtureRuntime() { return 0; }
+int dependencyFixtureRuntime() {
+    return 0;
+}

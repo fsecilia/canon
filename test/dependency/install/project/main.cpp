@@ -1,6 +1,5 @@
 int dependencyFixtureRuntime();
 
-int main()
-{
+int main() {
     return dependencyFixtureRuntime();
 }

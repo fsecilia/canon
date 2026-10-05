@@ -1,1 +1,3 @@
-int foreign() { return 0; }
+int foreign() {
+    return 0;
+}
