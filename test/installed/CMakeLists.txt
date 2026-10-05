@@ -17,9 +17,16 @@ if (NOT "${Canon_DIR}" STREQUAL "${CANON_EXPECTED_DIR}")
     message(FATAL_ERROR
         "Installed Canon was loaded from '${Canon_DIR}', expected '${CANON_EXPECTED_DIR}'")
 endif()
-if (NOT COMMAND canon_apply_target)
-    message(FATAL_ERROR "Installed Canon did not provide canon_apply_target()")
-endif()
+foreach(_command IN ITEMS
+    canon_apply_target
+    canon_resolve_dependency
+    canon_install_dependency
+    canon_package_dependency
+)
+    if (NOT COMMAND "${_command}")
+        message(FATAL_ERROR "Installed Canon did not provide ${_command}()")
+    endif()
+endforeach()
 if (NOT "${Canon_VERSION}" STREQUAL "${CANON_EXPECTED_VERSION}")
     message(FATAL_ERROR
         "Installed Canon reported version '${Canon_VERSION}', expected '${CANON_EXPECTED_VERSION}'")

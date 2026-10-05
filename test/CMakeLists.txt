@@ -166,6 +166,21 @@ _canon_add_script_test(
 )
 
 _canon_add_script_test(
+    dependencies.install.vendored
+    dependency/install/vendored.cmake
+)
+
+_canon_add_script_test(
+    dependencies.install.installed
+    dependency/install/installed.cmake
+)
+
+_canon_add_script_test(
+    dependencies.install.provided
+    dependency/install/provided.cmake
+)
+
+_canon_add_script_test(
     targets.warnings
     consumer/test.cmake
     -DCANON_BUILD_TYPE=Debug
@@ -519,6 +534,54 @@ _canon_add_configure_failure_test(
     dependencies.no-package
     dependency/errors/no-package
     "-DCANON_EXPECTED_ERROR=package dependencies were declared, but project"
+)
+
+_canon_add_configure_failure_test(
+    dependencies.install.empty
+    dependency/errors/install-empty
+    "-DCANON_EXPECTED_ERROR=canon_install_dependency(): external name must not be empty"
+)
+
+_canon_add_configure_failure_test(
+    dependencies.install.targets
+    dependency/errors/install-targets
+    "-DCANON_EXPECTED_ERROR=canon_install_dependency(): TARGETS is required"
+)
+
+_canon_add_configure_failure_test(
+    dependencies.install.unresolved
+    dependency/errors/install-unresolved
+    "-DCANON_EXPECTED_ERROR=canon_install_dependency(): dependency 'fixture-dependency' has not been resolved"
+)
+
+_canon_add_configure_failure_test(
+    dependencies.install.missing
+    dependency/errors/install-missing
+    "-DCANON_EXPECTED_ERROR=canon_install_dependency(): target 'DependencyFixture::Missing' does not exist"
+)
+
+_canon_add_configure_failure_test(
+    dependencies.install.foreign
+    dependency/errors/install-foreign
+    "-DCANON_EXPECTED_ERROR=target 'foreign' was not created by vendored dependency 'fixture-dependency'"
+)
+
+_canon_add_configure_failure_test(
+    dependencies.install.static
+    dependency/errors/install-static
+    "-DCANON_EXPECTED_ERROR=canon_install_dependency(): target 'DependencyFixture::Runtime' must be a SHARED library"
+)
+
+_canon_add_configure_failure_test(
+    dependencies.install.imported
+    dependency/errors/install-imported
+    "-DCANON_EXPECTED_ERROR=target 'DependencyFixture::Runtime' is imported and cannot be installed as vendored runtime"
+)
+
+_canon_add_configure_failure_test(
+    dependencies.install.framework
+    dependency/errors/install-framework
+    "-DCANON_EXPECTED_ERROR=canon_install_dependency(): FRAMEWORK target 'DependencyFixture::Runtime' is not supported"
 )
 
 _canon_add_configure_failure_test(

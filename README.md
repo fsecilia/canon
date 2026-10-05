@@ -119,7 +119,20 @@ Canon first reuses the dependency when every required target already exists. Oth
 
 The first argument names the directory beneath the project's `external/` tree. `PACKAGE` defaults to that name when the package name matches it. `VERSION` and `TARGETS` are required. `VERSION` constrains only the installed-package search performed when the required targets are absent and no vendored project is available. Existing targets are authoritative, and Canon does not infer or validate their version. A later call with a different `VERSION` therefore does not renegotiate a dependency whose required targets already exist. Vendored dependency versions are likewise controlled by the selected source checkout rather than by `VERSION`.
 
-This function only makes the dependency available to the current build; if an installed Canon-managed package must recover that dependency, record that separately with `canon_package_dependency()`.
+This function only makes the dependency available to the current build. Installing selected runtime artifacts from a vendored dependency and recording dependencies of the installed CMake package are separate operations.
+
+Use `canon_install_dependency()` when selected shared libraries from a vendored dependency belong in this project's installation:
+
+```cmake
+canon_install_dependency(
+    sdl
+    TARGETS SDL3::SDL3
+)
+```
+
+The first argument names a dependency previously passed to `canon_resolve_dependency()` or otherwise resolved by Canon. If that dependency was provided by its vendored source tree, Canon installs the listed source-built shared-library targets using the normal runtime and library destinations. If an already-provided or installed package won instead, the call adds no install rules. This keeps installed packages external while allowing vendored runtime artifacts to accompany the project that built them.
+
+`TARGETS` is explicit because CMake 3.31 does not expose a portable target-graph operation that identifies the transitive shared-library runtime closure on every target platform. List every vendored shared-library target that the installation requires, including private runtime support libraries. Canon accepts aliases to targets created by the winning vendored project. Imported targets, frameworks, and target kinds other than `SHARED_LIBRARY` are rejected rather than staged heuristically. The vendored project's own install rules remain excluded.
 
 GoogleTest has a dedicated policy because it is shared by essentially every C++ project in the Canon ecosystem:
 

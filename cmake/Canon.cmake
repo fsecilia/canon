@@ -914,6 +914,44 @@ function(_canon_register_package)
     _canon_schedule_package_finalization()
 endfunction()
 
+# Collects ordinary buildsystem targets created in one source-directory subtree.
+function(_canon_collect_buildsystem_targets SOURCE_DIR OUT_TARGETS)
+    get_property(_targets DIRECTORY "${SOURCE_DIR}" PROPERTY BUILDSYSTEM_TARGETS)
+    get_property(_subdirectories DIRECTORY "${SOURCE_DIR}" PROPERTY SUBDIRECTORIES)
+    foreach(_subdirectory IN LISTS _subdirectories)
+        _canon_collect_buildsystem_targets("${_subdirectory}" _subdirectory_targets)
+        list(APPEND _targets ${_subdirectory_targets})
+    endforeach()
+    set("${OUT_TARGETS}" "${_targets}" PARENT_SCOPE)
+endfunction()
+
+# Records the first provider selected for one dependency in this project.
+function(_canon_record_dependency_provider NAME PROVIDER)
+    string(HEX "${NAME}" _dependency_key)
+    set(_provider_property "_CANON_DEPENDENCY_PROVIDER_${_dependency_key}")
+
+    get_property(
+        _recorded
+        DIRECTORY "${PROJECT_SOURCE_DIR}"
+        PROPERTY "${_provider_property}"
+        SET
+    )
+    if (_recorded)
+        return()
+    endif()
+
+    set_property(
+        DIRECTORY "${PROJECT_SOURCE_DIR}"
+        PROPERTY "${_provider_property}" "${PROVIDER}"
+    )
+    if ("${PROVIDER}" STREQUAL "vendored")
+        set_property(
+            DIRECTORY "${PROJECT_SOURCE_DIR}"
+            PROPERTY "_CANON_DEPENDENCY_TARGETS_${_dependency_key}" "${ARGN}"
+        )
+    endif()
+endfunction()
+
 # Splits required dependency targets into those already present and those still missing.
 function(_canon_partition_dependency_targets OUT_PRESENT OUT_MISSING)
     set(_present)
@@ -954,6 +992,7 @@ function(_canon_resolve_dependency)
         ${_dependency_TARGETS}
     )
     if (NOT _missing_targets)
+        _canon_record_dependency_provider("${_dependency_NAME}" provided)
         message(CHECK_PASS "already provided")
         return()
     endif()
@@ -986,6 +1025,12 @@ function(_canon_resolve_dependency)
                 "${_missing_text}")
         endif()
 
+        _canon_collect_buildsystem_targets("${_dependency_SOURCE_DIR}" _vendored_targets)
+        _canon_record_dependency_provider(
+            "${_dependency_NAME}"
+            vendored
+            ${_vendored_targets}
+        )
         message(CHECK_PASS "using vendored '${_dependency_NAME}'")
         return()
     endif()
@@ -1011,6 +1056,7 @@ function(_canon_resolve_dependency)
             "${_missing_text}")
     endif()
 
+    _canon_record_dependency_provider("${_dependency_NAME}" installed)
     message(CHECK_PASS "using installed package '${_dependency_PACKAGE}'")
 endfunction()
 
@@ -1053,6 +1099,119 @@ function(canon_resolve_dependency EXTERNAL_NAME)
         VENDORED_HINT "initialize vendored dependency 'external/${EXTERNAL_NAME}'"
         TARGETS ${_dependency_TARGETS}
     )
+endfunction()
+
+# Installs one source-built shared-library target from a vendored dependency.
+function(_canon_install_vendored_dependency_target DEPENDENCY TARGET VENDORED_TARGETS)
+    if (NOT TARGET "${TARGET}")
+        message(FATAL_ERROR
+            "canon_install_dependency(): target '${TARGET}' does not exist")
+    endif()
+
+    get_target_property(_aliased_target "${TARGET}" ALIASED_TARGET)
+    if (NOT "${_aliased_target}" STREQUAL "_aliased_target-NOTFOUND")
+        set(_target "${_aliased_target}")
+    else()
+        set(_target "${TARGET}")
+    endif()
+
+    get_target_property(_imported "${_target}" IMPORTED)
+    if (_imported)
+        message(FATAL_ERROR
+            "canon_install_dependency(): target '${TARGET}' is imported and cannot be installed as vendored runtime")
+    endif()
+
+    list(FIND VENDORED_TARGETS "${_target}" _vendored_target_index)
+    if ("${_vendored_target_index}" EQUAL -1)
+        message(FATAL_ERROR
+            "canon_install_dependency(): target '${TARGET}' was not created by vendored dependency '${DEPENDENCY}'")
+    endif()
+
+    get_target_property(_type "${_target}" TYPE)
+    if (NOT "${_type}" STREQUAL "SHARED_LIBRARY")
+        message(FATAL_ERROR
+            "canon_install_dependency(): target '${TARGET}' must be a SHARED library")
+    endif()
+
+    get_target_property(_framework "${_target}" FRAMEWORK)
+    if (_framework)
+        message(FATAL_ERROR
+            "canon_install_dependency(): FRAMEWORK target '${TARGET}' is not supported")
+    endif()
+
+    string(HEX "${_target}" _target_key)
+    set(_installed_property "_CANON_DEPENDENCY_INSTALL_${_target_key}")
+    get_property(
+        _installed
+        DIRECTORY "${PROJECT_SOURCE_DIR}"
+        PROPERTY "${_installed_property}"
+    )
+    if (_installed)
+        return()
+    endif()
+
+    include(GNUInstallDirs)
+    install(
+        TARGETS "${_target}"
+        LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" NAMELINK_SKIP
+        RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
+    )
+    set_property(
+        DIRECTORY "${PROJECT_SOURCE_DIR}"
+        PROPERTY "${_installed_property}" TRUE
+    )
+endfunction()
+
+# Installs selected runtime targets when a dependency was resolved from its vendored source tree.
+function(canon_install_dependency EXTERNAL_NAME)
+    if ("${EXTERNAL_NAME}" STREQUAL "")
+        message(FATAL_ERROR "canon_install_dependency(): external name must not be empty")
+    endif()
+
+    set(_multi_value_arguments TARGETS)
+    cmake_parse_arguments(PARSE_ARGV 1 _dependency "" "" "${_multi_value_arguments}")
+    if (_dependency_UNPARSED_ARGUMENTS)
+        message(FATAL_ERROR
+            "canon_install_dependency(): unexpected arguments: ${_dependency_UNPARSED_ARGUMENTS}")
+    endif()
+    if (NOT _dependency_TARGETS)
+        message(FATAL_ERROR "canon_install_dependency(): TARGETS is required")
+    endif()
+
+    string(HEX "${EXTERNAL_NAME}" _dependency_key)
+    set(_provider_property "_CANON_DEPENDENCY_PROVIDER_${_dependency_key}")
+    get_property(
+        _resolved
+        DIRECTORY "${PROJECT_SOURCE_DIR}"
+        PROPERTY "${_provider_property}"
+        SET
+    )
+    if (NOT _resolved)
+        message(FATAL_ERROR
+            "canon_install_dependency(): dependency '${EXTERNAL_NAME}' has not been resolved")
+    endif()
+
+    get_property(
+        _provider
+        DIRECTORY "${PROJECT_SOURCE_DIR}"
+        PROPERTY "${_provider_property}"
+    )
+    if (NOT "${_provider}" STREQUAL "vendored")
+        return()
+    endif()
+
+    get_property(
+        _vendored_targets
+        DIRECTORY "${PROJECT_SOURCE_DIR}"
+        PROPERTY "_CANON_DEPENDENCY_TARGETS_${_dependency_key}"
+    )
+    foreach(_target IN LISTS _dependency_TARGETS)
+        _canon_install_vendored_dependency_target(
+            "${EXTERNAL_NAME}"
+            "${_target}"
+            "${_vendored_targets}"
+        )
+    endforeach()
 endfunction()
 
 # Makes Canon's GoogleTest policy available lazily to projects that need tests.
