@@ -62,6 +62,7 @@ function(_canon_cxx_warning_option_supported OPTION OUT_SUPPORTED)
     string(SHA256 _option_key
         "${CMAKE_CXX_COMPILER};${CMAKE_CXX_COMPILER_ID};${CMAKE_CXX_COMPILER_VERSION};${OPTION}")
     set(_probe_variable "_CANON_CXX_WARNING_OPTION_${_option_key}")
+    set(CMAKE_REQUIRED_QUIET TRUE)
     check_cxx_compiler_flag("${OPTION}" "${_probe_variable}")
     set(${OUT_SUPPORTED} "${${_probe_variable}}" PARENT_SCOPE)
 endfunction()
