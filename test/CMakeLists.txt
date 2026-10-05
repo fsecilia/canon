@@ -588,6 +588,12 @@ _canon_add_configure_failure_test(
 )
 
 _canon_add_configure_failure_test(
+    dependencies.resolve.outside
+    dependency/errors/resolve-outside
+    "-DCANON_EXPECTED_ERROR=canon_resolve_dependency(): external name '../foreign' must identify a path beneath the project's external directory"
+)
+
+_canon_add_configure_failure_test(
     dependencies.resolve.version
     dependency/errors/resolve-version
     "-DCANON_EXPECTED_ERROR=canon_resolve_dependency(): VERSION is required"

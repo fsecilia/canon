@@ -945,6 +945,25 @@ function(canon_resolve_dependency EXTERNAL_NAME)
             "canon_resolve_dependency(): CONFIG and MODULE are mutually exclusive")
     endif()
 
+    if(IS_ABSOLUTE "${EXTERNAL_NAME}")
+        message(FATAL_ERROR
+            "canon_resolve_dependency(): external name '${EXTERNAL_NAME}' must identify a path "
+            "beneath the project's external directory")
+    endif()
+    set(_external_source_dir "${PROJECT_SOURCE_DIR}/external")
+    cmake_path(NORMAL_PATH _external_source_dir)
+    set(_dependency_source_dir "${_external_source_dir}/${EXTERNAL_NAME}")
+    cmake_path(NORMAL_PATH _dependency_source_dir)
+    cmake_path(
+        IS_PREFIX _external_source_dir "${_dependency_source_dir}"
+        NORMALIZE _inside_external
+    )
+    if(NOT _inside_external OR "${_dependency_source_dir}" STREQUAL "${_external_source_dir}")
+        message(FATAL_ERROR
+            "canon_resolve_dependency(): external name '${EXTERNAL_NAME}' must identify a path "
+            "beneath the project's external directory")
+    endif()
+
     set(_mode_argument)
     if(_dependency_CONFIG)
         set(_mode_argument CONFIG)
