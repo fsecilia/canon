@@ -166,6 +166,11 @@ _canon_add_script_test(
 )
 
 _canon_add_script_test(
+    dependencies.install.nested
+    dependency/install/nested.cmake
+)
+
+_canon_add_script_test(
     dependencies.install.installed
     dependency/install/installed.cmake
 )
@@ -566,6 +571,14 @@ _canon_add_configure_failure_test(
     "-DCANON_EXPECTED_ERROR=dependency 'fixture-dependency' was already resolved using provider 'provided'"
     "-DCANON_EXPECTED_DETAIL=missing required targets: DependencyFixture::Support"
     "-DCANON_EXPECTED_STATUS=finding dependency 'DependencyFixture' - already resolved"
+)
+
+_canon_add_configure_failure_test(
+    dependencies.resolve.nested-provider-first
+    dependency/errors/resolve-nested-provider-first
+    "-DCANON_EXPECTED_ERROR=dependency 'leaf' was already resolved using provider 'vendored'"
+    "-DCANON_EXPECTED_DETAIL=missing required targets: LeafFixture::Support"
+    "-DCANON_EXPECTED_STATUS=finding dependency 'LeafFixture' - already resolved"
 )
 
 _canon_add_configure_failure_test(

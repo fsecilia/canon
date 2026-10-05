@@ -708,21 +708,21 @@ function(_canon_collect_buildsystem_targets SOURCE_DIR OUT_TARGETS)
     set("${OUT_TARGETS}" "${_targets}" PARENT_SCOPE)
 endfunction()
 
-# Gets the provider already selected for one dependency in this project.
+# Gets the provider already selected for one dependency in this build.
 function(_canon_get_dependency_provider NAME OUT_PROVIDER)
     string(HEX "${NAME}" _dependency_key)
     set(_provider_property "_CANON_DEPENDENCY_PROVIDER_${_dependency_key}")
 
     get_property(
         _recorded
-        DIRECTORY "${PROJECT_SOURCE_DIR}"
+        GLOBAL
         PROPERTY "${_provider_property}"
         SET
     )
     if(_recorded)
         get_property(
             _provider
-            DIRECTORY "${PROJECT_SOURCE_DIR}"
+            GLOBAL
             PROPERTY "${_provider_property}"
         )
     else()
@@ -732,7 +732,7 @@ function(_canon_get_dependency_provider NAME OUT_PROVIDER)
     set(${OUT_PROVIDER} "${_provider}" PARENT_SCOPE)
 endfunction()
 
-# Records the first provider selected for one dependency in this project.
+# Records the first provider selected for one dependency in this build.
 function(_canon_record_dependency_provider NAME PROVIDER)
     _canon_get_dependency_provider("${NAME}" _recorded_provider)
     if(NOT "${_recorded_provider}" STREQUAL "")
@@ -746,12 +746,12 @@ function(_canon_record_dependency_provider NAME PROVIDER)
 
     string(HEX "${NAME}" _dependency_key)
     set_property(
-        DIRECTORY "${PROJECT_SOURCE_DIR}"
+        GLOBAL
         PROPERTY "_CANON_DEPENDENCY_PROVIDER_${_dependency_key}" "${PROVIDER}"
     )
     if("${PROVIDER}" STREQUAL "vendored")
         set_property(
-            DIRECTORY "${PROJECT_SOURCE_DIR}"
+            GLOBAL
             PROPERTY "_CANON_DEPENDENCY_TARGETS_${_dependency_key}" "${ARGN}"
         )
     endif()
@@ -1060,7 +1060,7 @@ function(canon_install_dependency EXTERNAL_NAME)
     string(HEX "${EXTERNAL_NAME}" _dependency_key)
     get_property(
         _vendored_targets
-        DIRECTORY "${PROJECT_SOURCE_DIR}"
+        GLOBAL
         PROPERTY "_CANON_DEPENDENCY_TARGETS_${_dependency_key}"
     )
     foreach(_target IN LISTS _dependency_TARGETS)

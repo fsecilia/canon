@@ -21,6 +21,6 @@ canon_test_run(
     DESCRIPTION "Nested GoogleTest configure"
     EXPECTED_OUTPUT
         "finding dependency 'GTest' - using vendored 'googletest'"
-        "finding dependency 'GTest' - already provided"
+        "finding dependency 'GTest' - already resolved using vendored provider"
     COMMAND ${_configure_command}
 )
