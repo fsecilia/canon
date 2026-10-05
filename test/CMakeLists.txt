@@ -131,6 +131,16 @@ _canon_add_script_test(
 )
 
 _canon_add_script_test(
+    dependencies.resolve.siblings
+    dependency/resolve/siblings.cmake
+)
+
+_canon_add_script_test(
+    dependencies.resolve.module
+    dependency/resolve/module.cmake
+)
+
+_canon_add_script_test(
     dependencies.resolve.provided
     dependency/resolve/provided.cmake
 )

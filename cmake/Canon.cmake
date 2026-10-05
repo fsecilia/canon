@@ -777,12 +777,13 @@ endfunction()
 
 # Resolves one vendored-or-installed dependency for the active build.
 function(_canon_resolve_dependency)
+    set(_options CONFIG MODULE)
     set(_one_value_arguments NAME PACKAGE VERSION SOURCE_DIR BINARY_DIR VENDORED_HINT)
     set(_multi_value_arguments TARGETS)
     cmake_parse_arguments(
         PARSE_ARGV 0
         _dependency
-        ""
+        "${_options}"
         "${_one_value_arguments}"
         "${_multi_value_arguments}"
     )
@@ -862,11 +863,23 @@ function(_canon_resolve_dependency)
         return()
     endif()
 
+    if(_dependency_CONFIG AND _dependency_MODULE)
+        message(FATAL_ERROR
+            "_canon_resolve_dependency(): CONFIG and MODULE are mutually exclusive")
+    endif()
+
+    set(_find_mode)
+    if(_dependency_CONFIG)
+        set(_find_mode CONFIG)
+    elseif(_dependency_MODULE)
+        set(_find_mode MODULE)
+    endif()
     find_package(
         "${_dependency_PACKAGE}"
         "${_dependency_VERSION}"
-        CONFIG
+        ${_find_mode}
         QUIET
+        GLOBAL
     )
 
     _canon_partition_dependency_targets(
@@ -893,12 +906,13 @@ function(canon_resolve_dependency EXTERNAL_NAME)
         message(FATAL_ERROR "canon_resolve_dependency(): external name must not be empty")
     endif()
 
+    set(_options CONFIG MODULE)
     set(_one_value_arguments PACKAGE VERSION)
     set(_multi_value_arguments TARGETS)
     cmake_parse_arguments(
         PARSE_ARGV 1
         _dependency
-        ""
+        "${_options}"
         "${_one_value_arguments}"
         "${_multi_value_arguments}"
     )
@@ -917,6 +931,17 @@ function(canon_resolve_dependency EXTERNAL_NAME)
         message(FATAL_ERROR "canon_resolve_dependency(): TARGETS is required")
     endif()
 
+    if(_dependency_CONFIG AND _dependency_MODULE)
+        message(FATAL_ERROR
+            "canon_resolve_dependency(): CONFIG and MODULE are mutually exclusive")
+    endif()
+
+    set(_mode_argument)
+    if(_dependency_CONFIG)
+        set(_mode_argument CONFIG)
+    elseif(_dependency_MODULE)
+        set(_mode_argument MODULE)
+    endif()
     _canon_resolve_dependency(
         NAME "${EXTERNAL_NAME}"
         PACKAGE "${_dependency_PACKAGE}"
@@ -924,6 +949,7 @@ function(canon_resolve_dependency EXTERNAL_NAME)
         SOURCE_DIR "${PROJECT_SOURCE_DIR}/external/${EXTERNAL_NAME}"
         BINARY_DIR "${PROJECT_BINARY_DIR}/external/${EXTERNAL_NAME}"
         VENDORED_HINT "initialize vendored dependency 'external/${EXTERNAL_NAME}'"
+        ${_mode_argument}
         TARGETS ${_dependency_TARGETS}
     )
 endfunction()
