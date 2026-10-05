@@ -67,6 +67,50 @@ function(_canon_cxx_warning_option_supported OPTION OUT_SUPPORTED)
     set(${OUT_SUPPORTED} "${${_probe_variable}}" PARENT_SCOPE)
 endfunction()
 
+# Reports whether clang-tidy's embedded Clang frontend accepts one warning flag.
+function(_canon_clang_tidy_warning_option_supported EXECUTABLE OPTION OUT_SUPPORTED)
+    string(SHA256 _option_key "${EXECUTABLE};${OPTION}")
+    set(_probe_property "_CANON_CLANG_TIDY_WARNING_OPTION_${_option_key}")
+    get_property(_probed GLOBAL PROPERTY "${_probe_property}" SET)
+
+    if(NOT _probed)
+        set(_probe_directory "${CMAKE_BINARY_DIR}/CMakeFiles/Canon")
+        set(_probe_source "${_probe_directory}/clang-tidy-warning-option.cpp")
+        file(MAKE_DIRECTORY "${_probe_directory}")
+        file(WRITE "${_probe_source}" "auto canonClangTidyWarningProbe() -> int { return 0; }\n")
+
+        execute_process(
+            COMMAND
+                "${EXECUTABLE}"
+                "${_probe_source}"
+                "--checks=-*,readability-identifier-naming"
+                "--config={}"
+                "--extra-arg=-Werror=unknown-warning-option"
+                "--extra-arg=${OPTION}"
+                --
+            RESULT_VARIABLE _result
+            OUTPUT_VARIABLE _stdout
+            ERROR_VARIABLE _stderr
+        )
+        set(_output "${_stdout}\n${_stderr}")
+
+        if("${_result}" EQUAL 0)
+            set(_supported TRUE)
+        elseif("${_output}" MATCHES "unknown warning option")
+            set(_supported FALSE)
+        else()
+            message(FATAL_ERROR
+                "Canon could not determine whether clang-tidy supports warning option "
+                "'${OPTION}' using '${EXECUTABLE}'\n${_output}")
+        endif()
+
+        set_property(GLOBAL PROPERTY "${_probe_property}" "${_supported}")
+    endif()
+
+    get_property(_supported GLOBAL PROPERTY "${_probe_property}")
+    set(${OUT_SUPPORTED} "${_supported}" PARENT_SCOPE)
+endfunction()
+
 # Applies compiler-specific build options when Canon has policy for the active toolchain.
 function(_canon_apply_compiler_policy TARGET)
     set(_build_options)
@@ -632,19 +676,26 @@ function(_canon_apply_tidy TARGET)
         "--exclude-header-filter=${_external_filter}"
     )
     if(CANON_ENABLE_WARNINGS)
-        # clang-tidy uses a Clang frontend even when the configured compiler is GCC.
-        # Pass only options guaranteed by Canon's minimum clang-tidy version rather
-        # than masking unsupported options with -Wno-unknown-warning-option.
+        # clang-tidy uses its own Clang frontend even when the configured compiler is GCC.
+        # Filter optional suppressions against that frontend rather than assuming the
+        # configured compiler and clang-tidy support the same warning groups.
         _canon_get_clang_warning_policy(
             _warning_suppressions
             _optional_warning_suppressions
             _warning_reenables
         )
-        foreach(_option IN LISTS
-            _warning_suppressions
-            _optional_warning_suppressions
-            _warning_reenables
-        )
+        foreach(_optional_suppression IN LISTS _optional_warning_suppressions)
+            string(REGEX REPLACE "^-Wno-" "-W" _optional_warning "${_optional_suppression}")
+            _canon_clang_tidy_warning_option_supported(
+                "${CANON_CLANG_TIDY_EXECUTABLE}"
+                "${_optional_warning}"
+                _supported
+            )
+            if(_supported)
+                list(APPEND _warning_suppressions "${_optional_suppression}")
+            endif()
+        endforeach()
+        foreach(_option IN LISTS _warning_suppressions _warning_reenables)
             list(APPEND _tidy_command "--extra-arg=${_option}")
         endforeach()
     endif()
