@@ -70,9 +70,6 @@ install(
 # Verify compile instrumentation on every managed target in the fixture.
 foreach(_target IN ITEMS covered covered_object covered_test)
     canon_test_require_cxx_compile_option("${_target}" "--coverage")
-    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-        canon_test_require_cxx_compile_option("${_target}" "-fprofile-abs-path")
-    endif()
 endforeach()
 
 # Static- and object-library consumers must inherit the coverage runtime without compile instrumentation.

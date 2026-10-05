@@ -184,7 +184,7 @@ Canon does not set `ASAN_OPTIONS` or otherwise control the sanitizer runtime. Pr
 
 ## Coverage
 
-Coverage instrumentation is controlled by `CANON_ENABLE_COVERAGE`. It is off by default. When enabled, Canon adds gcov-compatible compile instrumentation to managed targets. GCC also receives `-fprofile-abs-path` so profile data records stable source paths. Compile instrumentation remains private. Static and object libraries publish the coverage runtime link requirement to consumers, while targets with their own link step satisfy that requirement directly.
+Coverage instrumentation is controlled by `CANON_ENABLE_COVERAGE`. It is off by default. When enabled, Canon adds gcov-compatible compile instrumentation to managed targets. Compile instrumentation remains private. Static and object libraries publish the coverage runtime link requirement to consumers, while targets with their own link step satisfy that requirement directly.
 
 Canon adds build-wide coverage helpers when the first managed target receives coverage, even when that target belongs to a nested project. `coverage-clean` removes stale `.gcda` files from the build tree. Canon asks the active compiler driver for its coverage companion. It checks the reported tool's compiler family and major version before adding `coverage-report`. GCC uses the compiler-reported `gcov`; Clang uses the compiler-reported `llvm-cov gcov`.
 

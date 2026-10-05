@@ -561,9 +561,6 @@ function(_canon_apply_coverage TARGET)
     _canon_register_coverage_project()
 
     _canon_apply_cxx_option("${TARGET}" "--coverage")
-    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-        _canon_apply_cxx_option("${TARGET}" "-fprofile-abs-path")
-    endif()
 
     get_target_property(_type "${TARGET}" TYPE)
     if ("${_type}" STREQUAL "STATIC_LIBRARY" OR "${_type}" STREQUAL "OBJECT_LIBRARY")
