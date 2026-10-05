@@ -753,10 +753,18 @@ function(_canon_record_dependency_provider NAME PROVIDER)
         PROPERTY "_CANON_DEPENDENCY_PROVIDER_${_dependency_key}" "${PROVIDER}"
     )
     if("${PROVIDER}" STREQUAL "vendored")
+        get_property(_owned_targets GLOBAL PROPERTY _CANON_VENDORED_DEPENDENCY_TARGETS)
+        set(_dependency_targets ${ARGN})
+        if(_owned_targets)
+            list(REMOVE_ITEM _dependency_targets ${_owned_targets})
+        endif()
+
         set_property(
             GLOBAL
-            PROPERTY "_CANON_DEPENDENCY_TARGETS_${_dependency_key}" "${ARGN}"
+            PROPERTY "_CANON_DEPENDENCY_TARGETS_${_dependency_key}" "${_dependency_targets}"
         )
+        list(APPEND _owned_targets ${_dependency_targets})
+        set_property(GLOBAL PROPERTY _CANON_VENDORED_DEPENDENCY_TARGETS "${_owned_targets}")
     endif()
 endfunction()
 

@@ -540,6 +540,12 @@ _canon_add_configure_failure_test(
 )
 
 _canon_add_configure_failure_test(
+    dependencies.install.nested-foreign
+    dependency/errors/install-nested-foreign
+    "-DCANON_EXPECTED_ERROR=target 'LeafFixture::Runtime' was not created by vendored dependency 'mid'"
+)
+
+_canon_add_configure_failure_test(
     dependencies.install.static
     dependency/errors/install-static
     "-DCANON_EXPECTED_ERROR=canon_install_dependency(): target 'DependencyFixture::Runtime' must be a SHARED library"
