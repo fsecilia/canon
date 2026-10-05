@@ -1150,6 +1150,26 @@ function(_canon_install_vendored_dependency_target DEPENDENCY TARGET VENDORED_TA
         return()
     endif()
 
+    get_property(
+        _build_target
+        DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+        PROPERTY _CANON_DEPENDENCY_INSTALL_BUILD_TARGET
+    )
+    if ("${_build_target}" STREQUAL "")
+        string(HEX "${CMAKE_CURRENT_BINARY_DIR}" _directory_key)
+        set(_build_target "_canon_install_dependencies_${_directory_key}")
+        if (TARGET "${_build_target}")
+            message(FATAL_ERROR
+                "canon_install_dependency(): internal build target '${_build_target}' already exists")
+        endif()
+        add_custom_target("${_build_target}" ALL)
+        set_property(
+            DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+            PROPERTY _CANON_DEPENDENCY_INSTALL_BUILD_TARGET "${_build_target}"
+        )
+    endif()
+    add_dependencies("${_build_target}" "${_target}")
+
     include(GNUInstallDirs)
     install(
         TARGETS "${_target}"
