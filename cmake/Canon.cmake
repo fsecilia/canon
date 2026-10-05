@@ -1064,6 +1064,14 @@ function(canon_install_dependency EXTERNAL_NAME)
         message(FATAL_ERROR
             "canon_install_dependency(): dependency '${EXTERNAL_NAME}' has not been resolved")
     endif()
+
+    foreach(_target IN LISTS _dependency_TARGETS)
+        if(NOT TARGET "${_target}")
+            message(FATAL_ERROR
+                "canon_install_dependency(): target '${_target}' does not exist")
+        endif()
+    endforeach()
+
     if(NOT "${_provider}" STREQUAL "vendored")
         return()
     endif()

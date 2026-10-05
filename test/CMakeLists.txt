@@ -546,6 +546,12 @@ _canon_add_configure_failure_test(
 )
 
 _canon_add_configure_failure_test(
+    dependencies.install.missing-provided
+    dependency/errors/install-missing-provided
+    "-DCANON_EXPECTED_ERROR=canon_install_dependency(): target 'DependencyFixture::Missing' does not exist"
+)
+
+_canon_add_configure_failure_test(
     dependencies.install.foreign
     dependency/errors/install-foreign
     "-DCANON_EXPECTED_ERROR=target 'foreign' was not created by vendored dependency 'fixture-dependency'"
