@@ -58,12 +58,12 @@ list(GET _install_data 3 _engine_name)
 list(GET _install_data 4 _vendored_runtime_name)
 
 foreach(_runtime_name IN ITEMS "${_engine_name}" "${_vendored_runtime_name}")
-    if (WIN32)
+    if(WIN32)
         set(_installed_runtime "${_install_prefix}/${_bindir}/${_runtime_name}")
     else()
         set(_installed_runtime "${_install_prefix}/${_libdir}/${_runtime_name}")
     endif()
-    if (NOT EXISTS "${_installed_runtime}")
+    if(NOT EXISTS "${_installed_runtime}")
         message(FATAL_ERROR
             "Application-shaped install is missing '${_installed_runtime}'")
     endif()
@@ -75,7 +75,7 @@ foreach(_package_file IN ITEMS
     CanonApplicationFixtureConfigVersion.cmake
     CanonApplicationFixtureTargets.cmake
 )
-    if (NOT EXISTS "${_package_dir}/${_package_file}")
+    if(NOT EXISTS "${_package_dir}/${_package_file}")
         message(FATAL_ERROR
             "Application-shaped install is missing '${_package_dir}/${_package_file}'")
     endif()

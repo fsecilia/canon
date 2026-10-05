@@ -25,10 +25,10 @@ function(_canon_test_nested_coverage ORDER CHILD_FIRST)
         "-DCANON_TEST_COVERAGE_CHILD_FIRST=${CHILD_FIRST}"
         "-DCANON_GCOVR_EXECUTABLE=${CANON_GCOVR_EXECUTABLE}"
     )
-    if (DEFINED CANON_GCOV_EXECUTABLE AND NOT "${CANON_GCOV_EXECUTABLE}" STREQUAL "")
+    if(DEFINED CANON_GCOV_EXECUTABLE AND NOT "${CANON_GCOV_EXECUTABLE}" STREQUAL "")
         list(APPEND _configure_command "-DCANON_GCOV_EXECUTABLE=${CANON_GCOV_EXECUTABLE}")
     endif()
-    if (DEFINED CANON_LLVM_COV_EXECUTABLE AND NOT "${CANON_LLVM_COV_EXECUTABLE}" STREQUAL "")
+    if(DEFINED CANON_LLVM_COV_EXECUTABLE AND NOT "${CANON_LLVM_COV_EXECUTABLE}" STREQUAL "")
         list(APPEND _configure_command "-DCANON_LLVM_COV_EXECUTABLE=${CANON_LLVM_COV_EXECUTABLE}")
     endif()
 
@@ -50,23 +50,23 @@ function(_canon_test_nested_coverage ORDER CHILD_FIRST)
     )
 
     set(_index "${_binary_dir}/coverage/index.html")
-    if (NOT EXISTS "${_index}")
+    if(NOT EXISTS "${_index}")
         message(FATAL_ERROR "nested coverage-report did not generate ${_index}")
     endif()
     file(READ "${_index}" _html)
-    if (NOT "${_html}" MATCHES "root_covered\\.cpp")
+    if(NOT "${_html}" MATCHES "root_covered\\.cpp")
         message(FATAL_ERROR
             "coverage report suppressed root project source for ${ORDER}")
     endif()
-    if (NOT "${_html}" MATCHES "covered\\.cpp")
+    if(NOT "${_html}" MATCHES "covered\\.cpp")
         message(FATAL_ERROR
             "coverage report suppressed managed child source beneath root external for ${ORDER}")
     endif()
-    if ("${_html}" MATCHES "root_excluded\\.cpp")
+    if("${_html}" MATCHES "root_excluded\\.cpp")
         message(FATAL_ERROR
             "coverage report unexpectedly contains root external source for ${ORDER}")
     endif()
-    if ("${_html}" MATCHES "excluded\\.cpp")
+    if("${_html}" MATCHES "excluded\\.cpp")
         message(FATAL_ERROR
             "coverage report unexpectedly contains child external source for ${ORDER}")
     endif()

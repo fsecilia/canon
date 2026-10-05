@@ -5,7 +5,7 @@ project(CanonCoverageNestedFixture LANGUAGES CXX)
 
 include("${CANON_SOURCE_DIR}/cmake/Canon.cmake")
 
-if (NOT CANON_ENABLE_COVERAGE)
+if(NOT CANON_ENABLE_COVERAGE)
     message(FATAL_ERROR "nested coverage fixture requires CANON_ENABLE_COVERAGE=ON")
 endif()
 

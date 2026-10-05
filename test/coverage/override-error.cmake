@@ -12,9 +12,9 @@ canon_test_require_variables(
     CANON_CXX_COMPILER_ID
 )
 
-if ("${CANON_CXX_COMPILER_ID}" STREQUAL "GNU")
+if("${CANON_CXX_COMPILER_ID}" STREQUAL "GNU")
     set(_override_variable CANON_GCOV_EXECUTABLE)
-elseif ("${CANON_CXX_COMPILER_ID}" STREQUAL "Clang")
+elseif("${CANON_CXX_COMPILER_ID}" STREQUAL "Clang")
     set(_override_variable CANON_LLVM_COV_EXECUTABLE)
 else()
     message(FATAL_ERROR "unsupported test compiler '${CANON_CXX_COMPILER_ID}'")

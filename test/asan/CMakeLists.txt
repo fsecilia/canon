@@ -7,7 +7,7 @@ project(CanonAsanFixture LANGUAGES CXX)
 
 include("${CMAKE_CURRENT_LIST_DIR}/../support/CanonSourceFixture.cmake")
 
-if (NOT CANON_ENABLE_ASAN)
+if(NOT CANON_ENABLE_ASAN)
     message(FATAL_ERROR "ASan fixture requires CANON_ENABLE_ASAN=ON")
 endif()
 

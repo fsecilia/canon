@@ -5,18 +5,18 @@ cmake_minimum_required(VERSION 3.31.6)
 
 project(CanonConsumer LANGUAGES CXX)
 
-if (NOT DEFINED CANON_SOURCE_DIR OR "${CANON_SOURCE_DIR}" STREQUAL "")
+if(NOT DEFINED CANON_SOURCE_DIR OR "${CANON_SOURCE_DIR}" STREQUAL "")
     message(FATAL_ERROR "CANON_SOURCE_DIR is required")
 endif()
 
-if (NOT COMMAND canon_apply_target)
+if(NOT COMMAND canon_apply_target)
     include("${CANON_SOURCE_DIR}/cmake/Canon.cmake")
 endif()
 
-if (CANON_ENABLE_ASAN)
+if(CANON_ENABLE_ASAN)
     message(FATAL_ERROR "consumer fixture expects CANON_ENABLE_ASAN to default to OFF")
 endif()
-if (CANON_ENABLE_COVERAGE)
+if(CANON_ENABLE_COVERAGE)
     message(FATAL_ERROR "consumer fixture expects CANON_ENABLE_COVERAGE to default to OFF")
 endif()
 
@@ -65,7 +65,7 @@ foreach(_target IN ITEMS sample_object warning_probe warning_probe_demoted)
     canon_apply_target("${_target}")
 endforeach()
 
-if (CANON_ENABLE_WARNINGS)
+if(CANON_ENABLE_WARNINGS)
     target_compile_options(
         warning_probe_demoted
         PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:-Wno-error=unused-parameter>"
@@ -93,7 +93,7 @@ set_target_properties(
 
 # Verify every managed compiled target receives the shared Canon policy.
 get_property(_ipo_supported GLOBAL PROPERTY _CANON_IPO_SUPPORTED)
-if (NOT "${_ipo_supported}" STREQUAL "YES" AND NOT "${_ipo_supported}" STREQUAL "NO")
+if(NOT "${_ipo_supported}" STREQUAL "YES" AND NOT "${_ipo_supported}" STREQUAL "NO")
     message(FATAL_ERROR "Canon IPO probe did not record a result: '${_ipo_supported}'")
 endif()
 
@@ -107,7 +107,7 @@ set(_compiled_targets
     consumer
 )
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     set(_warning_options
         -Wall
         -Wextra
@@ -120,7 +120,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     )
     set(_warning_suppressions)
     set(_warning_reenables)
-elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     set(_warning_options
         -Weverything
         -Werror
@@ -148,7 +148,7 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
         unsafe-buffer-usage-in-libc-call
     )
         _canon_cxx_warning_option_supported("-W${_optional_warning}" _supported)
-        if (_supported)
+        if(_supported)
             list(APPEND _warning_suppressions "-Wno-${_optional_warning}")
         endif()
     endforeach()
@@ -165,17 +165,17 @@ foreach(_target IN LISTS _compiled_targets)
     canon_test_require_target_property("${_target}" VISIBILITY_INLINES_HIDDEN TRUE)
     canon_test_require_target_property("${_target}" CXX_VISIBILITY_PRESET hidden)
 
-    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"
+    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"
         OR ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang"
             AND "${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}" STREQUAL "GNU"))
         canon_test_require_cxx_compile_option("${_target}" -fstrict-aliasing)
     endif()
 
-    if (CANON_ENABLE_WARNINGS)
+    if(CANON_ENABLE_WARNINGS)
         foreach(_option IN LISTS _warning_options _warning_suppressions _warning_reenables)
             canon_test_require_cxx_compile_option("${_target}" "${_option}")
         endforeach()
-        if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+        if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
             canon_test_require_cxx_compile_option_after(
                 "${_target}"
                 -Wshadow-field-in-constructor-modified
@@ -185,7 +185,7 @@ foreach(_target IN LISTS _compiled_targets)
     else()
         get_target_property(_options "${_target}" COMPILE_OPTIONS)
         foreach(_option IN LISTS _options)
-            if ("${_option}" MATCHES ":-W")
+            if("${_option}" MATCHES ":-W")
                 message(FATAL_ERROR
                     "warnings are disabled but ${_target} has warning option '${_option}'")
             endif()
@@ -199,7 +199,7 @@ set(_ipo_final_targets
     consumer
 )
 foreach(_target IN LISTS _ipo_final_targets)
-    if (_ipo_supported)
+    if(_ipo_supported)
         canon_test_require_target_property("${_target}" INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
     else()
         canon_test_require_target_property_unset(
@@ -219,7 +219,7 @@ endforeach()
 # Verify every managed library publishes its generated export header as a public file set.
 foreach(_library IN ITEMS sample_static sample_shared sample_module)
     get_target_property(_header_sets "${_library}" INTERFACE_HEADER_SETS)
-    if (NOT "canon_export_header" IN_LIST _header_sets)
+    if(NOT "canon_export_header" IN_LIST _header_sets)
         message(FATAL_ERROR
             "Canon export header for ${_library} is not a public HEADERS file set")
     endif()

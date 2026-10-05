@@ -28,10 +28,10 @@ canon_test_make_configure_command(
     -DCANON_ENABLE_COVERAGE=ON
     "-DCANON_GCOVR_EXECUTABLE=${CANON_GCOVR_EXECUTABLE}"
 )
-if (DEFINED CANON_GCOV_EXECUTABLE AND NOT "${CANON_GCOV_EXECUTABLE}" STREQUAL "")
+if(DEFINED CANON_GCOV_EXECUTABLE AND NOT "${CANON_GCOV_EXECUTABLE}" STREQUAL "")
     list(APPEND _configure_command "-DCANON_GCOV_EXECUTABLE=${CANON_GCOV_EXECUTABLE}")
 endif()
-if (DEFINED CANON_LLVM_COV_EXECUTABLE AND NOT "${CANON_LLVM_COV_EXECUTABLE}" STREQUAL "")
+if(DEFINED CANON_LLVM_COV_EXECUTABLE AND NOT "${CANON_LLVM_COV_EXECUTABLE}" STREQUAL "")
     list(APPEND _configure_command "-DCANON_LLVM_COV_EXECUTABLE=${CANON_LLVM_COV_EXECUTABLE}")
 endif()
 
@@ -46,7 +46,7 @@ canon_test_run(
     DESCRIPTION "coverage clean"
     COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}" --config "${CANON_TEST_CONFIG}" --target coverage-clean
 )
-if (EXISTS "${CANON_TEST_BINARY_DIR}/stale/stale.gcda")
+if(EXISTS "${CANON_TEST_BINARY_DIR}/stale/stale.gcda")
     message(FATAL_ERROR "coverage-clean left stale profile data behind")
 endif()
 
@@ -65,22 +65,22 @@ canon_test_run(
 )
 
 set(_index "${CANON_TEST_BINARY_DIR}/coverage/index.html")
-if (NOT EXISTS "${_index}")
+if(NOT EXISTS "${_index}")
     message(FATAL_ERROR "coverage-report did not generate ${_index}")
 endif()
 file(READ "${_index}" _html)
-if (NOT "${_html}" MATCHES "covered\\.cpp")
+if(NOT "${_html}" MATCHES "covered\\.cpp")
     message(FATAL_ERROR "coverage report does not contain covered.cpp")
 endif()
-if ("${_html}" MATCHES "covered_test\\.cpp")
+if("${_html}" MATCHES "covered_test\\.cpp")
     message(FATAL_ERROR "coverage report unexpectedly contains covered_test.cpp")
 endif()
-if ("${_html}" MATCHES "excluded\\.cpp")
+if("${_html}" MATCHES "excluded\\.cpp")
     message(FATAL_ERROR "coverage report unexpectedly contains external/excluded.cpp")
 endif()
 
 file(GLOB_RECURSE _remaining_gcda LIST_DIRECTORIES FALSE "${CANON_TEST_BINARY_DIR}/*.gcda")
-if (_remaining_gcda)
+if(_remaining_gcda)
     message(FATAL_ERROR "coverage-report left .gcda files behind: ${_remaining_gcda}")
 endif()
 

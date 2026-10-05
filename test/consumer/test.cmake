@@ -20,7 +20,7 @@ canon_test_make_configure_command(
     "-DCANON_SOURCE_DIR=${CANON_SOURCE_DIR}"
     "-DCMAKE_BUILD_TYPE=${CANON_BUILD_TYPE}"
 )
-if (DEFINED CANON_ENABLE_WARNINGS)
+if(DEFINED CANON_ENABLE_WARNINGS)
     list(APPEND _configure_command "-DCANON_ENABLE_WARNINGS=${CANON_ENABLE_WARNINGS}")
 endif()
 
@@ -44,7 +44,7 @@ canon_test_run(
     EXPECTED_REGEX "undefined reference|undefined symbol|Undefined symbols|unresolved external symbol"
 )
 
-if (CANON_ENABLE_WARNINGS)
+if(CANON_ENABLE_WARNINGS)
     canon_test_run(
         DESCRIPTION "Canon warning probe with warnings enabled"
         EXPECT_FAILURE

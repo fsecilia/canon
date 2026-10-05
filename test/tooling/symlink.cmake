@@ -21,7 +21,7 @@ execute_process(
     OUTPUT_VARIABLE _symlink_stdout
     ERROR_VARIABLE _symlink_stderr
 )
-if (NOT "${_symlink_result}" STREQUAL "0")
+if(NOT "${_symlink_result}" STREQUAL "0")
     message(FATAL_ERROR
         "create tidy source symlink failed with result '${_symlink_result}'\n"
         "stdout:\n${_symlink_stdout}\n"

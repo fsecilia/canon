@@ -15,7 +15,7 @@ canon_apply_target(sample)
 get_property(_reapplied_compile_options TARGET sample PROPERTY COMPILE_OPTIONS)
 get_property(_reapplied_link_options TARGET sample PROPERTY LINK_OPTIONS)
 
-if (NOT "${_reapplied_compile_options}" STREQUAL "${_compile_options}"
+if(NOT "${_reapplied_compile_options}" STREQUAL "${_compile_options}"
     OR NOT "${_reapplied_link_options}" STREQUAL "${_link_options}")
     message(FATAL_ERROR "canon_apply_target() changed target options when reapplied")
 endif()

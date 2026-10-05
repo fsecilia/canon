@@ -5,13 +5,13 @@ cmake_minimum_required(VERSION 3.31.6)
 
 project(CanonCoverageFixture LANGUAGES CXX)
 
-if (NOT DEFINED CANON_SOURCE_DIR OR "${CANON_SOURCE_DIR}" STREQUAL "")
+if(NOT DEFINED CANON_SOURCE_DIR OR "${CANON_SOURCE_DIR}" STREQUAL "")
     message(FATAL_ERROR "CANON_SOURCE_DIR is required")
 endif()
 
 include("${CANON_SOURCE_DIR}/cmake/Canon.cmake")
 
-if (NOT CANON_ENABLE_COVERAGE)
+if(NOT CANON_ENABLE_COVERAGE)
     message(FATAL_ERROR "coverage fixture requires CANON_ENABLE_COVERAGE=ON")
 endif()
 
@@ -23,7 +23,7 @@ add_library(covered_object OBJECT covered.cpp)
 canon_apply_library(covered)
 canon_apply_target(covered_object)
 
-if (NOT TARGET coverage-clean OR NOT TARGET coverage-report)
+if(NOT TARGET coverage-clean OR NOT TARGET coverage-report)
     message(FATAL_ERROR "coverage helpers were not created for the coverage build")
 endif()
 

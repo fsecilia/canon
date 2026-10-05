@@ -8,7 +8,7 @@ _canon_prepare_required_dependency_fixture(_source_dir _build_dir)
 set(_package_dir "${CANON_TEST_BINARY_DIR}/package/DependencyFixture")
 file(MAKE_DIRECTORY "${_package_dir}")
 file(WRITE "${_package_dir}/DependencyFixtureConfig.cmake" [=[
-if (NOT "${DependencyFixture_FIND_VERSION_RANGE}" STREQUAL "7.3...<8.0")
+if(NOT "${DependencyFixture_FIND_VERSION_RANGE}" STREQUAL "7.3...<8.0")
     message(FATAL_ERROR
         "DependencyFixture received version range '${DependencyFixture_FIND_VERSION_RANGE}'")
 endif()

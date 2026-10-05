@@ -14,11 +14,11 @@ canon_test_require_variables(
 file(REMOVE_RECURSE "${CANON_TEST_BINARY_DIR}")
 file(MAKE_DIRECTORY "${CANON_TEST_BINARY_DIR}/tools")
 
-if ("${CANON_CXX_COMPILER_ID}" STREQUAL "GNU")
+if("${CANON_CXX_COMPILER_ID}" STREQUAL "GNU")
     set(_program_name gcov)
     set(_override_variable CANON_GCOV_EXECUTABLE)
     set(_backend_version "gcov (GCC) 99.0.0")
-elseif ("${CANON_CXX_COMPILER_ID}" STREQUAL "Clang")
+elseif("${CANON_CXX_COMPILER_ID}" STREQUAL "Clang")
     set(_program_name llvm-cov)
     set(_override_variable CANON_LLVM_COV_EXECUTABLE)
     set(_backend_version "LLVM version 99.0.0")

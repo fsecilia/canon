@@ -26,7 +26,7 @@ add_library(second SHARED sample.cpp)
 canon_apply_target(second)
 
 get_property(_ipo_supported GLOBAL PROPERTY _CANON_IPO_SUPPORTED)
-if (NOT "${_ipo_supported}" STREQUAL "NO")
+if(NOT "${_ipo_supported}" STREQUAL "NO")
     message(FATAL_ERROR "Expected the forced IPO probe to fail, got '${_ipo_supported}'")
 endif()
 

@@ -21,7 +21,7 @@ _canon_validate_coverage_version_output(
     _valid
     _reason
 )
-if (NOT _valid)
+if(NOT _valid)
     message(FATAL_ERROR "matching GNU gcov version was rejected: ${_reason}")
 endif()
 
@@ -32,7 +32,7 @@ _canon_validate_coverage_version_output(
     _valid
     _reason
 )
-if (_valid OR NOT "${_reason}" MATCHES "reports major version 14")
+if(_valid OR NOT "${_reason}" MATCHES "reports major version 14")
     message(FATAL_ERROR "GNU gcov major-version mismatch was not diagnosed")
 endif()
 
@@ -43,7 +43,7 @@ _canon_validate_coverage_version_output(
     _valid
     _reason
 )
-if (NOT _valid)
+if(NOT _valid)
     message(FATAL_ERROR "matching LLVM llvm-cov version was rejected: ${_reason}")
 endif()
 
@@ -54,7 +54,7 @@ _canon_validate_coverage_version_output(
     _valid
     _reason
 )
-if (_valid OR NOT "${_reason}" MATCHES "GNU gcov")
+if(_valid OR NOT "${_reason}" MATCHES "GNU gcov")
     message(FATAL_ERROR "coverage-tool family mismatch was not diagnosed")
 endif()
 
@@ -62,7 +62,7 @@ _canon_resolve_reported_coverage_tool(
     canon-nonexistent-coverage-companion
     _resolved_executable
 )
-if (NOT "${_resolved_executable}" STREQUAL "")
+if(NOT "${_resolved_executable}" STREQUAL "")
     message(FATAL_ERROR
         "coverage discovery unexpectedly resolved '${_resolved_executable}' for a missing exact name")
 endif()

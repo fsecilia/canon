@@ -12,7 +12,7 @@ find_package_handle_standard_args(
     HANDLE_VERSION_RANGE
 )
 
-if (FixtureGraphics_FOUND AND NOT TARGET FixtureGraphics::Graphics)
+if(FixtureGraphics_FOUND AND NOT TARGET FixtureGraphics::Graphics)
     add_library(FixtureGraphics::Graphics INTERFACE IMPORTED)
     target_compile_definitions(
         FixtureGraphics::Graphics

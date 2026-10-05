@@ -53,6 +53,6 @@ canon_test_run(
 )
 
 set(_index "${_narrow_source_dir}/doxygen/html/index.html")
-if (NOT EXISTS "${_index}")
+if(NOT EXISTS "${_index}")
     message(FATAL_ERROR "Narrow in-source documentation did not generate '${_index}'")
 endif()

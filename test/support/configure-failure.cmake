@@ -14,7 +14,7 @@ canon_test_require_variables(
 
 set(_expected_output "${CANON_EXPECTED_ERROR}")
 foreach(_optional_variable IN ITEMS CANON_EXPECTED_DETAIL CANON_EXPECTED_STATUS)
-    if (DEFINED ${_optional_variable} AND NOT "${${_optional_variable}}" STREQUAL "")
+    if(DEFINED ${_optional_variable} AND NOT "${${_optional_variable}}" STREQUAL "")
         list(APPEND _expected_output "${${_optional_variable}}")
     endif()
 endforeach()

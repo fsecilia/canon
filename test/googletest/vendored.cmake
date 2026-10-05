@@ -31,7 +31,7 @@ canon_test_run(
 )
 
 set(_marker "${_install_prefix}/share/canon-gtest-fixture/installed-marker.txt")
-if (NOT EXISTS "${_marker}")
+if(NOT EXISTS "${_marker}")
     message(FATAL_ERROR "GoogleTest fixture install did not produce '${_marker}'")
 endif()
 foreach(_unexpected_path IN ITEMS
@@ -41,7 +41,7 @@ foreach(_unexpected_path IN ITEMS
     "${_install_prefix}/lib/libgtest.a"
     "${_install_prefix}/lib/libgmock.a"
 )
-    if (EXISTS "${_unexpected_path}")
+    if(EXISTS "${_unexpected_path}")
         message(FATAL_ERROR "Canon's vendored GoogleTest unexpectedly installed '${_unexpected_path}'")
     endif()
 endforeach()

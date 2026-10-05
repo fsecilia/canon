@@ -7,10 +7,10 @@ project(CanonRequiredDependency LANGUAGES NONE)
 
 include("${CANON_SOURCE_DIR}/test/support/CanonSourceFixture.cmake")
 
-if (CANON_PROVIDE_CORE)
+if(CANON_PROVIDE_CORE)
     add_library(DependencyFixture::Core INTERFACE IMPORTED GLOBAL)
 endif()
-if (CANON_PROVIDE_SUPPORT)
+if(CANON_PROVIDE_SUPPORT)
     add_library(DependencyFixture::Support INTERFACE IMPORTED GLOBAL)
 endif()
 
@@ -23,7 +23,7 @@ canon_resolve_dependency(
         DependencyFixture::Support
 )
 
-if (CANON_INSTALL_DEPENDENCY)
+if(CANON_INSTALL_DEPENDENCY)
     canon_install_dependency(
         fixture-dependency
         TARGETS DependencyFixture::Core
@@ -31,7 +31,7 @@ if (CANON_INSTALL_DEPENDENCY)
 endif()
 
 foreach(_required_target IN ITEMS DependencyFixture::Core DependencyFixture::Support)
-    if (NOT TARGET "${_required_target}")
+    if(NOT TARGET "${_required_target}")
         message(FATAL_ERROR "Required dependency target '${_required_target}' is unavailable")
     endif()
 endforeach()

@@ -29,10 +29,10 @@ canon_test_make_configure_command(
     "-DCANON_CLANG_TIDY_EXECUTABLE=${CANON_CLANG_TIDY_EXECUTABLE}"
     "-DCANON_GCOVR_EXECUTABLE=${CANON_GCOVR_EXECUTABLE}"
 )
-if (DEFINED CANON_GCOV_EXECUTABLE AND NOT "${CANON_GCOV_EXECUTABLE}" STREQUAL "")
+if(DEFINED CANON_GCOV_EXECUTABLE AND NOT "${CANON_GCOV_EXECUTABLE}" STREQUAL "")
     list(APPEND _configure_command "-DCANON_GCOV_EXECUTABLE=${CANON_GCOV_EXECUTABLE}")
 endif()
-if (DEFINED CANON_LLVM_COV_EXECUTABLE AND NOT "${CANON_LLVM_COV_EXECUTABLE}" STREQUAL "")
+if(DEFINED CANON_LLVM_COV_EXECUTABLE AND NOT "${CANON_LLVM_COV_EXECUTABLE}" STREQUAL "")
     list(APPEND _configure_command "-DCANON_LLVM_COV_EXECUTABLE=${CANON_LLVM_COV_EXECUTABLE}")
 endif()
 
@@ -54,10 +54,10 @@ canon_test_run(
 )
 
 set(_index "${CANON_TEST_BINARY_DIR}/coverage/index.html")
-if (NOT EXISTS "${_index}")
+if(NOT EXISTS "${_index}")
     message(FATAL_ERROR "coverage-report did not generate ${_index}")
 endif()
 file(READ "${_index}" _html)
-if (NOT "${_html}" MATCHES "covered\\.cpp")
+if(NOT "${_html}" MATCHES "covered\\.cpp")
     message(FATAL_ERROR "coverage report does not contain covered.cpp")
 endif()

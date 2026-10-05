@@ -36,13 +36,13 @@ canon_test_run(
 )
 
 set(_consumer_install "${_install_prefix}/share/canon-vendored-consumer/sample.cpp")
-if (NOT EXISTS "${_consumer_install}")
+if(NOT EXISTS "${_consumer_install}")
     message(FATAL_ERROR "Vendored consumer install did not produce '${_consumer_install}'")
 endif()
 
 foreach(_canon_file IN ITEMS Canon.cmake CanonConfig.cmake CanonConfigVersion.cmake CanonCoverageClean.cmake)
     set(_installed_canon_file "${_install_prefix}/share/cmake/Canon/${_canon_file}")
-    if (EXISTS "${_installed_canon_file}")
+    if(EXISTS "${_installed_canon_file}")
         message(FATAL_ERROR "Vendored Canon unexpectedly installed '${_installed_canon_file}'")
     endif()
 endforeach()

@@ -7,8 +7,8 @@ Canon is an opinionated CMake policy layer for C++ projects. It adds shared proj
 A project may use Canon that was already loaded by a parent, vendor Canon in its source tree, or find an installed Canon package. Use the public command as the load sentinel, prefer the vendored copy when it exists, and otherwise use normal CMake package discovery:
 
 ```cmake
-if (NOT COMMAND canon_apply_target)
-    if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/external/canon/CMakeLists.txt")
+if(NOT COMMAND canon_apply_target)
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/external/canon/CMakeLists.txt")
         add_subdirectory(external/canon EXCLUDE_FROM_ALL)
     else()
         find_package(Canon 0.1 CONFIG REQUIRED)

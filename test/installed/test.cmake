@@ -35,7 +35,7 @@ canon_test_run(
 )
 
 set(_coverage_clean_script "${_canon_package_dir}/CanonCoverageClean.cmake")
-if (NOT EXISTS "${_coverage_clean_script}")
+if(NOT EXISTS "${_coverage_clean_script}")
     message(FATAL_ERROR "Canon install did not include '${_coverage_clean_script}'")
 endif()
 

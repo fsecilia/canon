@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.31.6)
 
 project(CanonDocumentationFixture LANGUAGES CXX)
 
-if (NOT DEFINED CANON_SOURCE_DIR OR "${CANON_SOURCE_DIR}" STREQUAL "")
+if(NOT DEFINED CANON_SOURCE_DIR OR "${CANON_SOURCE_DIR}" STREQUAL "")
     message(FATAL_ERROR "CANON_SOURCE_DIR is required")
 endif()
 
@@ -21,7 +21,7 @@ file(WRITE "${PROJECT_BINARY_DIR}/ignored_generated.hpp"
     "auto ignoredGeneratedSymbol() -> int;\n"
 )
 
-if (NOT DEFINED CANON_DOCUMENTATION_INPUT)
+if(NOT DEFINED CANON_DOCUMENTATION_INPUT)
     set(CANON_DOCUMENTATION_INPUT .)
 endif()
 canon_add_documentation("${CANON_DOCUMENTATION_INPUT}")

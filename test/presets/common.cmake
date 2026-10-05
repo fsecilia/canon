@@ -25,9 +25,9 @@ file(WRITE "${_source_dir}/CMakePresets.json"
     "  \"include\": [\"external/canon/cmake/CanonPresets.json\"]\n"
     "}\n")
 
-if ("${CANON_PRESET_PROFILE}" STREQUAL "gcc")
+if("${CANON_PRESET_PROFILE}" STREQUAL "gcc")
     set(_compiler_alias g++)
-elseif ("${CANON_PRESET_PROFILE}" STREQUAL "clang")
+elseif("${CANON_PRESET_PROFILE}" STREQUAL "clang")
     set(_compiler_alias clang++)
 else()
     message(FATAL_ERROR "unsupported preset profile '${CANON_PRESET_PROFILE}'")
@@ -40,7 +40,7 @@ file(CREATE_LINK
     "${_compiler_alias_dir}/${_compiler_alias}"
     SYMBOLIC
 )
-if (CMAKE_HOST_WIN32)
+if(CMAKE_HOST_WIN32)
     set(_path_separator ";")
 else()
     set(_path_separator ":")
@@ -60,12 +60,12 @@ endfunction()
 
 function(_expect_cache_value PRESET VARIABLE TYPE EXPECTED_VALUE DESCRIPTION)
     set(_cache "${_source_dir}/build/${PRESET}/CMakeCache.txt")
-    if (NOT EXISTS "${_cache}")
+    if(NOT EXISTS "${_cache}")
         message(FATAL_ERROR "${DESCRIPTION} did not create '${_cache}'")
     endif()
 
     file(STRINGS "${_cache}" _cache_line REGEX "^${VARIABLE}:${TYPE}=")
-    if (NOT "${_cache_line}" STREQUAL "${VARIABLE}:${TYPE}=${EXPECTED_VALUE}")
+    if(NOT "${_cache_line}" STREQUAL "${VARIABLE}:${TYPE}=${EXPECTED_VALUE}")
         message(FATAL_ERROR
             "${DESCRIPTION} configured the wrong ${VARIABLE}: '${_cache_line}'")
     endif()
@@ -73,19 +73,19 @@ endfunction()
 
 function(_expect_compiler PRESET DESCRIPTION)
     set(_cache "${_source_dir}/build/${PRESET}/CMakeCache.txt")
-    if (NOT EXISTS "${_cache}")
+    if(NOT EXISTS "${_cache}")
         message(FATAL_ERROR "${DESCRIPTION} did not create '${_cache}'")
     endif()
 
     file(STRINGS "${_cache}" _cache_line REGEX "^CMAKE_CXX_COMPILER:FILEPATH=")
-    if ("${_cache_line}" STREQUAL "")
+    if("${_cache_line}" STREQUAL "")
         message(FATAL_ERROR "${DESCRIPTION} did not record CMAKE_CXX_COMPILER")
     endif()
     string(REGEX REPLACE "^[^=]*=" "" _configured_compiler "${_cache_line}")
 
     file(REAL_PATH "${_configured_compiler}" _configured_real)
     file(REAL_PATH "${CANON_CXX_COMPILER}" _expected_real)
-    if (NOT "${_configured_real}" STREQUAL "${_expected_real}")
+    if(NOT "${_configured_real}" STREQUAL "${_expected_real}")
         message(FATAL_ERROR
             "${DESCRIPTION} configured the wrong compiler:\n"
             "  expected: ${_expected_real}\n"

@@ -12,11 +12,11 @@ set(_coverage_configure_command
     --preset "${_preset}"
     "-DCANON_GCOVR_EXECUTABLE=${CANON_GCOVR_EXECUTABLE}"
 )
-if (DEFINED CANON_GCOV_EXECUTABLE AND NOT "${CANON_GCOV_EXECUTABLE}" STREQUAL "")
+if(DEFINED CANON_GCOV_EXECUTABLE AND NOT "${CANON_GCOV_EXECUTABLE}" STREQUAL "")
     list(APPEND _coverage_configure_command
         "-DCANON_GCOV_EXECUTABLE=${CANON_GCOV_EXECUTABLE}")
 endif()
-if (DEFINED CANON_LLVM_COV_EXECUTABLE AND NOT "${CANON_LLVM_COV_EXECUTABLE}" STREQUAL "")
+if(DEFINED CANON_LLVM_COV_EXECUTABLE AND NOT "${CANON_LLVM_COV_EXECUTABLE}" STREQUAL "")
     list(APPEND _coverage_configure_command
         "-DCANON_LLVM_COV_EXECUTABLE=${CANON_LLVM_COV_EXECUTABLE}")
 endif()
@@ -37,7 +37,7 @@ _expect_cache_value(
     TRUE
     "${_preset} workflow"
 )
-if (DEFINED CANON_GCOV_EXECUTABLE AND NOT "${CANON_GCOV_EXECUTABLE}" STREQUAL "")
+if(DEFINED CANON_GCOV_EXECUTABLE AND NOT "${CANON_GCOV_EXECUTABLE}" STREQUAL "")
     _expect_cache_value(
         "${_preset}"
         CANON_GCOV_EXECUTABLE
@@ -46,7 +46,7 @@ if (DEFINED CANON_GCOV_EXECUTABLE AND NOT "${CANON_GCOV_EXECUTABLE}" STREQUAL ""
         "${_preset} workflow"
     )
 endif()
-if (DEFINED CANON_LLVM_COV_EXECUTABLE AND NOT "${CANON_LLVM_COV_EXECUTABLE}" STREQUAL "")
+if(DEFINED CANON_LLVM_COV_EXECUTABLE AND NOT "${CANON_LLVM_COV_EXECUTABLE}" STREQUAL "")
     _expect_cache_value(
         "${_preset}"
         CANON_LLVM_COV_EXECUTABLE
@@ -57,6 +57,6 @@ if (DEFINED CANON_LLVM_COV_EXECUTABLE AND NOT "${CANON_LLVM_COV_EXECUTABLE}" STR
 endif()
 
 set(_index "${_source_dir}/build/${_preset}/coverage/index.html")
-if (NOT EXISTS "${_index}")
+if(NOT EXISTS "${_index}")
     message(FATAL_ERROR "${_preset} workflow did not generate '${_index}'")
 endif()

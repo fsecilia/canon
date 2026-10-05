@@ -7,7 +7,7 @@ canon_install_dependency(
 )
 
 get_target_property(_excluded dependency_fixture_runtime EXCLUDE_FROM_ALL)
-if (NOT _excluded)
+if(NOT _excluded)
     message(FATAL_ERROR
         "canon_install_dependency() changed the vendored target's EXCLUDE_FROM_ALL property")
 endif()

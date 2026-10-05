@@ -42,14 +42,14 @@ foreach(_unexpected_path IN ITEMS
     "${_install_prefix}/lib/libgmock.a"
     "${_install_prefix}/share/cmake/external/googletest"
 )
-    if (EXISTS "${_unexpected_path}")
+    if(EXISTS "${_unexpected_path}")
         message(FATAL_ERROR "Installed Canon unexpectedly included GoogleTest at '${_unexpected_path}'")
     endif()
 endforeach()
 
 file(MAKE_DIRECTORY "${_gtest_package_dir}")
 file(WRITE "${_gtest_package_dir}/GTestConfig.cmake" [=[
-if (NOT "${GTest_FIND_VERSION_RANGE}" STREQUAL "1.18.0...<2.0.0")
+if(NOT "${GTest_FIND_VERSION_RANGE}" STREQUAL "1.18.0...<2.0.0")
     message(FATAL_ERROR "GTest received version range '${GTest_FIND_VERSION_RANGE}'")
 endif()
 add_library(GTest::gmock_main INTERFACE IMPORTED)

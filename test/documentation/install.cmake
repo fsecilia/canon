@@ -22,7 +22,7 @@ canon_test_run(
     DESCRIPTION "ordinary install before documentation generation"
     COMMAND "${CMAKE_COMMAND}" --install "${_binary_dir}" --config "${CANON_TEST_CONFIG}" --prefix "${_ordinary_prefix}"
 )
-if (EXISTS "${_ordinary_prefix}/${_documentation_dir}")
+if(EXISTS "${_ordinary_prefix}/${_documentation_dir}")
     message(FATAL_ERROR "Ordinary install unexpectedly installed documentation")
 endif()
 
@@ -47,7 +47,7 @@ canon_test_run(
     DESCRIPTION "ordinary install after documentation generation"
     COMMAND "${CMAKE_COMMAND}" --install "${_binary_dir}" --config "${CANON_TEST_CONFIG}" --prefix "${_ordinary_prefix}"
 )
-if (EXISTS "${_ordinary_prefix}/${_documentation_dir}")
+if(EXISTS "${_ordinary_prefix}/${_documentation_dir}")
     message(FATAL_ERROR "Ordinary install unexpectedly installed generated documentation")
 endif()
 
@@ -62,6 +62,6 @@ canon_test_run(
 )
 
 set(_installed_index "${_generated_prefix}/${_documentation_dir}/index.html")
-if (NOT EXISTS "${_installed_index}")
+if(NOT EXISTS "${_installed_index}")
     message(FATAL_ERROR "Documentation component did not install '${_installed_index}'")
 endif()

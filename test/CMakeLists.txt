@@ -3,9 +3,9 @@
 
 enable_language(CXX)
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     set(_canon_preset_profile gcc)
-elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang"
+elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang"
     AND "${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}" STREQUAL "GNU")
     set(_canon_preset_profile clang)
 else()
@@ -20,13 +20,13 @@ find_program(CANON_CLANG_TIDY_EXECUTABLE NAMES clang-tidy)
 
 set(_canon_clang_tidy_supported FALSE)
 set(_canon_minimum_clang_tidy_version 21.1.6)
-if (CANON_CLANG_TIDY_EXECUTABLE)
+if(CANON_CLANG_TIDY_EXECUTABLE)
     _canon_get_clang_tidy_version("${CANON_CLANG_TIDY_EXECUTABLE}" _canon_clang_tidy_version)
-    if ("${_canon_clang_tidy_version}" STREQUAL "")
+    if("${_canon_clang_tidy_version}" STREQUAL "")
         message(WARNING
             "Canon clang-tidy validation unavailable: could not determine the version of "
             "'${CANON_CLANG_TIDY_EXECUTABLE}'")
-    elseif ("${_canon_clang_tidy_version}" VERSION_LESS "${_canon_minimum_clang_tidy_version}")
+    elseif("${_canon_clang_tidy_version}" VERSION_LESS "${_canon_minimum_clang_tidy_version}")
         message(WARNING
             "Canon clang-tidy validation unavailable: clang-tidy ${_canon_clang_tidy_version} "
             "is older than the required minimum ${_canon_minimum_clang_tidy_version}")
@@ -38,13 +38,13 @@ endif()
 find_program(CANON_GCOVR_EXECUTABLE NAMES gcovr)
 set(_canon_coverage_backend "")
 set(_canon_coverage_disabled_reason "")
-if (NOT CANON_GCOVR_EXECUTABLE)
+if(NOT CANON_GCOVR_EXECUTABLE)
     set(_canon_coverage_disabled_reason "gcovr was not found")
-elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"
+elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"
     OR ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang"
         AND "${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}" STREQUAL "GNU"))
     _canon_find_coverage_backend(_canon_coverage_backend _canon_coverage_backend_reason)
-    if ("${_canon_coverage_backend}" STREQUAL "")
+    if("${_canon_coverage_backend}" STREQUAL "")
         set(_canon_coverage_disabled_reason "${_canon_coverage_backend_reason}")
     endif()
 else()
@@ -57,7 +57,7 @@ function(_canon_add_script_test NAME SCRIPT)
     set(_one_value_arguments CONFIG)
     cmake_parse_arguments(PARSE_ARGV 2 _test "" "${_one_value_arguments}" "")
 
-    if ("${_test_CONFIG}" STREQUAL "")
+    if("${_test_CONFIG}" STREQUAL "")
         set(_test_CONFIG Debug)
     endif()
 
@@ -244,15 +244,15 @@ _canon_add_script_test(
 
 set(_canon_coverage_test_arguments)
 set(_canon_coverage_tests_enabled FALSE)
-if (CANON_GCOVR_EXECUTABLE AND NOT "${_canon_coverage_backend}" STREQUAL "")
+if(CANON_GCOVR_EXECUTABLE AND NOT "${_canon_coverage_backend}" STREQUAL "")
     set(_canon_coverage_tests_enabled TRUE)
     list(APPEND _canon_coverage_test_arguments
         "-DCANON_GCOVR_EXECUTABLE=${CANON_GCOVR_EXECUTABLE}")
-    if (DEFINED CANON_GCOV_EXECUTABLE AND NOT "${CANON_GCOV_EXECUTABLE}" STREQUAL "")
+    if(DEFINED CANON_GCOV_EXECUTABLE AND NOT "${CANON_GCOV_EXECUTABLE}" STREQUAL "")
         list(APPEND _canon_coverage_test_arguments
             "-DCANON_GCOV_EXECUTABLE=${CANON_GCOV_EXECUTABLE}")
     endif()
-    if (DEFINED CANON_LLVM_COV_EXECUTABLE AND NOT "${CANON_LLVM_COV_EXECUTABLE}" STREQUAL "")
+    if(DEFINED CANON_LLVM_COV_EXECUTABLE AND NOT "${CANON_LLVM_COV_EXECUTABLE}" STREQUAL "")
         list(APPEND _canon_coverage_test_arguments
             "-DCANON_LLVM_COV_EXECUTABLE=${CANON_LLVM_COV_EXECUTABLE}")
     endif()
@@ -280,7 +280,7 @@ _canon_add_script_test(
     ${_canon_coverage_test_arguments}
     "-DCANON_CLANG_TIDY_EXECUTABLE=${CANON_CLANG_TIDY_EXECUTABLE}"
 )
-if (NOT _canon_coverage_tests_enabled)
+if(NOT _canon_coverage_tests_enabled)
     set_tests_properties(
         canon.integration.coverage
         canon.integration.coverage.nested
@@ -302,7 +302,7 @@ _canon_add_script_test(
     tooling/consumer.cmake
     "-DCANON_CLANG_TIDY_EXECUTABLE=${CANON_CLANG_TIDY_EXECUTABLE}"
 )
-if (NOT _canon_clang_tidy_supported)
+if(NOT _canon_clang_tidy_supported)
     set_tests_properties(
         canon.integration.tidy
         canon.integration.tidy.validation-cache
@@ -310,7 +310,7 @@ if (NOT _canon_clang_tidy_supported)
         canon.integration.coverage.tidy
         PROPERTIES DISABLED TRUE
     )
-    if (NOT CANON_CLANG_TIDY_EXECUTABLE)
+    if(NOT CANON_CLANG_TIDY_EXECUTABLE)
         message(WARNING "Canon clang-tidy validation unavailable: clang-tidy was not found")
     endif()
 endif()
@@ -350,7 +350,7 @@ _canon_add_script_test(
     documentation/warning/test.cmake
     "-DCANON_DOXYGEN_EXECUTABLE=${DOXYGEN_EXECUTABLE}"
 )
-if (NOT Doxygen_FOUND)
+if(NOT Doxygen_FOUND)
     set_tests_properties(
         canon.integration.documentation
         canon.integration.documentation.install
@@ -390,7 +390,7 @@ _canon_add_script_test(
     googletest/nested.cmake
 )
 
-if (NOT EXISTS "${PROJECT_SOURCE_DIR}/external/googletest/CMakeLists.txt")
+if(NOT EXISTS "${PROJECT_SOURCE_DIR}/external/googletest/CMakeLists.txt")
     set_tests_properties(
         canon.integration.googletest.vendored
         canon.integration.googletest.nested
@@ -441,7 +441,7 @@ _canon_add_script_test(
     ${_canon_preset_test_arguments}
     ${_canon_coverage_test_arguments}
 )
-if (NOT _canon_coverage_tests_enabled)
+if(NOT _canon_coverage_tests_enabled)
     set_tests_properties(
         "canon.integration.presets.${_canon_preset_profile}.coverage"
         PROPERTIES DISABLED TRUE
@@ -454,7 +454,7 @@ _canon_add_script_test(
     ${_canon_preset_test_arguments}
     "-DCANON_CLANG_TIDY_EXECUTABLE=${CANON_CLANG_TIDY_EXECUTABLE}"
 )
-if (NOT _canon_clang_tidy_supported)
+if(NOT _canon_clang_tidy_supported)
     set_tests_properties(
         "canon.integration.presets.${_canon_preset_profile}.tidy"
         PROPERTIES DISABLED TRUE

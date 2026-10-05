@@ -18,7 +18,7 @@ foreach(_target IN ITEMS
     doc
     doc-clean
 )
-    if (NOT TARGET "${_target}")
+    if(NOT TARGET "${_target}")
         message(FATAL_ERROR "Expected documentation target '${_target}' was not created")
     endif()
 endforeach()
