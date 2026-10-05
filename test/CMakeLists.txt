@@ -268,11 +268,19 @@ _canon_add_script_test(
     coverage/empty/test.cmake
     ${_canon_coverage_test_arguments}
 )
+
+_canon_add_script_test(
+    coverage.tidy
+    coverage/tidy.cmake
+    ${_canon_coverage_test_arguments}
+    "-DCANON_CLANG_TIDY_EXECUTABLE=${CANON_CLANG_TIDY_EXECUTABLE}"
+)
 if (NOT _canon_coverage_tests_enabled)
     set_tests_properties(
         canon.integration.coverage
         canon.integration.coverage.nested
         canon.integration.coverage.empty-report
+        canon.integration.coverage.tidy
         PROPERTIES DISABLED TRUE
     )
     message(WARNING
@@ -280,6 +288,7 @@ if (NOT _canon_coverage_tests_enabled)
         "  canon.integration.coverage\n"
         "  canon.integration.coverage.nested\n"
         "  canon.integration.coverage.empty-report\n"
+        "  canon.integration.coverage.tidy\n"
         "  canon.integration.presets.${_canon_preset_profile}.coverage")
 endif()
 
@@ -293,6 +302,7 @@ if (NOT _canon_clang_tidy_supported)
         canon.integration.tidy
         canon.integration.tidy.validation-cache
         canon.integration.tidy.symlink
+        canon.integration.coverage.tidy
         PROPERTIES DISABLED TRUE
     )
     if (NOT CANON_CLANG_TIDY_EXECUTABLE)
