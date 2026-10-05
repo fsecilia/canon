@@ -1009,7 +1009,7 @@ function(_canon_install_vendored_dependency_target DEPENDENCY TARGET VENDORED_TA
         PROPERTY _CANON_DEPENDENCY_INSTALL_BUILD_TARGET
     )
     if ("${_build_target}" STREQUAL "")
-        string(HEX "${CMAKE_CURRENT_BINARY_DIR}" _directory_key)
+        string(SHA256 _directory_key "${CMAKE_CURRENT_BINARY_DIR}")
         set(_build_target "_canon_install_dependencies_${_directory_key}")
         if (TARGET "${_build_target}")
             message(FATAL_ERROR
