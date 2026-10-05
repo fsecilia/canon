@@ -1179,6 +1179,7 @@ function(canon_require_googletest)
         NAME googletest
         PACKAGE GTest
         VERSION "1.18.0...<2.0.0"
+        CONFIG
         SOURCE_DIR "${_source_dir}"
         BINARY_DIR "${CMAKE_BINARY_DIR}/canon/external/googletest"
         VENDORED_HINT "initialize Canon submodule 'external/googletest'"
