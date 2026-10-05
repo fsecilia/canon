@@ -176,6 +176,11 @@ _canon_add_script_test(
 )
 
 _canon_add_script_test(
+    dependencies.install.subdirectory
+    dependency/install/subdirectory.cmake
+)
+
+_canon_add_script_test(
     dependencies.install.installed
     dependency/install/installed.cmake
 )
