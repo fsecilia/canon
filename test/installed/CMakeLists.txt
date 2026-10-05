@@ -22,7 +22,6 @@ foreach(_command IN ITEMS
     canon_generate_export_header
     canon_resolve_dependency
     canon_install_dependency
-    canon_package_dependency
 )
     if (NOT COMMAND "${_command}")
         message(FATAL_ERROR "Installed Canon did not provide ${_command}()")

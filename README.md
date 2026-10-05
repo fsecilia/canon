@@ -18,7 +18,7 @@ endif()
 
 Adjust the vendored path to match the project layout.
 
-Canon's installed Config package uses the same compatibility policy as other Canon-managed packages: versions before 1.0 are compatible within the same minor version, while versions starting at 1.0 are compatible within the same major version.
+Canon's own installed Config package is architecture-independent. While Canon remains before 1.0, its installed versions are compatible within the same minor version.
 
 ## Tool versions
 
@@ -28,7 +28,7 @@ Canon does not reject other compilers by version or identity. They must support 
 
 ## Compiled targets
 
-`canon_apply_target()` supports executables, object libraries, and STATIC, SHARED, and MODULE libraries. Use it for compiled targets that need Canon's build policy without Canon-managed installation:
+`canon_apply_target()` supports executables, object libraries, and STATIC, SHARED, and MODULE libraries. Use it for compiled targets that need Canon's build policy:
 
 ```cmake
 add_executable(example main.cpp)
@@ -48,14 +48,15 @@ Canon intentionally leaves Release static and object libraries without IPO. Thos
 
 Canon requires the C++26 language level but does not set `CXX_EXTENSIONS`. The caller owns whether the compiler uses GNU-style extensions or a strict ISO dialect.
 
-Use `canon_apply_executable()` for a normal executable that should also be installed:
+Canon does not install managed targets. Projects own their normal CMake `install()` rules. An executable that should be installed therefore remains explicit:
 
 ```cmake
 add_executable(example main.cpp)
-canon_apply_executable(example)
-```
+canon_apply_target(example)
 
-`canon_apply_executable()` applies the compiled-target policy and installs the executable through CMake's conventional runtime install directory. `MACOSX_BUNDLE` executables are not supported.
+include(GNUInstallDirs)
+install(TARGETS example RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
+```
 
 ## Libraries and export headers
 
@@ -66,7 +67,7 @@ add_library(example SHARED example.cpp)
 canon_apply_library(example)
 ```
 
-Compiled libraries receive the common compiled-target policy and publish C++26 as a usage requirement. INTERFACE libraries publish the same C++26 usage requirement without compiled-target policy. Canon's current package-install integration still installs and exports managed libraries; package ownership is being simplified separately.
+Compiled libraries receive the common compiled-target policy and publish C++26 as a usage requirement. INTERFACE libraries publish the same C++26 usage requirement without compiled-target policy. `canon_apply_library()` does not create aliases, install the target, or register a package.
 
 Export-header generation is explicit. Pass the library target, the include-relative header path, and the public export macro:
 
@@ -84,17 +85,29 @@ EXAMPLE_API auto exampleAnswer() -> int;
 
 The export-header path and macro are deliberately not inferred from `PROJECT_NAME`, the target name, or `EXPORT_NAME`. Public source layout and preprocessor identity belong to the project, and spelling them explicitly keeps Canon from maintaining a second naming policy.
 
+Both `canon_apply_target()` and `canon_apply_library()` are idempotent for a target. Applying `canon_apply_target()` first and `canon_apply_library()` later does not reapply the compiled-target policy.
+
 ## Package installation
 
-The first managed library registers an installable CMake package for the current project. Architecture-independent packages install their CMake metadata beneath `${CMAKE_INSTALL_DATADIR}/cmake/${PROJECT_NAME}`. A package containing an installed compiled library or executable is architecture-specific and installs its metadata beneath `${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}`. Imported targets use the `${PROJECT_NAME}::` namespace. `canon_apply_library()` creates the matching namespaced alias in the build tree. If a project sets CMake's native `EXPORT_NAME` target property, Canon uses that public name for the alias too. Project code and installed consumers can therefore use the same public target name.
+Projects own their CMake package layout. Canon does not generate package configs, export sets, aliases, version files, or dependency declarations. This keeps package-specific choices visible in the project that makes them and avoids Canon maintaining a second package model over CMake's native one.
 
-`EXPORT_NAME` is an input to the current `canon_apply_library()` package integration and must be finalized before the call. Canon derives the build-tree alias when it applies the library policy. Changing `EXPORT_NAME` afterward is unsupported and can make the build-tree and installed identities disagree even when CMake accepts the change. Export-header identity is independent and comes only from `canon_generate_export_header()`.
+A project should provide its own `Config.cmake.in`, including any public package dependencies:
 
-A versioned project receives `<Project>Config.cmake`, `<Project>ConfigVersion.cmake`, and `<Project>Targets.cmake`. Before 1.0, compatible package versions must share the same minor version. Starting with 1.0, compatible versions must share the same major version. Header-only packages are architecture-independent. Package architecture only becomes more specific as managed targets are applied, so a later compiled library or executable moves the final package metadata to the architecture-specific location. Versionless projects omit `ConfigVersion.cmake`.
+```cmake
+@PACKAGE_INIT@
 
-Executables installed with `canon_apply_executable()` are not exported as package targets and do not create a package configuration by themselves.
+include(CMakeFindDependencyMacro)
+find_dependency(fmt 11 CONFIG)
 
-Each `canon_apply_*()` function is idempotent for a target. Reapplying the same function does not duplicate build policy or install rules. Applying `canon_apply_target()` first and later applying the matching executable or library function adds the higher-level policy without reapplying the compiled-target policy.
+include("${CMAKE_CURRENT_LIST_DIR}/ExampleTargets.cmake")
+check_required_components(Example)
+```
+
+Use ordinary `install(TARGETS ...)`, `install(EXPORT ...)`, `configure_package_config_file()`, and `write_basic_package_version_file()` for the package itself. Projects may add a build-tree alias such as `Example::Example` when they want build-tree and installed target names to match.
+
+For package metadata, header-only packages conventionally install beneath `${CMAKE_INSTALL_DATADIR}/cmake/<Package>`, while packages containing compiled artifacts conventionally install beneath `${CMAKE_INSTALL_LIBDIR}/cmake/<Package>`. The project knows which case it is and can choose the destination directly without deferred package inference.
+
+Before 1.0, Bonk libraries normally use `SameMinorVersion`; starting with 1.0, they normally use `SameMajorVersion`. This is a project packaging convention rather than generated Canon behavior.
 
 Use `canon_resolve_dependency()` when a project needs the same vendored-or-installed dependency lookup in its current build:
 
@@ -111,7 +124,7 @@ Canon first reuses the dependency when every required target already exists. Oth
 
 The first successful resolution for a dependency name selects its provider for that project. Later calls with the same dependency name reuse that provider and require their requested targets to already be available; they do not fall through to another provider. The first argument names the directory beneath the project's `external/` tree. `PACKAGE` defaults to that name when the package name matches it. `VERSION` and `TARGETS` are required. `VERSION` constrains only the installed-package search performed during the first resolution when the required targets are absent and no vendored project is available. Existing targets are authoritative, and Canon does not infer or validate their version. A later call with a different `VERSION` therefore does not renegotiate an already-resolved dependency. Vendored dependency versions are likewise controlled by the selected source checkout rather than by `VERSION`.
 
-This function only makes the dependency available to the current build. Installing selected runtime artifacts from a vendored dependency and recording dependencies of the installed CMake package are separate operations.
+This function only makes the dependency available to the current build. Installing selected runtime artifacts from a vendored dependency is a separate operation. Public dependencies of an installed CMake package belong in that project's `Config.cmake.in`.
 
 Use `canon_install_dependency()` when selected shared libraries from a vendored dependency belong in this project's installation:
 
@@ -139,19 +152,6 @@ git submodule update --init external/googletest
 ```
 
 If Canon's vendored GoogleTest source is unavailable, including when Canon is consumed as an installed package, Canon searches for an installed GTest package in the range `1.18.0...<2.0.0`. Canon does not install GoogleTest with itself and does not search for or add GoogleTest merely because Canon was loaded. Projects that never call `canon_require_googletest()` pay no GoogleTest configuration or build cost.
-
-Use `canon_package_dependency()` when an installed package must recover another package before importing its targets:
-
-```cmake
-find_package(fmt 11 CONFIG REQUIRED)
-canon_package_dependency(fmt 11 CONFIG)
-
-target_link_libraries(example PUBLIC fmt::fmt)
-```
-
-`canon_package_dependency()` does not locate, vendor, or link the dependency. In this example, Canon records a call equivalent to `find_dependency(fmt 11 CONFIG)` in the installed package configuration. Use it also when a dependency comes from the source tree during the build but downstream consumers must find that dependency as a package. Do not pass `REQUIRED` or `QUIET`; `find_dependency()` inherits those requirements from the outer `find_package()` call.
-
-Dependency arguments use normal CMake evaluation. Canon captures the values produced at the `canon_package_dependency()` call site and serializes those values safely into the generated package configuration. The generated package then forwards those values through CMake's `find_dependency()` macro. Values containing CMake variable, escape, or list syntax may therefore be interpreted again when the installed package is loaded. Normal `find_dependency()` and `find_package()` parsing, expansion, and list semantics apply; do not rely on the generated source preserving the original spelling or argument boundaries from the call site.
 
 ## Developer controls
 

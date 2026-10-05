@@ -27,9 +27,10 @@ canon_install_dependency(
 
 add_executable(sample main.cpp)
 target_link_libraries(sample PRIVATE DependencyFixture::Runtime)
-canon_apply_executable(sample)
+canon_apply_target(sample)
 
 include(GNUInstallDirs)
+install(TARGETS sample RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
 file(
     GENERATE
     OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/install-data.txt"

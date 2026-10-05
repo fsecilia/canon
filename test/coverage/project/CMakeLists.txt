@@ -42,6 +42,31 @@ target_link_libraries(covered_object_unmanaged PRIVATE covered_object)
 set_property(TARGET covered_object_unmanaged PROPERTY CXX_SCAN_FOR_MODULES FALSE)
 add_test(NAME covered_object_unmanaged COMMAND covered_object_unmanaged)
 
+include(CMakePackageConfigHelpers)
+include(GNUInstallDirs)
+set(_package_dir "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
+configure_package_config_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}Config.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+    INSTALL_DESTINATION "${_package_dir}"
+    NO_SET_AND_CHECK_MACRO
+)
+install(
+    TARGETS covered
+    EXPORT "${PROJECT_NAME}Targets"
+    ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+)
+install(
+    EXPORT "${PROJECT_NAME}Targets"
+    FILE "${PROJECT_NAME}Targets.cmake"
+    NAMESPACE "${PROJECT_NAME}::"
+    DESTINATION "${_package_dir}"
+)
+install(
+    FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+    DESTINATION "${_package_dir}"
+)
+
 # Verify compile instrumentation on every managed target in the fixture.
 foreach(_target IN ITEMS covered covered_object covered_test)
     canon_test_require_cxx_compile_option("${_target}" "--coverage")

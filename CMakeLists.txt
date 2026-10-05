@@ -13,15 +13,19 @@ if (NOT PROJECT_IS_TOP_LEVEL)
 endif()
 
 include(CMakePackageConfigHelpers)
-_canon_package_version_compatibility(_canon_version_compatibility)
 write_basic_package_version_file(
     "${CMAKE_CURRENT_BINARY_DIR}/CanonConfigVersion.cmake"
     VERSION "${PROJECT_VERSION}"
-    COMPATIBILITY "${_canon_version_compatibility}"
+    COMPATIBILITY SameMinorVersion
     ARCH_INDEPENDENT
 )
 
-_canon_package_install_directory(_canon_install_directory)
+if (DEFINED CMAKE_INSTALL_DATADIR AND NOT "${CMAKE_INSTALL_DATADIR}" STREQUAL "")
+    set(_canon_data_directory "${CMAKE_INSTALL_DATADIR}")
+else()
+    set(_canon_data_directory share)
+endif()
+set(_canon_install_directory "${_canon_data_directory}/cmake/Canon")
 
 install(
     FILES

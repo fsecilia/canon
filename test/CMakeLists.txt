@@ -106,18 +106,8 @@ _canon_add_script_test(
 )
 
 _canon_add_script_test(
-    executable.install
-    executable/install/test.cmake
-)
-
-_canon_add_script_test(
     target.idempotent
     target/idempotence/test.cmake
-)
-
-_canon_add_script_test(
-    executable.idempotent
-    executable/idempotence/test.cmake
 )
 
 _canon_add_script_test(
@@ -128,26 +118,6 @@ _canon_add_script_test(
 _canon_add_script_test(
     library.interface.idempotent
     library/interface-idempotence/test.cmake
-)
-
-_canon_add_script_test(
-    library.install
-    library/install/test.cmake
-)
-
-_canon_add_script_test(
-    package.config
-    package/install/config.cmake
-)
-
-_canon_add_script_test(
-    package.version
-    package/install/version.cmake
-)
-
-_canon_add_script_test(
-    package.dependencies
-    package/install/dependencies.cmake
 )
 
 _canon_add_script_test(
@@ -173,11 +143,6 @@ _canon_add_script_test(
 _canon_add_script_test(
     dependencies.install.build
     dependency/install/build.cmake
-)
-
-_canon_add_script_test(
-    dependencies.install.architecture
-    dependency/install/architecture.cmake
 )
 
 _canon_add_script_test(
@@ -480,24 +445,6 @@ _canon_add_configure_failure_test(
 )
 
 _canon_add_configure_failure_test(
-    executables.missing
-    executable/errors/missing
-    "-DCANON_EXPECTED_ERROR=canon_apply_executable(): target 'missing' does not exist"
-)
-
-_canon_add_configure_failure_test(
-    executables.library
-    executable/errors/library
-    "-DCANON_EXPECTED_ERROR=canon_apply_executable(): target 'sample' must be an executable"
-)
-
-_canon_add_configure_failure_test(
-    executables.bundle
-    executable/errors/bundle
-    "-DCANON_EXPECTED_ERROR=canon_apply_executable(): MACOSX_BUNDLE target 'sample' is not supported"
-)
-
-_canon_add_configure_failure_test(
     libraries.missing
     library/errors/missing
     "-DCANON_EXPECTED_ERROR=canon_apply_library(): target 'missing' does not exist"
@@ -507,36 +454,6 @@ _canon_add_configure_failure_test(
     libraries.object
     library/errors/object
     "-DCANON_EXPECTED_ERROR=canon_apply_library(): target 'sample' must be a STATIC, SHARED, MODULE, or INTERFACE library"
-)
-
-_canon_add_configure_failure_test(
-    libraries.framework
-    library/errors/framework
-    "-DCANON_EXPECTED_ERROR=canon_apply_library(): FRAMEWORK target 'sample' is not supported"
-)
-
-_canon_add_configure_failure_test(
-    dependencies.empty
-    dependency/errors/empty
-    "-DCANON_EXPECTED_ERROR=canon_package_dependency(): package name must not be empty"
-)
-
-_canon_add_configure_failure_test(
-    dependencies.required
-    dependency/errors/required
-    "-DCANON_EXPECTED_ERROR=canon_package_dependency(): 'REQUIRED' is inherited"
-)
-
-_canon_add_configure_failure_test(
-    dependencies.quiet
-    dependency/errors/quiet
-    "-DCANON_EXPECTED_ERROR=canon_package_dependency(): 'QUIET' is inherited"
-)
-
-_canon_add_configure_failure_test(
-    dependencies.no-package
-    dependency/errors/no-package
-    "-DCANON_EXPECTED_ERROR=package dependencies were declared, but project"
 )
 
 _canon_add_configure_failure_test(

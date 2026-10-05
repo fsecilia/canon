@@ -54,6 +54,34 @@ add_test(NAME asan_unmanaged_object COMMAND asan_unmanaged_object)
 add_executable(asan_probe EXCLUDE_FROM_ALL asan_probe.cpp)
 canon_apply_target(asan_probe)
 
+include(CMakePackageConfigHelpers)
+include(GNUInstallDirs)
+set(_package_dir "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
+configure_package_config_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}Config.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+    INSTALL_DESTINATION "${_package_dir}"
+    NO_SET_AND_CHECK_MACRO
+)
+install(
+    TARGETS asan_static asan_shared
+    EXPORT "${PROJECT_NAME}Targets"
+    ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+    LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+    RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
+    FILE_SET canon_export_header DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+)
+install(
+    EXPORT "${PROJECT_NAME}Targets"
+    FILE "${PROJECT_NAME}Targets.cmake"
+    NAMESPACE "${PROJECT_NAME}::"
+    DESTINATION "${_package_dir}"
+)
+install(
+    FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+    DESTINATION "${_package_dir}"
+)
+
 # Verify the compile policy reaches each managed target involved in the fixture.
 foreach(_target IN ITEMS asan_static asan_shared asan_object asan_app asan_test asan_probe)
     canon_test_require_cxx_compile_option("${_target}" -fsanitize=address)

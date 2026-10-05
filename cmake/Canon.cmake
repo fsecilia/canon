@@ -700,220 +700,6 @@ function(canon_apply_target TARGET)
     set_property(TARGET "${TARGET}" PROPERTY _CANON_TARGET_POLICY_APPLIED TRUE)
 endfunction()
 
-# Returns the install directory for this project's finalized package architecture.
-function(_canon_package_install_directory OUT_DIRECTORY)
-    get_property(
-        _architecture_specific
-        DIRECTORY "${PROJECT_SOURCE_DIR}"
-        PROPERTY _CANON_PACKAGE_ARCHITECTURE_SPECIFIC
-    )
-    if (_architecture_specific)
-        include(GNUInstallDirs)
-        set(_install_directory "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
-    else()
-        if (DEFINED CMAKE_INSTALL_DATADIR AND NOT "${CMAKE_INSTALL_DATADIR}" STREQUAL "")
-            set(_data_directory "${CMAKE_INSTALL_DATADIR}")
-        else()
-            set(_data_directory share)
-        endif()
-        set(_install_directory "${_data_directory}/cmake/${PROJECT_NAME}")
-    endif()
-
-    set("${OUT_DIRECTORY}" "${_install_directory}" PARENT_SCOPE)
-endfunction()
-
-# Selects Canon's package compatibility policy from the project's major version.
-function(_canon_package_version_compatibility OUT_COMPATIBILITY)
-    if ("${PROJECT_VERSION_MAJOR}" EQUAL 0)
-        set(_compatibility SameMinorVersion)
-    else()
-        set(_compatibility SameMajorVersion)
-    endif()
-    set("${OUT_COMPATIBILITY}" "${_compatibility}" PARENT_SCOPE)
-endfunction()
-
-# Writes the package version file from the project's finalized install policy.
-function(_canon_write_package_version_file)
-    if ("${PROJECT_VERSION}" STREQUAL "")
-        return()
-    endif()
-
-    _canon_package_version_compatibility(_compatibility)
-
-    get_property(
-        _architecture_specific
-        DIRECTORY "${PROJECT_SOURCE_DIR}"
-        PROPERTY _CANON_PACKAGE_ARCHITECTURE_SPECIFIC
-    )
-    set(_architecture_arguments)
-    if (NOT _architecture_specific)
-        list(APPEND _architecture_arguments ARCH_INDEPENDENT)
-    endif()
-
-    include(CMakePackageConfigHelpers)
-    write_basic_package_version_file(
-        "${PROJECT_BINARY_DIR}/canon/package/${PROJECT_NAME}ConfigVersion.cmake"
-        VERSION "${PROJECT_VERSION}"
-        COMPATIBILITY "${_compatibility}"
-        ${_architecture_arguments}
-    )
-endfunction()
-
-# Raises this project's package architecture to architecture-specific.
-function(_canon_mark_package_architecture_specific)
-    set_property(
-        DIRECTORY "${PROJECT_SOURCE_DIR}"
-        PROPERTY _CANON_PACKAGE_ARCHITECTURE_SPECIFIC TRUE
-    )
-endfunction()
-
-# Serializes one already-evaluated package argument as CMake source.
-function(_canon_serialize_package_argument OUT_ARGUMENT ARGUMENT)
-    set(_equals "=")
-    while (TRUE)
-        set(_closing_bracket "]${_equals}]")
-        string(FIND "${ARGUMENT}" "${_closing_bracket}" _closing_bracket_position)
-        if ("${_closing_bracket_position}" EQUAL -1)
-            break()
-        endif()
-        string(APPEND _equals "=")
-    endwhile()
-
-    set(_opening_bracket "[${_equals}[")
-    set(_leading_newline "")
-    if (NOT "${ARGUMENT}" STREQUAL "")
-        string(SUBSTRING "${ARGUMENT}" 0 1 _first_character)
-        if ("${_first_character}" STREQUAL "\n" OR "${_first_character}" STREQUAL "\r")
-            set(_leading_newline "\n")
-        endif()
-    endif()
-
-    set(
-        "${OUT_ARGUMENT}"
-        "${_opening_bracket}${_leading_newline}${ARGUMENT}${_closing_bracket}"
-        PARENT_SCOPE
-    )
-endfunction()
-
-# Writes this project's relocatable CMake package configuration.
-function(_canon_write_package_config_file)
-    set(_package_dir "${PROJECT_BINARY_DIR}/canon/package")
-    file(MAKE_DIRECTORY "${_package_dir}")
-
-    set(CANON_PACKAGE_DEPENDENCIES "")
-    get_property(
-        _dependency_keys
-        DIRECTORY "${PROJECT_SOURCE_DIR}"
-        PROPERTY _CANON_PACKAGE_DEPENDENCY_KEYS
-    )
-    if (_dependency_keys)
-        string(APPEND CANON_PACKAGE_DEPENDENCIES "include(CMakeFindDependencyMacro)\n\n")
-        foreach(_dependency_key IN LISTS _dependency_keys)
-            get_property(
-                _dependency_call
-                DIRECTORY "${PROJECT_SOURCE_DIR}"
-                PROPERTY "_CANON_PACKAGE_DEPENDENCY_${_dependency_key}"
-            )
-            string(APPEND CANON_PACKAGE_DEPENDENCIES "${_dependency_call}\n")
-        endforeach()
-        string(APPEND CANON_PACKAGE_DEPENDENCIES "\n")
-    endif()
-
-    set(_config_input "${_package_dir}/${PROJECT_NAME}Config.cmake.in")
-    file(WRITE "${_config_input}" [=[@PACKAGE_INIT@
-
-@CANON_PACKAGE_DEPENDENCIES@
-include("${CMAKE_CURRENT_LIST_DIR}/@CANON_PACKAGE_TARGETS_FILE@")
-
-check_required_components(@CANON_PACKAGE_NAME@)
-]=])
-
-    set(CANON_PACKAGE_NAME "${PROJECT_NAME}")
-    set(CANON_PACKAGE_TARGETS_FILE "${PROJECT_NAME}Targets.cmake")
-    _canon_package_install_directory(_install_directory)
-
-    include(CMakePackageConfigHelpers)
-    configure_package_config_file(
-        "${_config_input}"
-        "${_package_dir}/${PROJECT_NAME}Config.cmake"
-        INSTALL_DESTINATION "${_install_directory}"
-        NO_SET_AND_CHECK_MACRO
-    )
-endfunction()
-
-# Finalizes the project-wide export and package configuration after target declarations.
-function(_canon_finalize_package)
-    get_property(
-        _package_registered
-        DIRECTORY "${PROJECT_SOURCE_DIR}"
-        PROPERTY _CANON_PACKAGE_REGISTERED
-    )
-    if (NOT _package_registered)
-        get_property(
-            _dependency_keys
-            DIRECTORY "${PROJECT_SOURCE_DIR}"
-            PROPERTY _CANON_PACKAGE_DEPENDENCY_KEYS
-        )
-        if (_dependency_keys)
-            message(FATAL_ERROR
-                "canon_package_dependency(): package dependencies were declared, but project "
-                "'${PROJECT_NAME}' has no installable Canon package")
-        endif()
-        return()
-    endif()
-
-    _canon_package_install_directory(_install_directory)
-    _canon_write_package_config_file()
-    _canon_write_package_version_file()
-
-    install(
-        EXPORT "${PROJECT_NAME}Targets"
-        FILE "${PROJECT_NAME}Targets.cmake"
-        NAMESPACE "${PROJECT_NAME}::"
-        DESTINATION "${_install_directory}"
-    )
-
-    set(_package_files
-        "${PROJECT_BINARY_DIR}/canon/package/${PROJECT_NAME}Config.cmake"
-    )
-    if (NOT "${PROJECT_VERSION}" STREQUAL "")
-        list(APPEND _package_files
-            "${PROJECT_BINARY_DIR}/canon/package/${PROJECT_NAME}ConfigVersion.cmake"
-        )
-    endif()
-    install(FILES ${_package_files} DESTINATION "${_install_directory}")
-endfunction()
-
-# Schedules one package finalization at the end of this project's source directory.
-function(_canon_schedule_package_finalization)
-    get_property(
-        _finalizer_scheduled
-        DIRECTORY "${PROJECT_SOURCE_DIR}"
-        PROPERTY _CANON_PACKAGE_FINALIZER_SCHEDULED
-    )
-    if (_finalizer_scheduled)
-        return()
-    endif()
-
-    set_property(
-        DIRECTORY "${PROJECT_SOURCE_DIR}"
-        PROPERTY _CANON_PACKAGE_FINALIZER_SCHEDULED TRUE
-    )
-    cmake_language(
-        DEFER DIRECTORY "${PROJECT_SOURCE_DIR}"
-        CALL _canon_finalize_package
-    )
-endfunction()
-
-# Records that a managed library makes this project an installable CMake package.
-function(_canon_register_package)
-    set_property(
-        DIRECTORY "${PROJECT_SOURCE_DIR}"
-        PROPERTY _CANON_PACKAGE_REGISTERED TRUE
-    )
-    _canon_schedule_package_finalization()
-endfunction()
-
 # Collects ordinary buildsystem targets created in one source-directory subtree.
 function(_canon_collect_buildsystem_targets SOURCE_DIR OUT_TARGETS)
     get_property(_targets DIRECTORY "${SOURCE_DIR}" PROPERTY BUILDSYSTEM_TARGETS)
@@ -1180,8 +966,6 @@ function(_canon_install_vendored_dependency_target DEPENDENCY TARGET VENDORED_TA
             "canon_install_dependency(): FRAMEWORK target '${TARGET}' is not supported")
     endif()
 
-    _canon_mark_package_architecture_specific()
-
     string(HEX "${_target}" _target_key)
     set(_installed_property "_CANON_DEPENDENCY_INSTALL_${_target_key}")
     get_property(
@@ -1286,144 +1070,6 @@ function(canon_require_googletest)
     )
 endfunction()
 
-# Propagates one dependency requirement to this project's installed package.
-function(canon_package_dependency PACKAGE)
-    if ("${PACKAGE}" STREQUAL "")
-        message(FATAL_ERROR "canon_package_dependency(): package name must not be empty")
-    endif()
-
-    set(_dependency_call "find_dependency(")
-    math(EXPR _last_argument "${ARGC} - 1")
-    foreach(_argument_index RANGE 0 ${_last_argument})
-        set(_argument_name "ARGV${_argument_index}")
-        set(_argument "${${_argument_name}}")
-        if ("${_argument_index}" GREATER 0
-            AND ("${_argument}" STREQUAL "REQUIRED" OR "${_argument}" STREQUAL "QUIET"))
-            message(FATAL_ERROR
-                "canon_package_dependency(): '${_argument}' is inherited from the outer find_package() call")
-        endif()
-
-        _canon_serialize_package_argument(_serialized_argument "${_argument}")
-        if ("${_argument_index}" GREATER 0)
-            string(APPEND _dependency_call " ")
-        endif()
-        string(APPEND _dependency_call "${_serialized_argument}")
-    endforeach()
-    string(APPEND _dependency_call ")")
-
-    string(SHA256 _dependency_key "${_dependency_call}")
-    set(_dependency_property "_CANON_PACKAGE_DEPENDENCY_${_dependency_key}")
-
-    get_property(
-        _dependency_recorded
-        DIRECTORY "${PROJECT_SOURCE_DIR}"
-        PROPERTY "${_dependency_property}"
-        SET
-    )
-    if (_dependency_recorded)
-        get_property(
-            _existing_call
-            DIRECTORY "${PROJECT_SOURCE_DIR}"
-            PROPERTY "${_dependency_property}"
-        )
-        if (NOT "${_existing_call}" STREQUAL "${_dependency_call}")
-            message(FATAL_ERROR
-                "canon_package_dependency(): internal dependency-key collision for package '${PACKAGE}'")
-        endif()
-        return()
-    endif()
-
-    set_property(
-        DIRECTORY "${PROJECT_SOURCE_DIR}"
-        APPEND PROPERTY _CANON_PACKAGE_DEPENDENCY_KEYS "${_dependency_key}"
-    )
-    set_property(
-        DIRECTORY "${PROJECT_SOURCE_DIR}"
-        PROPERTY "${_dependency_property}" "${_dependency_call}"
-    )
-
-    _canon_schedule_package_finalization()
-endfunction()
-
-# Applies Canon's compiled-target policy and conventional installation to an executable.
-function(canon_apply_executable TARGET)
-    if (NOT TARGET "${TARGET}")
-        message(FATAL_ERROR "canon_apply_executable(): target '${TARGET}' does not exist")
-    endif()
-
-    get_target_property(_type "${TARGET}" TYPE)
-    if (NOT "${_type}" STREQUAL "EXECUTABLE")
-        message(FATAL_ERROR
-            "canon_apply_executable(): target '${TARGET}' must be an executable")
-    endif()
-
-    get_target_property(_macosx_bundle "${TARGET}" MACOSX_BUNDLE)
-    if (_macosx_bundle)
-        message(FATAL_ERROR
-            "canon_apply_executable(): MACOSX_BUNDLE target '${TARGET}' is not supported")
-    endif()
-
-    get_property(_applied TARGET "${TARGET}" PROPERTY _CANON_EXECUTABLE_POLICY_APPLIED)
-    if (_applied)
-        return()
-    endif()
-
-    canon_apply_target("${TARGET}")
-
-    include(GNUInstallDirs)
-    install(
-        TARGETS "${TARGET}"
-        RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
-    )
-    _canon_mark_package_architecture_specific()
-    set_property(TARGET "${TARGET}" PROPERTY _CANON_EXECUTABLE_POLICY_APPLIED TRUE)
-endfunction()
-
-# Installs a managed library and each of its public HEADERS file sets.
-function(_canon_install_library TARGET)
-    get_property(_header_sets TARGET "${TARGET}" PROPERTY INTERFACE_HEADER_SETS)
-
-    get_target_property(_type "${TARGET}" TYPE)
-    if ("${_type}" STREQUAL "INTERFACE_LIBRARY")
-        set(_file_set_arguments)
-        foreach(_header_set IN LISTS _header_sets)
-            list(APPEND _file_set_arguments FILE_SET "${_header_set}")
-        endforeach()
-        install(
-            TARGETS "${TARGET}"
-            EXPORT "${PROJECT_NAME}Targets"
-            ${_file_set_arguments}
-        )
-        return()
-    endif()
-
-    include(GNUInstallDirs)
-    set(_file_set_arguments)
-    foreach(_header_set IN LISTS _header_sets)
-        list(APPEND _file_set_arguments
-            FILE_SET "${_header_set}"
-            DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
-        )
-    endforeach()
-    install(
-        TARGETS "${TARGET}"
-        EXPORT "${PROJECT_NAME}Targets"
-        ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
-        LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
-        RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
-        ${_file_set_arguments}
-    )
-endfunction()
-
-# Returns the library name used by Canon's public package target.
-function(_canon_library_public_name TARGET OUT_NAME)
-    get_target_property(_public_name "${TARGET}" EXPORT_NAME)
-    if ("${_public_name}" STREQUAL "_public_name-NOTFOUND")
-        set(_public_name "${TARGET}")
-    endif()
-    set("${OUT_NAME}" "${_public_name}" PARENT_SCOPE)
-endfunction()
-
 # Generates and publishes one explicit export header for a compiled library.
 function(canon_generate_export_header TARGET HEADER MACRO)
     if (NOT "${ARGC}" EQUAL 3)
@@ -1476,23 +1122,7 @@ function(canon_generate_export_header TARGET HEADER MACRO)
     )
 endfunction()
 
-# Adds the build-tree alias that matches the installed package target name.
-function(_canon_add_build_tree_alias TARGET)
-    _canon_library_public_name("${TARGET}" _public_name)
-    set(_alias "${PROJECT_NAME}::${_public_name}")
-    if (TARGET "${_alias}")
-        get_target_property(_aliased_target "${_alias}" ALIASED_TARGET)
-        if ("${_aliased_target}" STREQUAL "${TARGET}")
-            return()
-        endif()
-        message(FATAL_ERROR
-            "canon_apply_library(): public target '${_alias}' already exists")
-    endif()
-
-    add_library("${_alias}" ALIAS "${TARGET}")
-endfunction()
-
-# Applies Canon's library policy and conventional installation to a library.
+# Applies Canon's public library policy to a library target.
 function(canon_apply_library TARGET)
     if (NOT TARGET "${TARGET}")
         message(FATAL_ERROR "canon_apply_library(): target '${TARGET}' does not exist")
@@ -1507,33 +1137,18 @@ function(canon_apply_library TARGET)
             "canon_apply_library(): target '${TARGET}' must be a STATIC, SHARED, MODULE, or INTERFACE library")
     endif()
 
-    get_target_property(_framework "${TARGET}" FRAMEWORK)
-    if (_framework)
-        message(FATAL_ERROR
-            "canon_apply_library(): FRAMEWORK target '${TARGET}' is not supported")
-    endif()
-
     get_property(_applied TARGET "${TARGET}" PROPERTY _CANON_LIBRARY_POLICY_APPLIED)
     if (_applied)
         return()
     endif()
 
-    _canon_add_build_tree_alias("${TARGET}")
-
     if ("${_type}" STREQUAL "INTERFACE_LIBRARY")
         target_compile_features("${TARGET}" INTERFACE cxx_std_26)
-        _canon_install_library("${TARGET}")
-        _canon_register_package()
-        set_property(TARGET "${TARGET}" PROPERTY _CANON_LIBRARY_POLICY_APPLIED TRUE)
-        return()
+    else()
+        canon_apply_target("${TARGET}")
+        target_compile_features("${TARGET}" PUBLIC cxx_std_26)
     endif()
 
-    _canon_mark_package_architecture_specific()
-    canon_apply_target("${TARGET}")
-    target_compile_features("${TARGET}" PUBLIC cxx_std_26)
-
-    _canon_install_library("${TARGET}")
-    _canon_register_package()
     set_property(TARGET "${TARGET}" PROPERTY _CANON_LIBRARY_POLICY_APPLIED TRUE)
 endfunction()
 
