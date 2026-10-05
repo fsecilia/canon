@@ -621,6 +621,14 @@ _canon_add_configure_failure_test(
 )
 
 _canon_add_configure_failure_test(
+    dependencies.resolve.provider-first
+    dependency/errors/resolve-provider-first
+    "-DCANON_EXPECTED_ERROR=dependency 'fixture-dependency' was already resolved using provider 'provided'"
+    "-DCANON_EXPECTED_DETAIL=missing required targets: DependencyFixture::Support"
+    "-DCANON_EXPECTED_STATUS=finding dependency 'DependencyFixture' - already resolved"
+)
+
+_canon_add_configure_failure_test(
     dependencies.resolve.missing
     dependency/errors/resolve-missing
     "-DCANON_EXPECTED_ERROR=dependency 'CanonMissingDependencyFixture' version '7.3...<8.0' is unavailable"

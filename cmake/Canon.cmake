@@ -925,8 +925,8 @@ function(_canon_collect_buildsystem_targets SOURCE_DIR OUT_TARGETS)
     set("${OUT_TARGETS}" "${_targets}" PARENT_SCOPE)
 endfunction()
 
-# Records the first provider selected for one dependency in this project.
-function(_canon_record_dependency_provider NAME PROVIDER)
+# Gets the provider already selected for one dependency in this project.
+function(_canon_get_dependency_provider NAME OUT_PROVIDER)
     string(HEX "${NAME}" _dependency_key)
     set(_provider_property "_CANON_DEPENDENCY_PROVIDER_${_dependency_key}")
 
@@ -937,12 +937,34 @@ function(_canon_record_dependency_provider NAME PROVIDER)
         SET
     )
     if (_recorded)
+        get_property(
+            _provider
+            DIRECTORY "${PROJECT_SOURCE_DIR}"
+            PROPERTY "${_provider_property}"
+        )
+    else()
+        set(_provider "")
+    endif()
+
+    set(${OUT_PROVIDER} "${_provider}" PARENT_SCOPE)
+endfunction()
+
+# Records the first provider selected for one dependency in this project.
+function(_canon_record_dependency_provider NAME PROVIDER)
+    _canon_get_dependency_provider("${NAME}" _recorded_provider)
+    if (NOT "${_recorded_provider}" STREQUAL "")
+        if (NOT "${_recorded_provider}" STREQUAL "${PROVIDER}")
+            message(FATAL_ERROR
+                "internal error: dependency '${NAME}' provider changed from "
+                "'${_recorded_provider}' to '${PROVIDER}'")
+        endif()
         return()
     endif()
 
+    string(HEX "${NAME}" _dependency_key)
     set_property(
         DIRECTORY "${PROJECT_SOURCE_DIR}"
-        PROPERTY "${_provider_property}" "${PROVIDER}"
+        PROPERTY "_CANON_DEPENDENCY_PROVIDER_${_dependency_key}" "${PROVIDER}"
     )
     if ("${PROVIDER}" STREQUAL "vendored")
         set_property(
@@ -985,6 +1007,25 @@ function(_canon_resolve_dependency)
     endif()
 
     message(CHECK_START "finding dependency '${_dependency_PACKAGE}'")
+
+    _canon_get_dependency_provider("${_dependency_NAME}" _selected_provider)
+    if (NOT "${_selected_provider}" STREQUAL "")
+        _canon_partition_dependency_targets(
+            _present_targets
+            _missing_targets
+            ${_dependency_TARGETS}
+        )
+        if (_missing_targets)
+            string(JOIN ", " _missing_text ${_missing_targets})
+            message(CHECK_FAIL "already resolved")
+            message(FATAL_ERROR
+                "dependency '${_dependency_NAME}' was already resolved using provider "
+                "'${_selected_provider}'; missing required targets: ${_missing_text}")
+        endif()
+
+        message(CHECK_PASS "already resolved using ${_selected_provider} provider")
+        return()
+    endif()
 
     _canon_partition_dependency_targets(
         _present_targets
@@ -1198,28 +1239,16 @@ function(canon_install_dependency EXTERNAL_NAME)
         message(FATAL_ERROR "canon_install_dependency(): TARGETS is required")
     endif()
 
-    string(HEX "${EXTERNAL_NAME}" _dependency_key)
-    set(_provider_property "_CANON_DEPENDENCY_PROVIDER_${_dependency_key}")
-    get_property(
-        _resolved
-        DIRECTORY "${PROJECT_SOURCE_DIR}"
-        PROPERTY "${_provider_property}"
-        SET
-    )
-    if (NOT _resolved)
+    _canon_get_dependency_provider("${EXTERNAL_NAME}" _provider)
+    if ("${_provider}" STREQUAL "")
         message(FATAL_ERROR
             "canon_install_dependency(): dependency '${EXTERNAL_NAME}' has not been resolved")
     endif()
-
-    get_property(
-        _provider
-        DIRECTORY "${PROJECT_SOURCE_DIR}"
-        PROPERTY "${_provider_property}"
-    )
     if (NOT "${_provider}" STREQUAL "vendored")
         return()
     endif()
 
+    string(HEX "${EXTERNAL_NAME}" _dependency_key)
     get_property(
         _vendored_targets
         DIRECTORY "${PROJECT_SOURCE_DIR}"
