@@ -1215,12 +1215,19 @@ function(canon_generate_export_header TARGET HEADER MACRO)
             "canon_generate_export_header(): MACRO '${MACRO}' must be an uppercase C identifier")
     endif()
 
-    include(GenerateExportHeader)
     get_target_property(_target_binary_dir "${TARGET}" BINARY_DIR)
     set(_include_dir "${_target_binary_dir}/generated")
+    cmake_path(NORMAL_PATH _include_dir)
     set(_generated_header "${_include_dir}/${HEADER}")
     cmake_path(NORMAL_PATH _generated_header)
+    cmake_path(IS_PREFIX _include_dir "${_generated_header}" NORMALIZE _inside_include_dir)
+    if(NOT _inside_include_dir OR "${_generated_header}" STREQUAL "${_include_dir}")
+        message(FATAL_ERROR
+            "canon_generate_export_header(): HEADER '${HEADER}' must resolve beneath "
+            "target '${TARGET}' generated directory")
+    endif()
 
+    include(GenerateExportHeader)
     string(SHA256 _macro_key "${MACRO}")
     set(_macro_owner_property "_CANON_EXPORT_MACRO_OWNER_${_macro_key}")
     get_property(_macro_owner GLOBAL PROPERTY "${_macro_owner_property}")

@@ -522,6 +522,12 @@ _canon_add_configure_failure_test(
 )
 
 _canon_add_configure_failure_test(
+    export-header.outside
+    export-header/errors/outside
+    "-DCANON_EXPECTED_ERROR=canon_generate_export_header(): HEADER '../escaped.hpp' must resolve beneath target 'sample' generated directory"
+)
+
+_canon_add_configure_failure_test(
     dependencies.install.empty
     dependency/errors/install-empty
     "-DCANON_EXPECTED_ERROR=canon_install_dependency(): external name must not be empty"
