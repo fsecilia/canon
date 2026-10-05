@@ -467,6 +467,12 @@ if(NOT _canon_clang_tidy_supported)
 endif()
 
 _canon_add_configure_failure_test(
+    targets.arguments
+    target/errors/arguments
+    "-DCANON_EXPECTED_ERROR=canon_apply_target(): expected exactly one target"
+)
+
+_canon_add_configure_failure_test(
     targets.missing
     target/errors/missing
     "-DCANON_EXPECTED_ERROR=target 'missing' does not exist"
@@ -480,6 +486,12 @@ _canon_add_configure_failure_test(
 )
 
 _canon_add_configure_failure_test(
+    libraries.arguments
+    library/errors/arguments
+    "-DCANON_EXPECTED_ERROR=canon_apply_library(): expected exactly one target"
+)
+
+_canon_add_configure_failure_test(
     libraries.missing
     library/errors/missing
     "-DCANON_EXPECTED_ERROR=canon_apply_library(): target 'missing' does not exist"
@@ -489,6 +501,12 @@ _canon_add_configure_failure_test(
     libraries.object
     library/errors/object
     "-DCANON_EXPECTED_ERROR=canon_apply_library(): target 'sample' must be a STATIC, SHARED, MODULE, or INTERFACE library"
+)
+
+_canon_add_configure_failure_test(
+    googletest.arguments
+    googletest/errors/arguments
+    "-DCANON_EXPECTED_ERROR=canon_require_googletest(): does not accept arguments"
 )
 
 _canon_add_configure_failure_test(

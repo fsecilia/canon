@@ -651,6 +651,9 @@ endfunction()
 
 # Applies Canon's private build policy to a target that compiles C++ sources.
 function(canon_apply_target TARGET)
+    if(NOT "${ARGC}" EQUAL 1)
+        message(FATAL_ERROR "canon_apply_target(): expected exactly one target")
+    endif()
     if(NOT TARGET "${TARGET}")
         message(FATAL_ERROR "canon_apply_target(): target '${TARGET}' does not exist")
     endif()
@@ -1074,6 +1077,10 @@ endfunction()
 
 # Makes Canon's GoogleTest policy available lazily to projects that need tests.
 function(canon_require_googletest)
+    if(NOT "${ARGC}" EQUAL 0)
+        message(FATAL_ERROR "canon_require_googletest(): does not accept arguments")
+    endif()
+
     set(BUILD_GMOCK ON)
     set(INSTALL_GTEST OFF)
 
@@ -1147,6 +1154,9 @@ endfunction()
 
 # Applies Canon's public library policy to a library target.
 function(canon_apply_library TARGET)
+    if(NOT "${ARGC}" EQUAL 1)
+        message(FATAL_ERROR "canon_apply_library(): expected exactly one target")
+    endif()
     if(NOT TARGET "${TARGET}")
         message(FATAL_ERROR "canon_apply_library(): target '${TARGET}' does not exist")
     endif()
