@@ -141,6 +141,7 @@ function(_canon_get_clang_warning_policy
     set(_optional_suppressions
         -Wno-c++23-compat
         -Wno-unsafe-buffer-usage-in-libc-call
+        -Wno-lifetime-safety-intra-tu-suggestions
     )
     # Re-enable child groups that broader cemetery entries would otherwise disable.
     set(_reenables
