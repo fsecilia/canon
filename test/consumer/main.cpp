@@ -4,9 +4,9 @@
 /// \copyright Copyright (C) 2026 Frank Secilia
 
 #include "sample.hpp"
-#include "sample_interface/sample.hpp"
 #include "sample_shared.hpp"
 #include "sample_static.hpp"
+#include "sample_interface/sample.hpp"
 
 auto noisy(int unused) -> int;
 
