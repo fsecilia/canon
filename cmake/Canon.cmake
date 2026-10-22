@@ -902,6 +902,7 @@ function(_canon_resolve_dependency)
             "${_dependency_SOURCE_DIR}"
             "${_dependency_BINARY_DIR}"
             EXCLUDE_FROM_ALL
+            SYSTEM
         )
 
         _canon_partition_dependency_targets(
