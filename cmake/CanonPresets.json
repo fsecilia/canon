@@ -48,6 +48,13 @@
       }
     },
     {
+      "name": "canon-rel-with-deb-info",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+      }
+    },
+    {
       "name": "canon-asan",
       "hidden": true,
       "cacheVariables": {
@@ -85,6 +92,14 @@
       "inherits": [
         "canon-gcc",
         "canon-release"
+      ]
+    },
+    {
+      "name": "gcc-rel-with-deb-info",
+      "displayName": "gcc-rel-with-deb-info",
+      "inherits": [
+        "canon-gcc",
+        "canon-rel-with-deb-info"
       ]
     },
     {
@@ -128,6 +143,14 @@
       ]
     },
     {
+      "name": "clang-rel-with-deb-info",
+      "displayName": "clang-rel-with-deb-info",
+      "inherits": [
+        "canon-clang",
+        "canon-rel-with-deb-info"
+      ]
+    },
+    {
       "name": "clang-asan",
       "displayName": "clang-asan",
       "inherits": [
@@ -162,6 +185,10 @@
       "configurePreset": "gcc-release"
     },
     {
+      "name": "gcc-rel-with-deb-info",
+      "configurePreset": "gcc-rel-with-deb-info"
+    },
+    {
       "name": "gcc-asan",
       "configurePreset": "gcc-asan"
     },
@@ -194,6 +221,10 @@
     {
       "name": "clang-release",
       "configurePreset": "clang-release"
+    },
+    {
+      "name": "clang-rel-with-deb-info",
+      "configurePreset": "clang-rel-with-deb-info"
     },
     {
       "name": "clang-asan",
@@ -244,6 +275,11 @@
       "configurePreset": "gcc-release"
     },
     {
+      "name": "gcc-rel-with-deb-info",
+      "inherits": "_canon-test",
+      "configurePreset": "gcc-rel-with-deb-info"
+    },
+    {
       "name": "gcc-asan",
       "inherits": "_canon-test",
       "configurePreset": "gcc-asan"
@@ -267,6 +303,11 @@
       "name": "clang-release",
       "inherits": "_canon-test",
       "configurePreset": "clang-release"
+    },
+    {
+      "name": "clang-rel-with-deb-info",
+      "inherits": "_canon-test",
+      "configurePreset": "clang-rel-with-deb-info"
     },
     {
       "name": "clang-asan",
@@ -316,6 +357,23 @@
         {
           "type": "test",
           "name": "gcc-release"
+        }
+      ]
+    },
+    {
+      "name": "gcc-rel-with-deb-info",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "gcc-rel-with-deb-info"
+        },
+        {
+          "type": "build",
+          "name": "gcc-rel-with-deb-info"
+        },
+        {
+          "type": "test",
+          "name": "gcc-rel-with-deb-info"
         }
       ]
     },
@@ -409,6 +467,23 @@
         {
           "type": "test",
           "name": "clang-release"
+        }
+      ]
+    },
+    {
+      "name": "clang-rel-with-deb-info",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "clang-rel-with-deb-info"
+        },
+        {
+          "type": "build",
+          "name": "clang-rel-with-deb-info"
+        },
+        {
+          "type": "test",
+          "name": "clang-rel-with-deb-info"
         }
       ]
     },
