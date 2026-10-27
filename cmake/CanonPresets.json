@@ -73,7 +73,7 @@
     },
     {
       "name": "gcc-debug",
-      "displayName": "GCC Debug",
+      "displayName": "gcc-debug",
       "inherits": [
         "canon-gcc",
         "canon-debug"
@@ -81,7 +81,7 @@
     },
     {
       "name": "gcc-release",
-      "displayName": "GCC Release",
+      "displayName": "gcc-release",
       "inherits": [
         "canon-gcc",
         "canon-release"
@@ -89,7 +89,7 @@
     },
     {
       "name": "gcc-asan",
-      "displayName": "GCC AddressSanitizer",
+      "displayName": "gcc-asan",
       "inherits": [
         "canon-gcc",
         "canon-asan"
@@ -97,7 +97,7 @@
     },
     {
       "name": "gcc-tidy",
-      "displayName": "GCC clang-tidy",
+      "displayName": "gcc-tidy",
       "inherits": [
         "canon-gcc",
         "canon-tidy"
@@ -105,7 +105,7 @@
     },
     {
       "name": "gcc-coverage",
-      "displayName": "GCC Coverage",
+      "displayName": "gcc-coverage",
       "inherits": [
         "canon-gcc",
         "canon-coverage"
@@ -113,7 +113,7 @@
     },
     {
       "name": "clang-debug",
-      "displayName": "Clang Debug",
+      "displayName": "clang-debug",
       "inherits": [
         "canon-clang",
         "canon-debug"
@@ -121,7 +121,7 @@
     },
     {
       "name": "clang-release",
-      "displayName": "Clang Release",
+      "displayName": "clang-release",
       "inherits": [
         "canon-clang",
         "canon-release"
@@ -129,7 +129,7 @@
     },
     {
       "name": "clang-asan",
-      "displayName": "Clang AddressSanitizer",
+      "displayName": "clang-asan",
       "inherits": [
         "canon-clang",
         "canon-asan"
@@ -137,7 +137,7 @@
     },
     {
       "name": "clang-tidy",
-      "displayName": "Clang clang-tidy",
+      "displayName": "clang-tidy",
       "inherits": [
         "canon-clang",
         "canon-tidy"
@@ -145,7 +145,7 @@
     },
     {
       "name": "clang-coverage",
-      "displayName": "Clang Coverage",
+      "displayName": "clang-coverage",
       "inherits": [
         "canon-clang",
         "canon-coverage"
