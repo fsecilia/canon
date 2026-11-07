@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.31.6)
 
 project(CanonTidyFixture LANGUAGES CXX)
 
-include("${CMAKE_CURRENT_LIST_DIR}/../support/CanonSourceFixture.cmake")
+include("${CANON_SOURCE_DIR}/test/support/CanonFixture.cmake")
 
 if(NOT CANON_ENABLE_TIDY)
     message(FATAL_ERROR "tidy fixture requires CANON_ENABLE_TIDY=ON")

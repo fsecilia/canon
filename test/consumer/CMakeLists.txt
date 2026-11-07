@@ -5,13 +5,7 @@ cmake_minimum_required(VERSION 3.31.6)
 
 project(CanonConsumer LANGUAGES CXX)
 
-if(NOT DEFINED CANON_SOURCE_DIR OR "${CANON_SOURCE_DIR}" STREQUAL "")
-    message(FATAL_ERROR "CANON_SOURCE_DIR is required")
-endif()
-
-if(NOT COMMAND canon_apply_target)
-    include("${CANON_SOURCE_DIR}/cmake/Canon.cmake")
-endif()
+include("${CANON_SOURCE_DIR}/test/support/CanonFixture.cmake")
 
 if(CANON_ENABLE_ASAN)
     message(FATAL_ERROR "consumer fixture expects CANON_ENABLE_ASAN to default to OFF")
@@ -20,7 +14,6 @@ if(CANON_ENABLE_COVERAGE)
     message(FATAL_ERROR "consumer fixture expects CANON_ENABLE_COVERAGE to default to OFF")
 endif()
 
-include("${CANON_SOURCE_DIR}/test/support/CanonFixtureAssertions.cmake")
 add_subdirectory(external/noisy)
 
 add_library(sample_static STATIC sample_static.cpp)
@@ -78,6 +71,14 @@ add_executable(consumer main.cpp)
 target_link_libraries(consumer PRIVATE sample_static sample_shared sample_interface noisy)
 canon_apply_target(consumer)
 
+# Canon libraries publish C++26 to consumers that Canon does not manage.
+add_library(sample_requirements INTERFACE)
+canon_apply_library(sample_requirements)
+add_executable(cxx26_interface_consumer cxx26_consumer.cpp)
+target_link_libraries(cxx26_interface_consumer PRIVATE sample_requirements)
+add_executable(cxx26_compiled_consumer cxx26_consumer.cpp)
+target_link_libraries(cxx26_compiled_consumer PRIVATE sample_static)
+
 # Exercise shared-library visibility through unmanaged consumer links.
 add_executable(visibility_exported EXCLUDE_FROM_ALL visibility_exported.cpp)
 target_link_libraries(visibility_exported PRIVATE sample_shared)
@@ -87,7 +88,7 @@ target_link_libraries(visibility_hidden PRIVATE sample_shared)
 
 # Keep the probes unmanaged while avoiding a module-scanner dependency in the fixture.
 set_target_properties(
-    visibility_exported visibility_hidden
+    cxx26_interface_consumer cxx26_compiled_consumer visibility_exported visibility_hidden
     PROPERTIES CXX_SCAN_FOR_MODULES FALSE
 )
 
@@ -168,20 +169,17 @@ foreach(_target IN LISTS _compiled_targets)
     if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"
         OR ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang"
             AND "${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}" STREQUAL "GNU"))
-        canon_test_require_cxx_compile_option("${_target}" -fstrict-aliasing)
+        canon_test_require_cxx_compile_options("${_target}" -fstrict-aliasing)
     endif()
 
     if(CANON_ENABLE_WARNINGS)
-        foreach(_option IN LISTS _warning_options _warning_suppressions _warning_reenables)
-            canon_test_require_cxx_compile_option("${_target}" "${_option}")
-        endforeach()
-        if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-            canon_test_require_cxx_compile_option_after(
-                "${_target}"
-                -Wshadow-field-in-constructor-modified
-                -Wno-shadow-field-in-constructor
-            )
-        endif()
+        # Order matters: a re-enabled child group must follow the broader suppression that disables it.
+        canon_test_require_cxx_compile_options(
+            "${_target}"
+            ${_warning_options}
+            ${_warning_suppressions}
+            ${_warning_reenables}
+        )
     else()
         get_target_property(_options "${_target}" COMPILE_OPTIONS)
         foreach(_option IN LISTS _options)
@@ -232,8 +230,8 @@ canon_test_require_target_property(sample_interface INTERFACE_COMPILE_FEATURES c
 
 # Verify Canon does not leak build options through the unmanaged interface target.
 foreach(_property IN ITEMS INTERFACE_COMPILE_OPTIONS INTERFACE_LINK_OPTIONS)
-    canon_test_require_target_property_empty(sample_interface "${_property}")
+    canon_test_require_target_property_unset(sample_interface "${_property}" ALLOW_EMPTY)
 endforeach()
 
 # Verify Canon does not modify the unmanaged external target.
-canon_test_require_target_property_empty(noisy COMPILE_OPTIONS)
+canon_test_require_target_property_unset(noisy COMPILE_OPTIONS ALLOW_EMPTY)

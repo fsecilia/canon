@@ -1,78 +1,32 @@
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2026 Frank Secilia
 
+# Proves clang-tidy runs on managed targets with Canon's warning policy and skips headers under external/.
+
 include("${CANON_SOURCE_DIR}/test/support/CanonTest.cmake")
 
-canon_test_require_variables(
-    CANON_SOURCE_DIR
-    CANON_TEST_BINARY_DIR
-    CANON_GENERATOR
-    CANON_CXX_COMPILER
-    CANON_CLANG_TIDY_EXECUTABLE
-)
-
-file(REMOVE_RECURSE "${CANON_TEST_BINARY_DIR}")
-
-canon_test_make_configure_command(
-    _configure_command
-    "${CANON_SOURCE_DIR}/test/tooling"
-    "${CANON_TEST_BINARY_DIR}"
-    "-DCANON_SOURCE_DIR=${CANON_SOURCE_DIR}"
-    -DCMAKE_BUILD_TYPE=Debug
-    -DCANON_ENABLE_WARNINGS=ON
-    -DCANON_ENABLE_TIDY=ON
-    "-DCANON_CLANG_TIDY_EXECUTABLE=${CANON_CLANG_TIDY_EXECUTABLE}"
-)
-
-canon_test_run(
-    DESCRIPTION "tidy configure"
-    COMMAND ${_configure_command}
-)
-
-set(_nested_root "${CANON_TEST_BINARY_DIR}/nested-source")
-set(_nested_source_dir "${_nested_root}/external/tooling")
-set(_nested_binary_dir "${CANON_TEST_BINARY_DIR}/nested-build")
-file(MAKE_DIRECTORY "${_nested_root}/external")
-file(COPY "${CANON_SOURCE_DIR}/test/tooling/" DESTINATION "${_nested_source_dir}")
-file(COPY "${CANON_SOURCE_DIR}/test/support" DESTINATION "${_nested_root}/external")
-configure_file(
-    "${CANON_SOURCE_DIR}/.clang-tidy"
-    "${_nested_source_dir}/.clang-tidy"
-    COPYONLY
-)
-
-canon_test_make_configure_command(
-    _nested_configure_command
-    "${_nested_source_dir}"
-    "${_nested_binary_dir}"
-    "-DCANON_SOURCE_DIR=${CANON_SOURCE_DIR}"
-    -DCMAKE_BUILD_TYPE=Debug
-    -DCANON_ENABLE_WARNINGS=ON
-    -DCANON_ENABLE_TIDY=ON
-    "-DCANON_CLANG_TIDY_EXECUTABLE=${CANON_CLANG_TIDY_EXECUTABLE}"
-)
-
-canon_test_run(
-    DESCRIPTION "tidy configure beneath ancestor external directory"
-    COMMAND ${_nested_configure_command}
-)
-canon_test_run(
-    DESCRIPTION "project header beneath ancestor external directory"
+set(_build "${CANON_TEST_BINARY_DIR}/build")
+canon_test_configure(SOURCE "${CANON_SOURCE_DIR}/test/tooling" BINARY "${_build}")
+canon_test_build(BINARY "${_build}" DESCRIPTION "tidy build with an external header")
+canon_test_build(BINARY "${_build}" TARGET tidy_warning_policy)
+canon_test_build(
+    BINARY "${_build}"
+    TARGET tidy_probe
+    DESCRIPTION "tidy rejects a managed naming violation"
     EXPECT_FAILURE
-    COMMAND "${CMAKE_COMMAND}" --build "${_nested_binary_dir}" --config "${CANON_TEST_CONFIG}" --target tidy_header_probe
     EXPECTED_OUTPUT readability-identifier-naming
 )
-canon_test_run(
-    DESCRIPTION "tidy build with managed external header"
-    COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}" --config "${CANON_TEST_CONFIG}"
-)
-canon_test_run(
-    DESCRIPTION "tidy build with Canon warning policy"
-    COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}" --config "${CANON_TEST_CONFIG}" --target tidy_warning_policy
-)
-canon_test_run(
-    DESCRIPTION "deliberately invalid managed tidy target"
+
+# Only the project's own external/ is excluded, so its headers are still checked beneath an ancestor's external/.
+set(_nested_source "${CANON_TEST_BINARY_DIR}/nested-source/external/tooling")
+set(_nested_build "${CANON_TEST_BINARY_DIR}/nested-build")
+file(COPY "${CANON_SOURCE_DIR}/test/tooling/" DESTINATION "${_nested_source}")
+file(COPY "${CANON_SOURCE_DIR}/.clang-tidy" DESTINATION "${_nested_source}")
+canon_test_configure(SOURCE "${_nested_source}" BINARY "${_nested_build}")
+canon_test_build(
+    BINARY "${_nested_build}"
+    TARGET tidy_header_probe
+    DESCRIPTION "tidy checks a project header beneath an ancestor external/ directory"
     EXPECT_FAILURE
-    COMMAND "${CMAKE_COMMAND}" --build "${CANON_TEST_BINARY_DIR}" --config "${CANON_TEST_CONFIG}" --target tidy_probe
     EXPECTED_OUTPUT readability-identifier-naming
 )

@@ -25,3 +25,16 @@ endforeach()
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/installed-marker.txt" "Canon GoogleTest vendored fixture\n")
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/installed-marker.txt" DESTINATION share/canon-gtest-fixture)
+
+# Canon's vendored GoogleTest is a build-only dependency and must not leak into the consumer's installation.
+include("${CANON_SOURCE_DIR}/test/support/CanonFixture.cmake")
+include(GNUInstallDirs)
+canon_fixture_expect_installed(
+    PRESENT share/canon-gtest-fixture/installed-marker.txt
+    ABSENT
+        "${CMAKE_INSTALL_INCLUDEDIR}/gtest"
+        "${CMAKE_INSTALL_INCLUDEDIR}/gmock"
+        "${CMAKE_INSTALL_LIBDIR}/cmake/GTest"
+        "${CMAKE_INSTALL_LIBDIR}/$<TARGET_FILE_NAME:gtest>"
+        "${CMAKE_INSTALL_LIBDIR}/$<TARGET_FILE_NAME:gmock>"
+)

@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.31.6)
 
 project(CanonDocumentationNoMainPageFixture LANGUAGES NONE)
 
-include("${CMAKE_CURRENT_LIST_DIR}/../../support/CanonSourceFixture.cmake")
+include("${CANON_SOURCE_DIR}/test/support/CanonFixture.cmake")
 
 set(DOXYGEN_USE_MDFILE_AS_MAINPAGE "")
 canon_add_documentation(public.hpp)

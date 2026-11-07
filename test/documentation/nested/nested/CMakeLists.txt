@@ -3,5 +3,5 @@
 
 project(CanonDocumentationNestedFixture LANGUAGES NONE)
 
-include("${CMAKE_CURRENT_LIST_DIR}/../../../support/CanonSourceFixture.cmake")
+include("${CANON_SOURCE_DIR}/test/support/CanonFixture.cmake")
 canon_add_documentation(nested.hpp)

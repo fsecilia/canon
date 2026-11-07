@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.31.6)
 
 project(CanonApplicationFixture VERSION 0.1.0 LANGUAGES CXX)
 
-include("${CANON_SOURCE_DIR}/test/support/CanonSourceFixture.cmake")
+include("${CANON_SOURCE_DIR}/test/support/CanonFixture.cmake")
 include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)
 
@@ -90,9 +90,10 @@ install(
     DESTINATION "${CMAKE_INSTALL_DATADIR}/cmake/CanonApplicationFixture"
 )
 
-file(
-    GENERATE
-    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/install-data.txt"
-    CONTENT
-        "${CMAKE_INSTALL_BINDIR}\n${CMAKE_INSTALL_LIBDIR}\n${CMAKE_INSTALL_DATADIR}\n$<TARGET_FILE_NAME:engine>\n$<TARGET_FILE_NAME:fixture_runtime_shared>\n"
+canon_fixture_expect_installed(
+    PRESENT_TARGETS engine fixture_runtime_shared
+    PRESENT
+        "${CMAKE_INSTALL_DATADIR}/cmake/CanonApplicationFixture/CanonApplicationFixtureConfig.cmake"
+        "${CMAKE_INSTALL_DATADIR}/cmake/CanonApplicationFixture/CanonApplicationFixtureConfigVersion.cmake"
+        "${CMAKE_INSTALL_DATADIR}/cmake/CanonApplicationFixture/CanonApplicationFixtureTargets.cmake"
 )

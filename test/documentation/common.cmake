@@ -5,35 +5,17 @@ include_guard(GLOBAL)
 
 include("${CANON_SOURCE_DIR}/test/support/CanonTest.cmake")
 
-canon_test_require_variables(
-    CANON_SOURCE_DIR
-    CANON_TEST_BINARY_DIR
-    CANON_GENERATOR
-    CANON_CXX_COMPILER
-    CANON_DOXYGEN_EXECUTABLE
-)
+# Copies the documentation project into this test's tree, so Canon's source-relative exclusions see a fresh layout.
+function(_canon_copy_documentation_project OUT_SOURCE)
+    set(_source "${CANON_TEST_BINARY_DIR}/source")
+    file(COPY "${CANON_SOURCE_DIR}/test/documentation/project/" DESTINATION "${_source}")
+    set(${OUT_SOURCE} "${_source}" PARENT_SCOPE)
+endfunction()
 
-function(_canon_configure_documentation OUT_SOURCE_DIR OUT_BINARY_DIR DESCRIPTION)
-    file(REMOVE_RECURSE "${CANON_TEST_BINARY_DIR}")
-    set(_source_dir "${CANON_TEST_BINARY_DIR}/source")
-    set(_binary_dir "${_source_dir}/out")
-    file(COPY "${CANON_SOURCE_DIR}/test/documentation/project/" DESTINATION "${_source_dir}")
-
-    canon_test_make_configure_command(
-        _configure_command
-        "${_source_dir}"
-        "${_binary_dir}"
-        "-DCANON_SOURCE_DIR=${CANON_SOURCE_DIR}"
-        -DCMAKE_BUILD_TYPE=Debug
-        "-DDOXYGEN_EXECUTABLE=${CANON_DOXYGEN_EXECUTABLE}"
-        ${ARGN}
-    )
-
-    canon_test_run(
-        DESCRIPTION "${DESCRIPTION}"
-        COMMAND ${_configure_command}
-    )
-
-    set(${OUT_SOURCE_DIR} "${_source_dir}" PARENT_SCOPE)
-    set(${OUT_BINARY_DIR} "${_binary_dir}" PARENT_SCOPE)
+# Reads generated HTML. OUT_SYMBOLS omits source listings, whose text includes every symbol.
+function(_canon_read_documentation BINARY OUT_ALL OUT_SYMBOLS)
+    canon_test_read_files(_all "${BINARY}/doxygen/html" "*.html")
+    canon_test_read_files(_symbols "${BINARY}/doxygen/html" "*.html" EXCLUDE_REGEX "_source\\.html$")
+    set(${OUT_ALL} "${_all}" PARENT_SCOPE)
+    set(${OUT_SYMBOLS} "${_symbols}" PARENT_SCOPE)
 endfunction()

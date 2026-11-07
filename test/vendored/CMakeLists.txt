@@ -19,7 +19,7 @@ add_subdirectory("${CANON_SOURCE_DIR}" canon EXCLUDE_FROM_ALL)
 if(NOT COMMAND canon_apply_target)
     message(FATAL_ERROR "Vendored Canon did not provide canon_apply_target()")
 endif()
-if(COMMAND _canon_add_script_test)
+if(COMMAND _canon_add_test)
     message(FATAL_ERROR "Vendored Canon exposed its private integration-test helper")
 endif()
 if(DEFINED BUILD_TESTING)
@@ -33,3 +33,14 @@ add_library(vendored_sample STATIC sample.cpp)
 canon_apply_target(vendored_sample)
 
 install(FILES sample.cpp DESTINATION share/canon-vendored-consumer)
+
+# A vendored Canon must not install its own package files into the consumer's installation.
+include("${CANON_SOURCE_DIR}/test/support/CanonFixture.cmake")
+canon_fixture_expect_installed(
+    PRESENT share/canon-vendored-consumer/sample.cpp
+    ABSENT
+        share/cmake/Canon/Canon.cmake
+        share/cmake/Canon/CanonConfig.cmake
+        share/cmake/Canon/CanonConfigVersion.cmake
+        share/cmake/Canon/CanonCoverageClean.cmake
+)

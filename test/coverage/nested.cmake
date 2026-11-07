@@ -1,76 +1,39 @@
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2026 Frank Secilia
 
+# Proves report exclusions respect every Canon project in the build, not only the top-level one.
+
 include("${CANON_SOURCE_DIR}/test/support/CanonTest.cmake")
 
-canon_test_require_variables(CANON_SOURCE_DIR)
+# Runs the coverage lifecycle for one layout and checks which sources the report names.
+function(_check_layout NAME FIXTURE)
+    cmake_parse_arguments(PARSE_ARGV 2 _layout "" "" "ARGS;REPORTED;EXCLUDED")
+    set(_build "${CANON_TEST_BINARY_DIR}/${NAME}")
+    canon_test_configure(SOURCE "${CANON_SOURCE_DIR}/test/coverage/${FIXTURE}" BINARY "${_build}" ARGS ${_layout_ARGS})
+    canon_test_build(BINARY "${_build}")
+    canon_test_ctest(BINARY "${_build}")
+    canon_test_build(BINARY "${_build}" TARGET coverage-report)
 
-canon_test_require_variables(
-    CANON_TEST_BINARY_DIR
-    CANON_GENERATOR
-    CANON_CXX_COMPILER
-    CANON_GCOVR_EXECUTABLE
-)
-
-function(_canon_test_nested_coverage ORDER CHILD_FIRST)
-    set(_binary_dir "${CANON_TEST_BINARY_DIR}/${ORDER}")
-    file(REMOVE_RECURSE "${_binary_dir}")
-    canon_test_make_configure_command(
-        _configure_command
-        "${CANON_SOURCE_DIR}/test/coverage/nested"
-        "${_binary_dir}"
-        "-DCANON_SOURCE_DIR=${CANON_SOURCE_DIR}"
-        -DCMAKE_BUILD_TYPE=Debug
-        -DCANON_ENABLE_COVERAGE=ON
-        "-DCANON_TEST_COVERAGE_CHILD_FIRST=${CHILD_FIRST}"
-        "-DCANON_GCOVR_EXECUTABLE=${CANON_GCOVR_EXECUTABLE}"
-    )
-    if(DEFINED CANON_GCOV_EXECUTABLE AND NOT "${CANON_GCOV_EXECUTABLE}" STREQUAL "")
-        list(APPEND _configure_command "-DCANON_GCOV_EXECUTABLE=${CANON_GCOV_EXECUTABLE}")
-    endif()
-    if(DEFINED CANON_LLVM_COV_EXECUTABLE AND NOT "${CANON_LLVM_COV_EXECUTABLE}" STREQUAL "")
-        list(APPEND _configure_command "-DCANON_LLVM_COV_EXECUTABLE=${CANON_LLVM_COV_EXECUTABLE}")
-    endif()
-
-    canon_test_run(
-        DESCRIPTION "nested coverage ${ORDER} configure"
-        COMMAND ${_configure_command}
-    )
-    canon_test_run(
-        DESCRIPTION "nested coverage ${ORDER} build"
-        COMMAND "${CMAKE_COMMAND}" --build "${_binary_dir}" --config "${CANON_TEST_CONFIG}"
-    )
-    canon_test_run(
-        DESCRIPTION "nested coverage ${ORDER} tests"
-        COMMAND "${CMAKE_CTEST_COMMAND}" --test-dir "${_binary_dir}" --build-config "${CANON_TEST_CONFIG}" --output-on-failure
-    )
-    canon_test_run(
-        DESCRIPTION "nested coverage ${ORDER} report"
-        COMMAND "${CMAKE_COMMAND}" --build "${_binary_dir}" --config "${CANON_TEST_CONFIG}" --target coverage-report
-    )
-
-    set(_index "${_binary_dir}/coverage/index.html")
-    if(NOT EXISTS "${_index}")
-        message(FATAL_ERROR "nested coverage-report did not generate ${_index}")
-    endif()
-    file(READ "${_index}" _html)
-    if(NOT "${_html}" MATCHES "root_covered\\.cpp")
-        message(FATAL_ERROR
-            "coverage report suppressed root project source for ${ORDER}")
-    endif()
-    if(NOT "${_html}" MATCHES "covered\\.cpp")
-        message(FATAL_ERROR
-            "coverage report suppressed managed child source beneath root external for ${ORDER}")
-    endif()
-    if("${_html}" MATCHES "root_excluded\\.cpp")
-        message(FATAL_ERROR
-            "coverage report unexpectedly contains root external source for ${ORDER}")
-    endif()
-    if("${_html}" MATCHES "excluded\\.cpp")
-        message(FATAL_ERROR
-            "coverage report unexpectedly contains child external source for ${ORDER}")
-    endif()
+    canon_test_read_files(_report "${_build}/coverage" index.html)
+    foreach(_source IN LISTS _layout_REPORTED)
+        canon_test_require_matches("${_report}" "${NAME} coverage report" "[\">/]${_source}\\.cpp")
+    endforeach()
+    foreach(_source IN LISTS _layout_EXCLUDED)
+        canon_test_forbid_matches("${_report}" "${NAME} coverage report" "[\">/]${_source}\\.cpp")
+    endforeach()
 endfunction()
 
-_canon_test_nested_coverage(root-first OFF)
-_canon_test_nested_coverage(child-first ON)
+_check_layout(root-first nested
+    ARGS -DCANON_TEST_COVERAGE_CHILD_FIRST=OFF
+    REPORTED root child
+    EXCLUDED root_vendor child_vendor
+)
+_check_layout(child-first nested
+    ARGS -DCANON_TEST_COVERAGE_CHILD_FIRST=ON
+    REPORTED root child
+    EXCLUDED root_vendor child_vendor
+)
+_check_layout(owner owner
+    REPORTED root owned
+    EXCLUDED owned_vendor
+)

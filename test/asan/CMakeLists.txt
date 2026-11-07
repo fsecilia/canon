@@ -5,14 +5,13 @@ cmake_minimum_required(VERSION 3.31.6)
 
 project(CanonAsanFixture LANGUAGES CXX)
 
-include("${CMAKE_CURRENT_LIST_DIR}/../support/CanonSourceFixture.cmake")
+include("${CANON_SOURCE_DIR}/test/support/CanonFixture.cmake")
 
 if(NOT CANON_ENABLE_ASAN)
     message(FATAL_ERROR "ASan fixture requires CANON_ENABLE_ASAN=ON")
 endif()
 
 include(CTest)
-include("${CANON_SOURCE_DIR}/test/support/CanonFixtureAssertions.cmake")
 
 add_library(asan_static STATIC asan_static.cpp)
 add_library(asan_shared SHARED asan_shared.cpp)
@@ -84,8 +83,7 @@ install(
 
 # Verify the compile policy reaches each managed target involved in the fixture.
 foreach(_target IN ITEMS asan_static asan_shared asan_object asan_app asan_test asan_probe)
-    canon_test_require_cxx_compile_option("${_target}" -fsanitize=address)
-    canon_test_require_cxx_compile_option("${_target}" -fno-omit-frame-pointer)
+    canon_test_require_cxx_compile_options("${_target}" -fsanitize=address -fno-omit-frame-pointer)
 endforeach()
 
 # Verify each managed target publishes the sanitizer runtime where its consumers need it.

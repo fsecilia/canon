@@ -1,67 +1,31 @@
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2026 Frank Secilia
 
+# Proves documentation installs only as an explicit component, and only after it has been generated.
+
 include("${CANON_SOURCE_DIR}/test/documentation/common.cmake")
 
-set(_documentation_dir manual)
-_canon_configure_documentation(
-    _source_dir
-    _binary_dir
-    "documentation install configure"
-    "-DCMAKE_INSTALL_DOCDIR=${_documentation_dir}"
-)
+_canon_copy_documentation_project(_source)
+set(_build "${CANON_TEST_BINARY_DIR}/build")
+set(_ordinary_prefix "${CANON_TEST_BINARY_DIR}/ordinary")
+set(_component_prefix "${CANON_TEST_BINARY_DIR}/component")
+canon_test_configure(SOURCE "${_source}" BINARY "${_build}" ARGS -DCMAKE_INSTALL_DOCDIR=manual)
+canon_test_build(BINARY "${_build}")
 
-set(_ordinary_prefix "${CANON_TEST_BINARY_DIR}/ordinary-prefix")
-set(_generated_prefix "${CANON_TEST_BINARY_DIR}/generated-prefix")
-
-canon_test_run(
-    DESCRIPTION "documentation-install fixture build"
-    COMMAND "${CMAKE_COMMAND}" --build "${_binary_dir}" --config "${CANON_TEST_CONFIG}"
-)
-canon_test_run(
-    DESCRIPTION "ordinary install before documentation generation"
-    COMMAND "${CMAKE_COMMAND}" --install "${_binary_dir}" --config "${CANON_TEST_CONFIG}" --prefix "${_ordinary_prefix}"
-)
-if(EXISTS "${_ordinary_prefix}/${_documentation_dir}")
-    message(FATAL_ERROR "Ordinary install unexpectedly installed documentation")
-endif()
-
-canon_test_run(
-    DESCRIPTION "documentation component install before generation"
+canon_test_install(BINARY "${_build}" PREFIX "${_ordinary_prefix}" DESCRIPTION "ordinary install before doc")
+canon_test_forbid_paths("${_ordinary_prefix}/manual")
+canon_test_install(
+    BINARY "${_build}"
+    PREFIX "${_component_prefix}"
+    COMPONENT Documentation
+    DESCRIPTION "documentation component before doc"
     EXPECT_FAILURE
-    COMMAND
-        "${CMAKE_COMMAND}"
-        --install "${_binary_dir}"
-        --config "${CANON_TEST_CONFIG}"
-        --prefix "${_generated_prefix}"
-        --component Documentation
     EXPECTED_OUTPUT doxygen/html
 )
-canon_test_run(
-    DESCRIPTION "documentation build"
-    COMMAND "${CMAKE_COMMAND}" --build "${_binary_dir}" --config "${CANON_TEST_CONFIG}" --target doc
-)
 
+canon_test_build(BINARY "${_build}" TARGET doc)
 file(REMOVE_RECURSE "${_ordinary_prefix}")
-canon_test_run(
-    DESCRIPTION "ordinary install after documentation generation"
-    COMMAND "${CMAKE_COMMAND}" --install "${_binary_dir}" --config "${CANON_TEST_CONFIG}" --prefix "${_ordinary_prefix}"
-)
-if(EXISTS "${_ordinary_prefix}/${_documentation_dir}")
-    message(FATAL_ERROR "Ordinary install unexpectedly installed generated documentation")
-endif()
-
-canon_test_run(
-    DESCRIPTION "generated documentation component install"
-    COMMAND
-        "${CMAKE_COMMAND}"
-        --install "${_binary_dir}"
-        --config "${CANON_TEST_CONFIG}"
-        --prefix "${_generated_prefix}"
-        --component Documentation
-)
-
-set(_installed_index "${_generated_prefix}/${_documentation_dir}/index.html")
-if(NOT EXISTS "${_installed_index}")
-    message(FATAL_ERROR "Documentation component did not install '${_installed_index}'")
-endif()
+canon_test_install(BINARY "${_build}" PREFIX "${_ordinary_prefix}" DESCRIPTION "ordinary install after doc")
+canon_test_forbid_paths("${_ordinary_prefix}/manual")
+canon_test_install(BINARY "${_build}" PREFIX "${_component_prefix}" COMPONENT Documentation)
+canon_test_require_paths("${_component_prefix}/manual/index.html")

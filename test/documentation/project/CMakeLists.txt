@@ -5,11 +5,7 @@ cmake_minimum_required(VERSION 3.31.6)
 
 project(CanonDocumentationFixture LANGUAGES CXX)
 
-if(NOT DEFINED CANON_SOURCE_DIR OR "${CANON_SOURCE_DIR}" STREQUAL "")
-    message(FATAL_ERROR "CANON_SOURCE_DIR is required")
-endif()
-
-include("${CANON_SOURCE_DIR}/cmake/Canon.cmake")
+include("${CANON_SOURCE_DIR}/test/support/CanonFixture.cmake")
 
 add_library(documented STATIC documented.cpp documented.hpp)
 canon_apply_library(documented)

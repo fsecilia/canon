@@ -37,3 +37,12 @@ endif()
 
 add_library(installed_sample STATIC sample.cpp)
 canon_apply_target(installed_sample)
+
+if(CANON_TEST_REQUIRE_GOOGLETEST)
+    canon_require_googletest()
+    foreach(_target IN ITEMS GTest::gmock_main GTest::gtest_main)
+        if(NOT TARGET "${_target}")
+            message(FATAL_ERROR "Installed Canon did not provide '${_target}'")
+        endif()
+    endforeach()
+endif()

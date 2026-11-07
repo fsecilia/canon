@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.31.6)
 
 project(CanonDocumentationWarningFixture LANGUAGES NONE)
 
-include("${CMAKE_CURRENT_LIST_DIR}/../../support/CanonSourceFixture.cmake")
+include("${CANON_SOURCE_DIR}/test/support/CanonFixture.cmake")
 
 set(DOXYGEN_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/caller-output")
 set(DOXYGEN_HTML_OUTPUT caller-html)

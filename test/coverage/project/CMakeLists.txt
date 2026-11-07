@@ -5,18 +5,13 @@ cmake_minimum_required(VERSION 3.31.6)
 
 project(CanonCoverageFixture LANGUAGES CXX)
 
-if(NOT DEFINED CANON_SOURCE_DIR OR "${CANON_SOURCE_DIR}" STREQUAL "")
-    message(FATAL_ERROR "CANON_SOURCE_DIR is required")
-endif()
-
-include("${CANON_SOURCE_DIR}/cmake/Canon.cmake")
+include("${CANON_SOURCE_DIR}/test/support/CanonFixture.cmake")
 
 if(NOT CANON_ENABLE_COVERAGE)
     message(FATAL_ERROR "coverage fixture requires CANON_ENABLE_COVERAGE=ON")
 endif()
 
 include(CTest)
-include("${CANON_SOURCE_DIR}/test/support/CanonFixtureAssertions.cmake")
 
 add_library(covered STATIC covered.cpp external/excluded.cpp)
 add_library(covered_object OBJECT covered.cpp)
@@ -69,7 +64,7 @@ install(
 
 # Verify compile instrumentation on every managed target in the fixture.
 foreach(_target IN ITEMS covered covered_object covered_test)
-    canon_test_require_cxx_compile_option("${_target}" "--coverage")
+    canon_test_require_cxx_compile_options("${_target}" --coverage)
 endforeach()
 
 # Static- and object-library consumers must inherit the coverage runtime without compile instrumentation.

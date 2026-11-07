@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.31.6)
 
 project(CanonDocumentationPolicyFixture LANGUAGES NONE)
 
-include("${CMAKE_CURRENT_LIST_DIR}/../../support/CanonSourceFixture.cmake")
+include("${CANON_SOURCE_DIR}/test/support/CanonFixture.cmake")
 
 set(DOXYGEN_EXCLUDE
     "${PROJECT_SOURCE_DIR}/caller-excluded"

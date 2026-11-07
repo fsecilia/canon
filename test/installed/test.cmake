@@ -1,75 +1,55 @@
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2026 Frank Secilia
 
+# Installs Canon, then consumes the installed package the way downstream projects do.
+
 include("${CANON_SOURCE_DIR}/test/support/CanonTest.cmake")
 
-canon_test_require_variables(
-    CANON_SOURCE_DIR
-    CANON_TEST_BINARY_DIR
-    CANON_GENERATOR
-    CANON_CXX_COMPILER
-    CANON_EXPECTED_VERSION
-)
+canon_test_require_variables(CANON_EXPECTED_VERSION CANON_GTEST_PACKAGE_DIR)
 
-file(REMOVE_RECURSE "${CANON_TEST_BINARY_DIR}")
-set(_canon_build_dir "${CANON_TEST_BINARY_DIR}/canon-build")
-set(_consumer_build_dir "${CANON_TEST_BINARY_DIR}/consumer-build")
-set(_install_prefix "${CANON_TEST_BINARY_DIR}/install")
+set(_canon_build "${CANON_TEST_BINARY_DIR}/canon-build")
+set(_prefix "${CANON_TEST_BINARY_DIR}/install")
 set(_data_dir artifact-data)
-set(_canon_package_dir "${_install_prefix}/${_data_dir}/cmake/Canon")
+set(_package_dir "${_prefix}/${_data_dir}/cmake/Canon")
 
-canon_test_make_configure_command(
-    _staging_configure_command
-    "${CANON_SOURCE_DIR}"
-    "${_canon_build_dir}"
-    -DBUILD_TESTING=OFF
-    "-DCMAKE_INSTALL_DATADIR=${_data_dir}"
+canon_test_configure(
+    SOURCE "${CANON_SOURCE_DIR}"
+    BINARY "${_canon_build}"
+    ARGS -DBUILD_TESTING=OFF "-DCMAKE_INSTALL_DATADIR=${_data_dir}"
 )
-canon_test_run(
-    DESCRIPTION "Canon staging configure"
-    COMMAND ${_staging_configure_command}
+canon_test_install(BINARY "${_canon_build}" PREFIX "${_prefix}")
+foreach(_file IN ITEMS Canon.cmake CanonConfig.cmake CanonConfigVersion.cmake CanonCoverageClean.cmake
+    CanonCoverageVerify.cmake
 )
-canon_test_run(
-    DESCRIPTION "Canon staging install"
-    COMMAND "${CMAKE_COMMAND}" --install "${_canon_build_dir}" --config "${CANON_TEST_CONFIG}" --prefix "${_install_prefix}"
-)
-
-set(_coverage_clean_script "${_canon_package_dir}/CanonCoverageClean.cmake")
-if(NOT EXISTS "${_coverage_clean_script}")
-    message(FATAL_ERROR "Canon install did not include '${_coverage_clean_script}'")
-endif()
+    canon_test_require_paths("${_package_dir}/${_file}")
+endforeach()
+# Canon does not install GoogleTest with itself.
+canon_test_forbid_paths("${_prefix}/include/gtest" "${_prefix}/include/gmock" "${_prefix}/lib/cmake/GTest")
 
 set(_minimum_version_probe "${CANON_TEST_BINARY_DIR}/minimum-version.cmake")
-file(WRITE "${_minimum_version_probe}" [=[
-set(CMAKE_VERSION 3.30.0)
-include("${CANON_CONFIG_FILE}")
-]=])
+file(WRITE "${_minimum_version_probe}" "set(CMAKE_VERSION 3.30.0)\ninclude(\"${_package_dir}/CanonConfig.cmake\")\n")
 canon_test_run(
-    DESCRIPTION "Installed Canon CMake minimum"
+    DESCRIPTION "installed Canon rejects an older CMake"
     EXPECT_FAILURE
-    COMMAND
-        "${CMAKE_COMMAND}"
-        "-DCANON_CONFIG_FILE=${_canon_package_dir}/CanonConfig.cmake"
-        -P "${_minimum_version_probe}"
+    COMMAND "${CMAKE_COMMAND}" -P "${_minimum_version_probe}"
     EXPECTED_OUTPUT "Canon requires CMake 3.31.6 or newer; found 3.30.0"
 )
 
-canon_test_make_configure_command(
-    _consumer_configure_command
-    "${CANON_SOURCE_DIR}/test/installed"
-    "${_consumer_build_dir}"
+set(_consumer_arguments
     "-DCANON_EXPECTED_VERSION=${CANON_EXPECTED_VERSION}"
-    "-DCANON_EXPECTED_DIR=${_canon_package_dir}"
-    "-DCanon_DIR=${_canon_package_dir}"
-    "-DCMAKE_PREFIX_PATH=${_install_prefix}"
-    -DCMAKE_BUILD_TYPE=Debug
+    "-DCANON_EXPECTED_DIR=${_package_dir}"
+    "-DCanon_DIR=${_package_dir}"
 )
+set(_consumer "${CANON_TEST_BINARY_DIR}/consumer")
+canon_test_configure(SOURCE "${CANON_SOURCE_DIR}/test/installed" BINARY "${_consumer}" ARGS ${_consumer_arguments})
+canon_test_build(BINARY "${_consumer}")
 
-canon_test_run(
-    DESCRIPTION "Installed Canon consumer configure"
-    COMMAND ${_consumer_configure_command}
-)
-canon_test_run(
-    DESCRIPTION "Installed Canon consumer build"
-    COMMAND "${CMAKE_COMMAND}" --build "${_consumer_build_dir}" --config "${CANON_TEST_CONFIG}"
+# Without its source checkout, installed Canon falls back to an installed GoogleTest package.
+set(_googletest_consumer "${CANON_TEST_BINARY_DIR}/googletest-consumer")
+canon_test_configure(
+    SOURCE "${CANON_SOURCE_DIR}/test/installed"
+    BINARY "${_googletest_consumer}"
+    DESCRIPTION "installed Canon finds an installed GoogleTest"
+    ARGS ${_consumer_arguments} -DCANON_TEST_REQUIRE_GOOGLETEST=ON "-DGTest_DIR=${CANON_GTEST_PACKAGE_DIR}"
+    EXPECTED_OUTPUT "finding dependency 'GTest' - using installed package 'GTest'"
 )
