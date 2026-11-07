@@ -47,7 +47,6 @@ function(canon_test_run)
     endif()
     canon_test_require_variables(_test_DESCRIPTION _test_COMMAND)
 
-    message(STATUS "${_test_DESCRIPTION}")
     execute_process(
         COMMAND ${_test_COMMAND}
         RESULT_VARIABLE _result
