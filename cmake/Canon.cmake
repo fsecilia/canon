@@ -50,6 +50,42 @@ function(_canon_apply_cxx_option TARGET OPTION)
     target_compile_options("${TARGET}" PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${OPTION}>")
 endfunction()
 
+# Reports GNU or Clang when Canon has compiler-specific policy for the active C++ compiler, and otherwise "".
+#
+# Clang counts only with its GNU-compatible frontend; clang-cl takes MSVC-style options.
+function(_canon_get_compiler_family OUT_FAMILY)
+    set(_family "")
+    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+        set(_family GNU)
+    elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" AND "${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}" STREQUAL "GNU")
+        set(_family Clang)
+    endif()
+    set(${OUT_FAMILY} "${_family}" PARENT_SCOPE)
+endfunction()
+
+# Fails when Canon has no compiler-specific implementation of FEATURE for the active C++ compiler.
+function(_canon_require_compiler_family FEATURE OUT_FAMILY)
+    _canon_get_compiler_family(_family)
+    if("${_family}" STREQUAL "")
+        message(FATAL_ERROR
+            "Canon ${FEATURE} is not supported for compiler '${CMAKE_CXX_COMPILER_ID}' "
+            "with frontend '${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}'")
+    endif()
+    set(${OUT_FAMILY} "${_family}" PARENT_SCOPE)
+endfunction()
+
+# Fails unless TARGET exists and has one of the listed TYPES. FUNCTION and REQUIREMENT phrase the diagnostic.
+function(_canon_require_target_type FUNCTION TARGET REQUIREMENT)
+    if(NOT TARGET "${TARGET}")
+        message(FATAL_ERROR "${FUNCTION}(): target '${TARGET}' does not exist")
+    endif()
+    get_target_property(_type "${TARGET}" TYPE)
+    if(NOT "${_type}" IN_LIST ARGN)
+        string(REPLACE "<type>" "${_type}" _requirement "${REQUIREMENT}")
+        message(FATAL_ERROR "${FUNCTION}(): target '${TARGET}' ${_requirement}")
+    endif()
+endfunction()
+
 # Escapes one literal value for use inside a regular expression.
 function(_canon_regex_escape_literal VALUE OUT_VALUE)
     string(REGEX REPLACE "([][+.*()^$?|\\\\])" "\\\\\\1" _escaped "${VALUE}")
@@ -113,25 +149,16 @@ endfunction()
 
 # Applies compiler-specific build options when Canon has policy for the active toolchain.
 function(_canon_apply_compiler_policy TARGET)
-    set(_build_options)
-    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-        list(APPEND _build_options -fstrict-aliasing)
-    elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang"
-        AND "${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}" STREQUAL "GNU")
-        list(APPEND _build_options -fstrict-aliasing)
+    _canon_get_compiler_family(_family)
+    if(NOT "${_family}" STREQUAL "")
+        _canon_apply_cxx_option("${TARGET}" -fstrict-aliasing)
     endif()
-
-    foreach(_option IN LISTS _build_options)
-        _canon_apply_cxx_option("${TARGET}" "${_option}")
-    endforeach()
 endfunction()
 
 # Enables Release IPO on final-link targets when the active C++ toolchain supports it.
 function(_canon_apply_ipo_if_supported TARGET)
     get_target_property(_type "${TARGET}" TYPE)
-    if(NOT "${_type}" STREQUAL "EXECUTABLE"
-        AND NOT "${_type}" STREQUAL "SHARED_LIBRARY"
-        AND NOT "${_type}" STREQUAL "MODULE_LIBRARY")
+    if(NOT "${_type}" MATCHES "^(EXECUTABLE|SHARED_LIBRARY|MODULE_LIBRARY)$")
         return()
     endif()
 
@@ -159,12 +186,11 @@ function(_canon_apply_ipo_if_supported TARGET)
     endif()
 endfunction()
 
-# Reports Canon's Clang warning exceptions, including options absent from older frontends.
-function(_canon_get_clang_warning_policy
-    OUT_SUPPRESSIONS
-    OUT_OPTIONAL_SUPPRESSIONS
-    OUT_REENABLES
-)
+# Reports Canon's Clang warning exceptions that the target frontend accepts.
+#
+# Canon probes the compiler unless TIDY_EXECUTABLE names a clang-tidy, which embeds its own Clang frontend even when
+# the configured compiler is GCC. Suppressions for warning groups that a frontend lacks are omitted; the rest apply.
+function(_canon_get_clang_warning_exceptions OUT_OPTIONS TIDY_EXECUTABLE)
     set(_suppressions
         -Wno-c++98-compat
         -Wno-c++98-compat-pedantic
@@ -196,14 +222,25 @@ function(_canon_get_clang_warning_policy
         -Wshadow-field-in-constructor-modified
     )
 
-    set(${OUT_SUPPRESSIONS} "${_suppressions}" PARENT_SCOPE)
-    set(${OUT_OPTIONAL_SUPPRESSIONS} "${_optional_suppressions}" PARENT_SCOPE)
-    set(${OUT_REENABLES} "${_reenables}" PARENT_SCOPE)
+    foreach(_optional_suppression IN LISTS _optional_suppressions)
+        string(REGEX REPLACE "^-Wno-" "-W" _optional_warning "${_optional_suppression}")
+        if("${TIDY_EXECUTABLE}" STREQUAL "")
+            _canon_cxx_warning_option_supported("${_optional_warning}" _supported)
+        else()
+            _canon_clang_tidy_warning_option_supported("${TIDY_EXECUTABLE}" "${_optional_warning}" _supported)
+        endif()
+        if(_supported)
+            list(APPEND _suppressions "${_optional_suppression}")
+        endif()
+    endforeach()
+
+    set(${OUT_OPTIONS} ${_suppressions} ${_reenables} PARENT_SCOPE)
 endfunction()
 
 # Applies Canon's strict compiler-specific warning policy.
 function(_canon_apply_warnings TARGET)
-    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    _canon_require_compiler_family(warnings _family)
+    if("${_family}" STREQUAL "GNU")
         set(_warning_options
             -Wall
             -Wextra
@@ -214,52 +251,25 @@ function(_canon_apply_warnings TARGET)
             -Wfloat-conversion
             -Wshadow
         )
-        set(_warning_suppressions)
-        set(_warning_reenables)
-    elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang"
-        AND "${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}" STREQUAL "GNU")
-        set(_warning_options
-            -Weverything
-            -Werror
-        )
-        _canon_get_clang_warning_policy(
-            _warning_suppressions
-            _optional_warning_suppressions
-            _warning_reenables
-        )
-        foreach(_optional_suppression IN LISTS _optional_warning_suppressions)
-            string(REGEX REPLACE "^-Wno-" "-W" _optional_warning "${_optional_suppression}")
-            _canon_cxx_warning_option_supported("${_optional_warning}" _supported)
-            if(_supported)
-                list(APPEND _warning_suppressions "${_optional_suppression}")
-            endif()
-        endforeach()
     else()
-        message(FATAL_ERROR
-            "Canon warnings do not support compiler '${CMAKE_CXX_COMPILER_ID}' "
-            "with frontend '${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}'")
+        _canon_get_clang_warning_exceptions(_exceptions "")
+        set(_warning_options -Weverything -Werror ${_exceptions})
     endif()
 
-    foreach(_option IN LISTS _warning_options _warning_suppressions _warning_reenables)
+    foreach(_option IN LISTS _warning_options)
         _canon_apply_cxx_option("${TARGET}" "${_option}")
     endforeach()
 endfunction()
 
 # Adds AddressSanitizer instrumentation and propagates required runtime linking.
 function(_canon_apply_asan TARGET)
-    if(NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU"
-        AND NOT ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang"
-            AND "${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}" STREQUAL "GNU"))
-        message(FATAL_ERROR
-            "Canon ASan does not support compiler '${CMAKE_CXX_COMPILER_ID}' "
-            "with frontend '${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}'")
-    endif()
+    _canon_require_compiler_family(ASan _family)
 
     _canon_apply_cxx_option("${TARGET}" "-fsanitize=address")
     _canon_apply_cxx_option("${TARGET}" "-fno-omit-frame-pointer")
 
     get_target_property(_type "${TARGET}" TYPE)
-    if("${_type}" STREQUAL "STATIC_LIBRARY" OR "${_type}" STREQUAL "OBJECT_LIBRARY")
+    if("${_type}" MATCHES "^(STATIC|OBJECT)_LIBRARY$")
         target_link_options("${TARGET}" INTERFACE -fsanitize=address)
     elseif("${_type}" STREQUAL "SHARED_LIBRARY")
         target_link_options("${TARGET}" PUBLIC -fsanitize=address)
@@ -343,52 +353,37 @@ function(_canon_validate_coverage_tool EXECUTABLE FAMILY EXPECTED_MAJOR OUT_VALI
 endfunction()
 
 # Resolves exactly the program name reported by the compiler driver.
+#
+# A reported path is used as is; a bare program name is searched for exactly, never under alternate names.
 function(_canon_resolve_reported_coverage_tool CANDIDATE OUT_EXECUTABLE)
-    if(IS_ABSOLUTE "${CANDIDATE}")
-        if(EXISTS "${CANDIDATE}" AND NOT IS_DIRECTORY "${CANDIDATE}")
-            set(${OUT_EXECUTABLE} "${CANDIDATE}" PARENT_SCOPE)
-        else()
-            set(${OUT_EXECUTABLE} "" PARENT_SCOPE)
-        endif()
-        return()
-    endif()
-
+    set(_executable "")
     if("${CANDIDATE}" MATCHES "[/\\\\]")
-        if(EXISTS "${CANDIDATE}" AND NOT IS_DIRECTORY "${CANDIDATE}")
-            get_filename_component(_absolute_candidate "${CANDIDATE}" ABSOLUTE)
-            set(${OUT_EXECUTABLE} "${_absolute_candidate}" PARENT_SCOPE)
-        else()
-            set(${OUT_EXECUTABLE} "" PARENT_SCOPE)
+        get_filename_component(_candidate "${CANDIDATE}" ABSOLUTE)
+        if(EXISTS "${_candidate}" AND NOT IS_DIRECTORY "${_candidate}")
+            set(_executable "${_candidate}")
         endif()
-        return()
-    endif()
-
-    set(_coverage_executable "_coverage_executable-NOTFOUND")
-    find_program(_coverage_executable NAMES "${CANDIDATE}" NO_CACHE)
-    if(_coverage_executable)
-        set(${OUT_EXECUTABLE} "${_coverage_executable}" PARENT_SCOPE)
     else()
-        set(${OUT_EXECUTABLE} "" PARENT_SCOPE)
+        find_program(_found NAMES "${CANDIDATE}" NO_CACHE)
+        if(_found)
+            set(_executable "${_found}")
+        endif()
     endif()
+    set(${OUT_EXECUTABLE} "${_executable}" PARENT_SCOPE)
 endfunction()
 
 # Selects and validates the compiler-matched gcov backend used by gcovr.
 function(_canon_find_coverage_backend OUT_COMMAND OUT_REASON)
-    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    _canon_require_compiler_family(coverage _compiler_family)
+    if("${_compiler_family}" STREQUAL "GNU")
         set(_program_name gcov)
         set(_family GNU)
         set(_override_variable CANON_GCOV_EXECUTABLE)
         set(_command_suffix "")
-    elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang"
-        AND "${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}" STREQUAL "GNU")
+    else()
         set(_program_name llvm-cov)
         set(_family LLVM)
         set(_override_variable CANON_LLVM_COV_EXECUTABLE)
         set(_command_suffix " gcov")
-    else()
-        message(FATAL_ERROR
-            "Canon coverage does not support compiler '${CMAKE_CXX_COMPILER_ID}' "
-            "with frontend '${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}'")
     endif()
 
     string(REGEX MATCH "^[0-9]+" _compiler_major "${CMAKE_CXX_COMPILER_VERSION}")
@@ -398,13 +393,9 @@ function(_canon_find_coverage_backend OUT_COMMAND OUT_REASON)
             "'${CMAKE_CXX_COMPILER_VERSION}'")
     endif()
 
-    set(_explicit_override FALSE)
-    if(NOT "${${_override_variable}}" STREQUAL "")
-        set(_coverage_executable "${${_override_variable}}")
-        set(_explicit_override TRUE)
-    endif()
-
-    if(NOT _explicit_override)
+    set(_coverage_executable "${${_override_variable}}")
+    if("${_coverage_executable}" STREQUAL "")
+        set(_explicit_override FALSE)
         execute_process(
             COMMAND "${CMAKE_CXX_COMPILER}" "-print-prog-name=${_program_name}"
             RESULT_VARIABLE _driver_result
@@ -430,6 +421,8 @@ function(_canon_find_coverage_backend OUT_COMMAND OUT_REASON)
             set(${OUT_REASON} "${_failure_reason}" PARENT_SCOPE)
             return()
         endif()
+    else()
+        set(_explicit_override TRUE)
     endif()
 
     _canon_validate_coverage_tool(
@@ -612,7 +605,7 @@ function(_canon_apply_coverage TARGET)
     _canon_apply_cxx_option("${TARGET}" "--coverage")
 
     get_target_property(_type "${TARGET}" TYPE)
-    if("${_type}" STREQUAL "STATIC_LIBRARY" OR "${_type}" STREQUAL "OBJECT_LIBRARY")
+    if("${_type}" MATCHES "^(STATIC|OBJECT)_LIBRARY$")
         target_link_options("${TARGET}" INTERFACE --coverage)
     else()
         target_link_options("${TARGET}" PRIVATE --coverage)
@@ -679,26 +672,8 @@ function(_canon_apply_tidy TARGET)
         "--exclude-header-filter=${_external_filter}"
     )
     if(CANON_ENABLE_WARNINGS)
-        # clang-tidy uses its own Clang frontend even when the configured compiler is GCC.
-        # Filter optional suppressions against that frontend rather than assuming the
-        # configured compiler and clang-tidy support the same warning groups.
-        _canon_get_clang_warning_policy(
-            _warning_suppressions
-            _optional_warning_suppressions
-            _warning_reenables
-        )
-        foreach(_optional_suppression IN LISTS _optional_warning_suppressions)
-            string(REGEX REPLACE "^-Wno-" "-W" _optional_warning "${_optional_suppression}")
-            _canon_clang_tidy_warning_option_supported(
-                "${CANON_CLANG_TIDY_EXECUTABLE}"
-                "${_optional_warning}"
-                _supported
-            )
-            if(_supported)
-                list(APPEND _warning_suppressions "${_optional_suppression}")
-            endif()
-        endforeach()
-        foreach(_option IN LISTS _warning_suppressions _warning_reenables)
+        _canon_get_clang_warning_exceptions(_exceptions "${CANON_CLANG_TIDY_EXECUTABLE}")
+        foreach(_option IN LISTS _exceptions)
             list(APPEND _tidy_command "--extra-arg=${_option}")
         endforeach()
     endif()
@@ -710,19 +685,16 @@ function(canon_apply_target TARGET)
     if(NOT "${ARGC}" EQUAL 1)
         message(FATAL_ERROR "canon_apply_target(): expected exactly one target")
     endif()
-    if(NOT TARGET "${TARGET}")
-        message(FATAL_ERROR "canon_apply_target(): target '${TARGET}' does not exist")
-    endif()
-
-    get_target_property(_type "${TARGET}" TYPE)
-    if(NOT "${_type}" STREQUAL "EXECUTABLE"
-        AND NOT "${_type}" STREQUAL "STATIC_LIBRARY"
-        AND NOT "${_type}" STREQUAL "SHARED_LIBRARY"
-        AND NOT "${_type}" STREQUAL "MODULE_LIBRARY"
-        AND NOT "${_type}" STREQUAL "OBJECT_LIBRARY")
-        message(FATAL_ERROR
-            "canon_apply_target(): target '${TARGET}' has type '${_type}', which has no compiled-target Canon policy")
-    endif()
+    _canon_require_target_type(
+        canon_apply_target
+        "${TARGET}"
+        "has type '<type>', which has no compiled-target Canon policy"
+        EXECUTABLE
+        STATIC_LIBRARY
+        SHARED_LIBRARY
+        MODULE_LIBRARY
+        OBJECT_LIBRARY
+    )
 
     get_property(_applied TARGET "${TARGET}" PROPERTY _CANON_TARGET_POLICY_APPLIED)
     if(_applied)
@@ -767,42 +739,18 @@ function(_canon_collect_buildsystem_targets SOURCE_DIR OUT_TARGETS)
     set("${OUT_TARGETS}" "${_targets}" PARENT_SCOPE)
 endfunction()
 
-# Gets the provider already selected for one dependency in this build.
+# Gets the provider already selected for one dependency in this build, or "" if none has been.
 function(_canon_get_dependency_provider NAME OUT_PROVIDER)
     string(HEX "${NAME}" _dependency_key)
-    set(_provider_property "_CANON_DEPENDENCY_PROVIDER_${_dependency_key}")
-
-    get_property(
-        _recorded
-        GLOBAL
-        PROPERTY "${_provider_property}"
-        SET
-    )
-    if(_recorded)
-        get_property(
-            _provider
-            GLOBAL
-            PROPERTY "${_provider_property}"
-        )
-    else()
-        set(_provider "")
-    endif()
-
+    get_property(_provider GLOBAL PROPERTY "_CANON_DEPENDENCY_PROVIDER_${_dependency_key}")
     set(${OUT_PROVIDER} "${_provider}" PARENT_SCOPE)
 endfunction()
 
-# Records the first provider selected for one dependency in this build.
+# Records the provider selected for one dependency. Callers record only a dependency that has no provider yet.
+#
+# A vendored provider also records the targets its source tree created, excluding targets that an earlier vendored
+# dependency already owns, so installation can verify provenance.
 function(_canon_record_dependency_provider NAME PROVIDER)
-    _canon_get_dependency_provider("${NAME}" _recorded_provider)
-    if(NOT "${_recorded_provider}" STREQUAL "")
-        if(NOT "${_recorded_provider}" STREQUAL "${PROVIDER}")
-            message(FATAL_ERROR
-                "internal error: dependency '${NAME}' provider changed from "
-                "'${_recorded_provider}' to '${PROVIDER}'")
-        endif()
-        return()
-    endif()
-
     string(HEX "${NAME}" _dependency_key)
     set_property(
         GLOBAL
@@ -840,22 +788,16 @@ function(_canon_partition_dependency_targets OUT_PRESENT OUT_MISSING)
 endfunction()
 
 # Resolves one vendored-or-installed dependency for the active build.
+#
+# FIND_MODE is CONFIG, MODULE, or empty for find_package()'s default search. Callers validate their own arguments.
 function(_canon_resolve_dependency)
-    set(_options CONFIG MODULE)
-    set(_one_value_arguments NAME PACKAGE VERSION SOURCE_DIR BINARY_DIR VENDORED_HINT)
-    set(_multi_value_arguments TARGETS)
     cmake_parse_arguments(
         PARSE_ARGV 0
         _dependency
-        "${_options}"
-        "${_one_value_arguments}"
-        "${_multi_value_arguments}"
+        ""
+        "NAME;PACKAGE;VERSION;FIND_MODE;SOURCE_DIR;BINARY_DIR;VENDORED_HINT"
+        "TARGETS"
     )
-
-    if(_dependency_UNPARSED_ARGUMENTS)
-        message(FATAL_ERROR
-            "_canon_resolve_dependency(): unexpected arguments: ${_dependency_UNPARSED_ARGUMENTS}")
-    endif()
 
     message(CHECK_START "finding dependency '${_dependency_PACKAGE}'")
 
@@ -928,21 +870,10 @@ function(_canon_resolve_dependency)
         return()
     endif()
 
-    if(_dependency_CONFIG AND _dependency_MODULE)
-        message(FATAL_ERROR
-            "_canon_resolve_dependency(): CONFIG and MODULE are mutually exclusive")
-    endif()
-
-    set(_find_mode)
-    if(_dependency_CONFIG)
-        set(_find_mode CONFIG)
-    elseif(_dependency_MODULE)
-        set(_find_mode MODULE)
-    endif()
     find_package(
         "${_dependency_PACKAGE}"
         "${_dependency_VERSION}"
-        ${_find_mode}
+        ${_dependency_FIND_MODE}
         QUIET
         GLOBAL
     )
@@ -1020,31 +951,26 @@ function(canon_resolve_dependency EXTERNAL_NAME)
             "beneath the project's external directory")
     endif()
 
-    set(_mode_argument)
+    set(_find_mode)
     if(_dependency_CONFIG)
-        set(_mode_argument CONFIG)
+        set(_find_mode CONFIG)
     elseif(_dependency_MODULE)
-        set(_mode_argument MODULE)
+        set(_find_mode MODULE)
     endif()
     _canon_resolve_dependency(
         NAME "${EXTERNAL_NAME}"
         PACKAGE "${_dependency_PACKAGE}"
         VERSION "${_dependency_VERSION}"
-        SOURCE_DIR "${PROJECT_SOURCE_DIR}/external/${EXTERNAL_NAME}"
+        FIND_MODE "${_find_mode}"
+        SOURCE_DIR "${_dependency_source_dir}"
         BINARY_DIR "${PROJECT_BINARY_DIR}/external/${EXTERNAL_NAME}"
         VENDORED_HINT "initialize vendored dependency 'external/${EXTERNAL_NAME}'"
-        ${_mode_argument}
         TARGETS ${_dependency_TARGETS}
     )
 endfunction()
 
 # Installs one source-built shared-library target from a vendored dependency.
 function(_canon_install_vendored_dependency_target DEPENDENCY TARGET VENDORED_TARGETS)
-    if(NOT TARGET "${TARGET}")
-        message(FATAL_ERROR
-            "canon_install_dependency(): target '${TARGET}' does not exist")
-    endif()
-
     get_target_property(_aliased_target "${TARGET}" ALIASED_TARGET)
     if(NOT "${_aliased_target}" STREQUAL "_aliased_target-NOTFOUND")
         set(_target "${_aliased_target}")
@@ -1076,25 +1002,18 @@ function(_canon_install_vendored_dependency_target DEPENDENCY TARGET VENDORED_TA
             "canon_install_dependency(): FRAMEWORK target '${TARGET}' is not supported")
     endif()
 
-    string(HEX "${_target}" _target_key)
-    set(_installed_property "_CANON_DEPENDENCY_INSTALL_${_target_key}")
-    get_property(
-        _installed
-        DIRECTORY "${PROJECT_SOURCE_DIR}"
-        PROPERTY "${_installed_property}"
-    )
-    if(_installed)
-        return()
-    endif()
-
+    # The vendored subtree is EXCLUDE_FROM_ALL, so a target in this directory's ALL builds what this directory
+    # installs. A per-directory target keeps directory-scoped install targets such as <dir>/install working.
     get_property(
         _build_target
         DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
         PROPERTY _CANON_DEPENDENCY_INSTALL_BUILD_TARGET
     )
     if("${_build_target}" STREQUAL "")
-        string(SHA256 _directory_key "${CMAKE_CURRENT_BINARY_DIR}")
-        set(_build_target "_canon_install_dependencies_${_directory_key}")
+        get_property(_build_target_count GLOBAL PROPERTY _CANON_DEPENDENCY_INSTALL_BUILD_TARGET_COUNT)
+        math(EXPR _build_target_count "${_build_target_count} + 1")
+        set_property(GLOBAL PROPERTY _CANON_DEPENDENCY_INSTALL_BUILD_TARGET_COUNT "${_build_target_count}")
+        set(_build_target "_canon_install_dependencies_${_build_target_count}")
         if(TARGET "${_build_target}")
             message(FATAL_ERROR
                 "canon_install_dependency(): internal build target '${_build_target}' already exists")
@@ -1112,10 +1031,6 @@ function(_canon_install_vendored_dependency_target DEPENDENCY TARGET VENDORED_TA
         TARGETS "${_target}"
         LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" NAMELINK_SKIP
         RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
-    )
-    set_property(
-        DIRECTORY "${PROJECT_SOURCE_DIR}"
-        PROPERTY "${_installed_property}" TRUE
     )
 endfunction()
 
@@ -1173,6 +1088,8 @@ function(canon_require_googletest)
         message(FATAL_ERROR "canon_require_googletest(): does not accept arguments")
     endif()
 
+    # GoogleTest's own install rules are excluded with the rest of its EXCLUDE_FROM_ALL tree; INSTALL_GTEST OFF also
+    # keeps it from generating package files that nothing installs.
     set(BUILD_GMOCK ON)
     set(INSTALL_GTEST OFF)
 
@@ -1183,7 +1100,7 @@ function(canon_require_googletest)
         NAME googletest
         PACKAGE GTest
         VERSION "1.18.0...<2.0.0"
-        CONFIG
+        FIND_MODE CONFIG
         SOURCE_DIR "${_source_dir}"
         BINARY_DIR "${CMAKE_BINARY_DIR}/canon/external/googletest"
         VENDORED_HINT "initialize Canon submodule 'external/googletest'"
@@ -1199,18 +1116,14 @@ function(canon_generate_export_header TARGET HEADER MACRO)
         message(FATAL_ERROR
             "canon_generate_export_header(): expected TARGET, HEADER, and MACRO")
     endif()
-    if(NOT TARGET "${TARGET}")
-        message(FATAL_ERROR
-            "canon_generate_export_header(): target '${TARGET}' does not exist")
-    endif()
-
-    get_target_property(_type "${TARGET}" TYPE)
-    if(NOT "${_type}" STREQUAL "STATIC_LIBRARY"
-        AND NOT "${_type}" STREQUAL "SHARED_LIBRARY"
-        AND NOT "${_type}" STREQUAL "MODULE_LIBRARY")
-        message(FATAL_ERROR
-            "canon_generate_export_header(): target '${TARGET}' must be a STATIC, SHARED, or MODULE library")
-    endif()
+    _canon_require_target_type(
+        canon_generate_export_header
+        "${TARGET}"
+        "must be a STATIC, SHARED, or MODULE library"
+        STATIC_LIBRARY
+        SHARED_LIBRARY
+        MODULE_LIBRARY
+    )
     if("${HEADER}" STREQUAL "" OR IS_ABSOLUTE "${HEADER}")
         message(FATAL_ERROR
             "canon_generate_export_header(): HEADER must be a non-empty relative path")
@@ -1284,18 +1197,16 @@ function(canon_apply_library TARGET)
     if(NOT "${ARGC}" EQUAL 1)
         message(FATAL_ERROR "canon_apply_library(): expected exactly one target")
     endif()
-    if(NOT TARGET "${TARGET}")
-        message(FATAL_ERROR "canon_apply_library(): target '${TARGET}' does not exist")
-    endif()
-
+    _canon_require_target_type(
+        canon_apply_library
+        "${TARGET}"
+        "must be a STATIC, SHARED, MODULE, or INTERFACE library"
+        STATIC_LIBRARY
+        SHARED_LIBRARY
+        MODULE_LIBRARY
+        INTERFACE_LIBRARY
+    )
     get_target_property(_type "${TARGET}" TYPE)
-    if(NOT "${_type}" STREQUAL "STATIC_LIBRARY"
-        AND NOT "${_type}" STREQUAL "SHARED_LIBRARY"
-        AND NOT "${_type}" STREQUAL "MODULE_LIBRARY"
-        AND NOT "${_type}" STREQUAL "INTERFACE_LIBRARY")
-        message(FATAL_ERROR
-            "canon_apply_library(): target '${TARGET}' must be a STATIC, SHARED, MODULE, or INTERFACE library")
-    endif()
 
     get_property(_applied TARGET "${TARGET}" PROPERTY _CANON_LIBRARY_POLICY_APPLIED)
     if(_applied)
@@ -1360,6 +1271,29 @@ function(canon_add_documentation)
         list(APPEND _inputs "${_absolute_input}")
     endforeach()
 
+    # An explicit main page is a documentation input; a missing one fails here instead of being silently dropped.
+    if(NOT DEFINED DOXYGEN_USE_MDFILE_AS_MAINPAGE)
+        if(EXISTS "${PROJECT_SOURCE_DIR}/README.md")
+            set(DOXYGEN_USE_MDFILE_AS_MAINPAGE "${PROJECT_SOURCE_DIR}/README.md")
+        endif()
+    elseif(NOT "${DOXYGEN_USE_MDFILE_AS_MAINPAGE}" STREQUAL "")
+        get_filename_component(
+            _main_page
+            "${DOXYGEN_USE_MDFILE_AS_MAINPAGE}"
+            ABSOLUTE
+            BASE_DIR "${PROJECT_SOURCE_DIR}"
+        )
+        if(NOT EXISTS "${_main_page}")
+            message(FATAL_ERROR
+                "canon_add_documentation(): main page '${DOXYGEN_USE_MDFILE_AS_MAINPAGE}' does not exist")
+        endif()
+        set(DOXYGEN_USE_MDFILE_AS_MAINPAGE "${_main_page}")
+    endif()
+    if(NOT "${DOXYGEN_USE_MDFILE_AS_MAINPAGE}" STREQUAL "")
+        list(APPEND _inputs "${DOXYGEN_USE_MDFILE_AS_MAINPAGE}")
+    endif()
+    list(REMOVE_DUPLICATES _inputs)
+
     include(GNUInstallDirs)
     find_package(Doxygen 1.9 QUIET OPTIONAL_COMPONENTS dot)
 
@@ -1367,15 +1301,6 @@ function(canon_add_documentation)
     set(_clean_target "${PROJECT_NAME}-doc-clean")
     set(_output_directory "${PROJECT_BINARY_DIR}/doxygen")
     set(_warning_log "${PROJECT_BINARY_DIR}/doxygen-warnings.log")
-
-    if(PROJECT_IS_TOP_LEVEL)
-        install(
-            DIRECTORY "${_output_directory}/html/"
-            TYPE DOC
-            COMPONENT Documentation
-            EXCLUDE_FROM_ALL
-        )
-    endif()
 
     add_custom_target(
         "${_clean_target}"
@@ -1385,9 +1310,18 @@ function(canon_add_documentation)
         VERBATIM
     )
 
+    # Only the top-level project contributes to the convenience targets and the Documentation install component.
     if(PROJECT_IS_TOP_LEVEL)
+        add_custom_target(doc)
+        add_dependencies(doc "${_doc_target}")
         add_custom_target(doc-clean)
         add_dependencies(doc-clean "${_clean_target}")
+        install(
+            DIRECTORY "${_output_directory}/html/"
+            TYPE DOC
+            COMPONENT Documentation
+            EXCLUDE_FROM_ALL
+        )
     endif()
 
     if(NOT Doxygen_FOUND)
@@ -1403,34 +1337,8 @@ function(canon_add_documentation)
             COMMENT "Unable to generate API documentation"
             VERBATIM
         )
-        if(PROJECT_IS_TOP_LEVEL)
-            add_custom_target(doc)
-            add_dependencies(doc "${_doc_target}")
-        endif()
         return()
     endif()
-
-    set(_readme "${PROJECT_SOURCE_DIR}/README.md")
-    if(EXISTS "${_readme}" AND NOT DEFINED DOXYGEN_USE_MDFILE_AS_MAINPAGE)
-        set(DOXYGEN_USE_MDFILE_AS_MAINPAGE "${_readme}")
-        list(APPEND _inputs "${_readme}")
-    elseif(DEFINED DOXYGEN_USE_MDFILE_AS_MAINPAGE
-        AND NOT "${DOXYGEN_USE_MDFILE_AS_MAINPAGE}" STREQUAL "")
-        if(IS_ABSOLUTE "${DOXYGEN_USE_MDFILE_AS_MAINPAGE}")
-            set(_main_page "${DOXYGEN_USE_MDFILE_AS_MAINPAGE}")
-        else()
-            get_filename_component(
-                _main_page
-                "${DOXYGEN_USE_MDFILE_AS_MAINPAGE}"
-                ABSOLUTE
-                BASE_DIR "${PROJECT_SOURCE_DIR}"
-            )
-        endif()
-        if(EXISTS "${_main_page}")
-            list(APPEND _inputs "${_main_page}")
-        endif()
-    endif()
-    list(REMOVE_DUPLICATES _inputs)
 
     set(DOXYGEN_OUTPUT_DIRECTORY "${_output_directory}")
     set(DOXYGEN_HTML_OUTPUT html)
@@ -1474,11 +1382,6 @@ function(canon_add_documentation)
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
         COMMENT "Generating API documentation"
     )
-
-    if(PROJECT_IS_TOP_LEVEL)
-        add_custom_target(doc)
-        add_dependencies(doc "${_doc_target}")
-    endif()
 endfunction()
 
 cmake_policy(POP)
