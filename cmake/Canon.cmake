@@ -789,20 +789,32 @@ endfunction()
 
 # Resolves one vendored-or-installed dependency for the active build.
 #
-# FIND_MODE is CONFIG, MODULE, or empty for find_package()'s default search. Callers validate their own arguments.
+# FIND_MODE is CONFIG, MODULE, or empty for find_package()'s default search. PROVIDER is auto, vendored, or installed.
+# Callers validate their own arguments.
 function(_canon_resolve_dependency)
     cmake_parse_arguments(
         PARSE_ARGV 0
         _dependency
         ""
-        "NAME;PACKAGE;VERSION;FIND_MODE;SOURCE_DIR;BINARY_DIR;VENDORED_HINT"
+        "NAME;PACKAGE;VERSION;FIND_MODE;PROVIDER;SOURCE_DIR;BINARY_DIR;VENDORED_HINT"
         "TARGETS"
     )
+    if("${_dependency_PROVIDER}" STREQUAL "")
+        set(_dependency_PROVIDER auto)
+    endif()
 
     message(CHECK_START "finding dependency '${_dependency_PACKAGE}'")
 
     _canon_get_dependency_provider("${_dependency_NAME}" _selected_provider)
     if(NOT "${_selected_provider}" STREQUAL "")
+        if(NOT "${_dependency_PROVIDER}" STREQUAL "auto" AND
+            NOT "${_selected_provider}" STREQUAL "${_dependency_PROVIDER}")
+            message(CHECK_FAIL "provider conflict")
+            message(FATAL_ERROR
+                "dependency '${_dependency_NAME}' was already resolved using provider "
+                "'${_selected_provider}'; cannot require '${_dependency_PROVIDER}'")
+        endif()
+
         _canon_partition_dependency_targets(
             _present_targets
             _missing_targets
@@ -826,6 +838,12 @@ function(_canon_resolve_dependency)
         ${_dependency_TARGETS}
     )
     if(NOT _missing_targets)
+        if(NOT "${_dependency_PROVIDER}" STREQUAL "auto")
+            message(CHECK_FAIL "already provided")
+            message(FATAL_ERROR
+                "dependency '${_dependency_NAME}' already has the required targets; "
+                "cannot require provider '${_dependency_PROVIDER}' because their provenance is unknown")
+        endif()
         _canon_record_dependency_provider("${_dependency_NAME}" provided)
         message(CHECK_PASS "already provided")
         return()
@@ -839,7 +857,8 @@ function(_canon_resolve_dependency)
             "present targets: ${_present_text}; missing targets: ${_missing_text}")
     endif()
 
-    if(EXISTS "${_dependency_SOURCE_DIR}/CMakeLists.txt")
+    if(NOT "${_dependency_PROVIDER}" STREQUAL "installed" AND
+        EXISTS "${_dependency_SOURCE_DIR}/CMakeLists.txt")
         add_subdirectory(
             "${_dependency_SOURCE_DIR}"
             "${_dependency_BINARY_DIR}"
@@ -870,6 +889,13 @@ function(_canon_resolve_dependency)
         return()
     endif()
 
+    if("${_dependency_PROVIDER}" STREQUAL "vendored")
+        message(CHECK_FAIL "vendored dependency unavailable")
+        message(FATAL_ERROR
+            "vendored dependency '${_dependency_NAME}' is unavailable; "
+            "${_dependency_VENDORED_HINT}")
+    endif()
+
     find_package(
         "${_dependency_PACKAGE}"
         "${_dependency_VERSION}"
@@ -886,6 +912,11 @@ function(_canon_resolve_dependency)
     if(_missing_targets)
         string(JOIN ", " _missing_text ${_missing_targets})
         message(CHECK_FAIL "unavailable")
+        if("${_dependency_PROVIDER}" STREQUAL "installed")
+            message(FATAL_ERROR
+                "installed dependency '${_dependency_PACKAGE}' version '${_dependency_VERSION}' is unavailable; "
+                "install a compatible package providing: ${_missing_text}")
+        endif()
         message(FATAL_ERROR
             "dependency '${_dependency_PACKAGE}' version '${_dependency_VERSION}' is unavailable; "
             "${_dependency_VENDORED_HINT}, or install a compatible package providing: "
@@ -896,14 +927,14 @@ function(_canon_resolve_dependency)
     message(CHECK_PASS "using installed package '${_dependency_PACKAGE}'")
 endfunction()
 
-# Resolves one project dependency from external/ or an installed package.
+# Resolves one project dependency from external/ or an installed package. Optional PROVIDER defaults to auto.
 function(canon_resolve_dependency EXTERNAL_NAME)
     if("${EXTERNAL_NAME}" STREQUAL "")
         message(FATAL_ERROR "canon_resolve_dependency(): external name must not be empty")
     endif()
 
     set(_options CONFIG MODULE)
-    set(_one_value_arguments PACKAGE VERSION)
+    set(_one_value_arguments PACKAGE VERSION PROVIDER)
     set(_multi_value_arguments TARGETS)
     cmake_parse_arguments(
         PARSE_ARGV 1
@@ -916,6 +947,15 @@ function(canon_resolve_dependency EXTERNAL_NAME)
     if(_dependency_UNPARSED_ARGUMENTS)
         message(FATAL_ERROR
             "canon_resolve_dependency(): unexpected arguments: ${_dependency_UNPARSED_ARGUMENTS}")
+    endif()
+    if("PROVIDER" IN_LIST _dependency_KEYWORDS_MISSING_VALUES)
+        message(FATAL_ERROR "canon_resolve_dependency(): PROVIDER requires a value")
+    endif()
+    if("${_dependency_PROVIDER}" STREQUAL "")
+        set(_dependency_PROVIDER auto)
+    elseif(NOT "${_dependency_PROVIDER}" MATCHES "^(auto|vendored|installed)$")
+        message(FATAL_ERROR
+            "canon_resolve_dependency(): PROVIDER '${_dependency_PROVIDER}' must be auto, vendored, or installed")
     endif()
     if("${_dependency_PACKAGE}" STREQUAL "")
         set(_dependency_PACKAGE "${EXTERNAL_NAME}")
@@ -962,6 +1002,7 @@ function(canon_resolve_dependency EXTERNAL_NAME)
         PACKAGE "${_dependency_PACKAGE}"
         VERSION "${_dependency_VERSION}"
         FIND_MODE "${_find_mode}"
+        PROVIDER "${_dependency_PROVIDER}"
         SOURCE_DIR "${_dependency_source_dir}"
         BINARY_DIR "${PROJECT_BINARY_DIR}/external/${EXTERNAL_NAME}"
         VENDORED_HINT "initialize vendored dependency 'external/${EXTERNAL_NAME}'"
@@ -1002,8 +1043,8 @@ function(_canon_install_vendored_dependency_target DEPENDENCY TARGET VENDORED_TA
             "canon_install_dependency(): FRAMEWORK target '${TARGET}' is not supported")
     endif()
 
-    # The vendored subtree is EXCLUDE_FROM_ALL, so a target in this directory's ALL builds what this directory
-    # installs. A per-directory target keeps directory-scoped install targets such as <dir>/install working.
+    # The vendored subtree is EXCLUDE_FROM_ALL, so a target in this directory's ALL builds what this directory installs.
+    # A per-directory target keeps directory-scoped install targets such as <dir>/install working.
     get_property(
         _build_target
         DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"

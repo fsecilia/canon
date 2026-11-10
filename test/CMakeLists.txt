@@ -313,6 +313,72 @@ _canon_add_test(
     ARGS "${_canon_dependency_package}"
     EXPECTED_OUTPUT "finding dependency 'DependencyFixture' - using installed package 'DependencyFixture'"
 )
+# Explicit provider selection must work even when both the source checkout and the installed package exist.
+_canon_add_test(
+    dependencies.resolve.provider.auto
+    FIXTURE dependency
+    CASE [[
+        canon_resolve_dependency(
+            runtime PACKAGE DependencyFixture VERSION "7.3...<8.0"
+            TARGETS DependencyFixture::Runtime PROVIDER auto
+        )
+        if(NOT TARGET fixture_runtime)
+            message(FATAL_ERROR "auto did not select the available vendored target")
+        endif()
+    ]]
+    ARGS "${_canon_dependency_package}"
+    EXPECTED_OUTPUT "finding dependency 'DependencyFixture' - using vendored 'runtime'"
+)
+_canon_add_test(
+    dependencies.resolve.provider.auto-installed
+    FIXTURE dependency
+    CASE [[
+        canon_resolve_dependency(
+            packaged PACKAGE DependencyFixture VERSION "7.3...<8.0"
+            TARGETS DependencyFixture::Core PROVIDER auto
+        )
+    ]]
+    ARGS "${_canon_dependency_package}"
+    EXPECTED_OUTPUT "finding dependency 'DependencyFixture' - using installed package 'DependencyFixture'"
+)
+_canon_add_test(
+    dependencies.resolve.provider.vendored
+    FIXTURE dependency
+    CASE [[
+        canon_resolve_dependency(
+            runtime PACKAGE DependencyFixture VERSION "7.3...<8.0"
+            TARGETS DependencyFixture::Runtime PROVIDER vendored
+        )
+        if(TARGET DependencyFixture::Core)
+            message(FATAL_ERROR "vendored selection loaded the installed package")
+        endif()
+    ]]
+    ARGS "${_canon_dependency_package}"
+    EXPECTED_OUTPUT "finding dependency 'DependencyFixture' - using vendored 'runtime'"
+)
+_canon_add_test(
+    dependencies.resolve.provider.installed
+    FIXTURE dependency
+    CASE [[
+        canon_resolve_dependency(
+            runtime PACKAGE DependencyFixture VERSION "7.3...<8.0"
+            TARGETS DependencyFixture::Core DependencyFixture::Support PROVIDER installed
+        )
+        if(TARGET fixture_runtime)
+            message(FATAL_ERROR "installed selection configured the vendored dependency")
+        endif()
+        canon_install_dependency(runtime TARGETS DependencyFixture::Core)
+        canon_resolve_dependency(
+            runtime PACKAGE DependencyFixture VERSION "7.3...<8.0"
+            TARGETS DependencyFixture::Core
+        )
+    ]]
+    ARGS "${_canon_dependency_package}"
+    EXPECTED_OUTPUT
+        "finding dependency 'DependencyFixture' - using installed package 'DependencyFixture'"
+        "finding dependency 'DependencyFixture' - already resolved using installed provider"
+)
+
 _canon_add_test(
     dependencies.resolve.provided
     FIXTURE dependency
@@ -422,6 +488,115 @@ _canon_add_test(
         "dependency 'leaf' was already resolved using provider 'vendored'"
         "missing required targets: LeafFixture::Support"
 )
+_canon_add_test(
+    dependencies.resolve.provider.value
+    FIXTURE dependency
+    CASE [[
+        canon_resolve_dependency(
+            runtime PACKAGE DependencyFixture VERSION "7.3...<8.0"
+            TARGETS DependencyFixture::Runtime PROVIDER other
+        )
+    ]]
+    EXPECT_FAILURE
+    EXPECTED_OUTPUT "canon_resolve_dependency(): PROVIDER 'other' must be auto, vendored, or installed"
+)
+_canon_add_test(
+    dependencies.resolve.provider.no-value
+    FIXTURE dependency
+    CASE [[
+        canon_resolve_dependency(
+            runtime PACKAGE DependencyFixture VERSION "7.3...<8.0"
+            TARGETS DependencyFixture::Runtime PROVIDER
+        )
+    ]]
+    EXPECT_FAILURE
+    EXPECTED_OUTPUT "canon_resolve_dependency(): PROVIDER requires a value"
+)
+_canon_add_test(
+    dependencies.resolve.provider.vendored-missing
+    FIXTURE dependency
+    CASE [[
+        canon_resolve_dependency(
+            packaged PACKAGE DependencyFixture VERSION "7.3...<8.0"
+            TARGETS DependencyFixture::Core PROVIDER vendored
+        )
+    ]]
+    ARGS "${_canon_dependency_package}"
+    EXPECT_FAILURE
+    EXPECTED_OUTPUT
+        "finding dependency 'DependencyFixture' - vendored dependency unavailable"
+        "vendored dependency 'packaged' is unavailable"
+        "initialize vendored dependency 'external/packaged'"
+)
+_canon_add_test(
+    dependencies.resolve.provider.installed-missing
+    FIXTURE dependency
+    CASE [[
+        canon_resolve_dependency(
+            runtime PACKAGE CanonMissingDependencyFixture VERSION "7.3...<8.0"
+            TARGETS DependencyFixture::Runtime PROVIDER installed
+        )
+    ]]
+    EXPECT_FAILURE
+    EXPECTED_OUTPUT
+        "finding dependency 'CanonMissingDependencyFixture' - unavailable"
+        "installed dependency 'CanonMissingDependencyFixture' version '7.3...<8.0' is unavailable"
+        "install a compatible package providing: DependencyFixture::Runtime"
+)
+_canon_add_test(
+    dependencies.resolve.provider.conflict-vendored
+    FIXTURE dependency
+    CASE [[
+        canon_resolve_dependency(
+            runtime PACKAGE DependencyFixture VERSION "7.3...<8.0"
+            TARGETS DependencyFixture::Runtime PROVIDER vendored
+        )
+        canon_resolve_dependency(
+            runtime PACKAGE DependencyFixture VERSION "7.3...<8.0"
+            TARGETS DependencyFixture::Runtime PROVIDER installed
+        )
+    ]]
+    EXPECT_FAILURE
+    EXPECTED_OUTPUT
+        "finding dependency 'DependencyFixture' - provider conflict"
+        "dependency 'runtime' was already resolved using provider 'vendored'; cannot require 'installed'"
+)
+_canon_add_test(
+    dependencies.resolve.provider.conflict-installed
+    FIXTURE dependency
+    CASE [[
+        canon_resolve_dependency(
+            runtime PACKAGE DependencyFixture VERSION "7.3...<8.0"
+            TARGETS DependencyFixture::Core PROVIDER installed
+        )
+        canon_resolve_dependency(
+            runtime PACKAGE DependencyFixture VERSION "7.3...<8.0"
+            TARGETS DependencyFixture::Core PROVIDER vendored
+        )
+    ]]
+    ARGS "${_canon_dependency_package}"
+    EXPECT_FAILURE
+    EXPECTED_OUTPUT
+        "finding dependency 'DependencyFixture' - provider conflict"
+        "dependency 'runtime' was already resolved using provider 'installed'; cannot require 'vendored'"
+)
+_canon_add_test(
+    dependencies.resolve.provider.preprovided
+    FIXTURE dependency
+    CASE [[
+        add_library(DependencyFixture::Core INTERFACE IMPORTED GLOBAL)
+        canon_resolve_dependency(
+            runtime PACKAGE DependencyFixture VERSION "7.3...<8.0"
+            TARGETS DependencyFixture::Core PROVIDER installed
+        )
+    ]]
+    EXPECT_FAILURE
+    EXPECTED_OUTPUT
+        "finding dependency 'DependencyFixture' - already provided"
+        "dependency 'runtime' already has the required targets"
+        "cannot require provider 'installed' because their provenance is unknown"
+)
+
 _canon_add_test(
     dependencies.resolve.missing
     FIXTURE dependency

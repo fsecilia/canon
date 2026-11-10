@@ -120,9 +120,23 @@ canon_resolve_dependency(
 )
 ```
 
-Canon first reuses the dependency when every required target already exists. Otherwise, if `${PROJECT_SOURCE_DIR}/external/sdl/CMakeLists.txt` exists, Canon adds that project beneath `${PROJECT_BINARY_DIR}/external/sdl` with `EXCLUDE_FROM_ALL` and `SYSTEM`, so its targets build only when something needs them and their headers do not trigger the consumer's warnings. If the vendored project is absent, Canon uses the basic `find_package()` signature and therefore preserves CMake's normal Module/Config search behavior, including `CMAKE_FIND_PACKAGE_PREFER_CONFIG`. Pass `MODULE` or `CONFIG` only when a dependency must force one lookup mode. Imported targets found this way are made visible across the build so nested projects and sibling directories reuse the same resolved provider. The call fails if only some required targets already exist or if the selected provider does not supply every target. `TARGETS` may list more than one required target. Canon does not download dependencies.
+By default (`PROVIDER auto`, or with no `PROVIDER` argument), Canon reuses the dependency when every required target already exists. Otherwise, if `${PROJECT_SOURCE_DIR}/external/sdl/CMakeLists.txt` exists, Canon adds that project beneath `${PROJECT_BINARY_DIR}/external/sdl` with `EXCLUDE_FROM_ALL` and `SYSTEM`, so its targets build only when something needs them and their headers do not trigger the consumer's warnings. If the vendored project is absent, Canon uses the basic `find_package()` signature and therefore preserves CMake's normal Module/Config search behavior, including `CMAKE_FIND_PACKAGE_PREFER_CONFIG`. Pass `MODULE` or `CONFIG` only when a dependency must force one lookup mode. Imported targets found this way are made visible across the build so nested projects and sibling directories reuse the same resolved provider. The call fails if only some required targets already exist or if the selected provider does not supply every target. `TARGETS` may list more than one required target. Canon does not download dependencies.
 
-The first successful resolution for a dependency name selects its provider for that build. Later calls with the same dependency name reuse that provider and require their requested targets to already be available; they do not fall through to another provider. The first argument names the directory beneath the project's `external/` tree. `PACKAGE` defaults to that name when the package name matches it. `VERSION` and `TARGETS` are required. `VERSION` is forwarded only to the first `find_package()` search performed when the required targets are absent and no vendored project is available. Existing targets are authoritative, and Canon does not infer or validate their version. A later call with a different `VERSION` therefore does not renegotiate an already-resolved dependency. Vendored dependency versions are likewise controlled by the selected source checkout rather than by `VERSION`.
+Set `PROVIDER installed` to require `find_package()` even when a vendored source directory exists. Set `PROVIDER vendored` to require the source checkout and fail instead of searching installed packages. Both explicit modes fail when their required provider is missing; neither silently switches providers. For example, a build that must use a platform runtime's SDL can specify:
+
+```cmake
+canon_resolve_dependency(
+    sdl
+    PACKAGE SDL3
+    VERSION "3.2.0...<4.0"
+    TARGETS SDL3::SDL3
+    PROVIDER installed
+)
+```
+
+The first successful resolution for a dependency name selects its provider for that build. Later calls with the same dependency name reuse that provider and require their requested targets to already be available; they do not fall through to another provider. A later explicit provider request that conflicts with the selected provider fails; omitting `PROVIDER` or specifying `auto` accepts the existing selection. If targets were already provided before the first call, Canon cannot establish their provenance, so an explicit `installed` or `vendored` request fails rather than claiming it enforced that choice.
+
+The first argument names the directory beneath the project's `external/` tree. `PACKAGE` defaults to that name when the package name matches it. `VERSION` and `TARGETS` are required. `VERSION` is forwarded only to the first `find_package()` search performed when the required targets are absent. Existing targets in `auto` mode are authoritative, and Canon does not infer or validate their version. A later call with a different `VERSION` therefore does not renegotiate an already-resolved dependency. Vendored dependency versions are likewise controlled by the selected source checkout rather than by `VERSION`.
 
 This function only makes the dependency available to the current build. Installing selected runtime artifacts from a vendored dependency is a separate operation. Public dependencies of an installed CMake package belong in that project's `Config.cmake.in`.
 
